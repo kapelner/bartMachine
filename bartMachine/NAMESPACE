@@ -1,0 +1,43 @@
+import(rJava)
+import(car)
+import(randomForest)
+import(missForest)
+
+export(build_bart_machine)
+export(destroy_bart_machine)
+
+export(set_bart_machine_num_cores)
+export(bart_machine_num_cores)
+export(init_java_for_bart_machine_with_mem_in_mb)
+
+export(dummify_data)
+export(get_var_counts_over_chain)
+export(get_var_props_over_chain)
+
+export(cov_importance_test)
+
+export(plot_y_vs_yhat)
+export(check_bart_error_assumptions)
+export(get_sigsqs)
+
+export(investigate_var_importance)
+export(plot_convergence_diagnostics)
+export(interaction_investigator)
+export(pd_plot) 
+export(rmse_by_num_trees)
+
+export(bart_predict_for_test_data)
+export(bart_machine_get_posterior)
+export(calc_credible_intervals)
+export(calc_prediction_intervals)
+
+export(build_bart_machine_cv)
+export(k_fold_cv)
+
+export(var_selection_by_permute_response_three_methods)
+export(var_selection_by_permute_response_cv)
+
+
+S3method(predict, bartMachine)
+S3method(print, bartMachine)
+S3method(summary, bartMachine) #alias for print

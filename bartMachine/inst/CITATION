@@ -1,0 +1,11 @@
+citHeader("")
+
+citEntry(
+     entry       = "Article",
+	 title       = "bart{M}achine: A Powerful Tool for Machine Learning in {R}",
+	 author      = personList(as.person("Adam Kapelner"), as.person("Justin Bleich")),
+	 journal     = "Ar{X}iv e-prints",
+	 year        = "2013", 
+	 textVersion = "Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013",
+	 header      = "To cite bartMachine in publications, please use:"
+)

@@ -1,0 +1,29 @@
+BART - Bayesian Additive Regressive Trees
+Software for Supervised Statistical Learning
+(work in progress, not 100% finished yet)
+
+Copyright (C) 2012 Professor Ed George & Adam Kapelner & Justin Bleich, 
+Dept of Statistics, The Wharton School of the University of Pennsylvania
+
+This is a Java implementation of the algorithm found in Chipman, George, & McCulloch 
+BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics. 
+2010 4(1): 266-298 and is available at http://projecteuclid.org/euclid.aoas/1273584455
+
+We provide a wrapper in R which will eventually become an R package.
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details:
+
+http://www.gnu.org/licenses/gpl-2.0.txt
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.

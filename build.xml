@@ -1,0 +1,27 @@
+<project name="bartMachine" basedir="." default="clean">
+    <description>
+        This script builds the bartMachine code into the bart_java.jar file which gets called from R in the R package
+    </description>	
+	
+	<path id="master-classpath">
+	  <fileset dir=".">
+	    <include name="*.jar" />
+	  	<exclude name="bart_java.jar" />
+	  </fileset>
+	</path>	
+	
+    <target name="compile" description="compile the source code">
+      <mkdir dir="class_files"/>
+      <javac srcdir="src" destdir="class_files" includeantruntime="false" >
+      	<classpath refid="master-classpath" />	
+      </javac>
+    </target>	
+	
+	<target name="dist" depends="compile" description="generate the jar file" >
+	    <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files" />
+	</target>	
+	
+	<target name="clean" description="Clean up" depends="dist">
+		<delete dir="class_files" />
+	</target>
+</project>
