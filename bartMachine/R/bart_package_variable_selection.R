@@ -182,7 +182,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
 				num_trees_for_permute = num_trees_for_permute,
-        num_reps_for_avg = num_reps_for_avg,                                                                          
+        		num_reps_for_avg = num_reps_for_avg,                                                                          
 				alpha = alpha, 
 				plot = FALSE)		
 		destroy_bart_machine(bart_machine_temp)

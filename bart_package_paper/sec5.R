@@ -17,10 +17,13 @@ bart_machine
 oos_stats = k_fold_cv(X, y, k_folds = 10)
 oos_stats$confusion_matrix
 
+predict(bart_machine_cv, X[1 : 2, ], type = "prob")
+predict(bart_machine_cv, X[1 : 2, ], type = "class")
+
 # Figure 12
 cov_importance_test(bart_machine_cv, covariates = c("age"))
 
-calc_credible_intervals(bart_machine_cv, X[1 : 2, ])
-
 # Figure 13
 pd_plot(bart_machine_cv, j = "glu")
+
+calc_credible_intervals(bart_machine_cv, X[1 : 2, ])

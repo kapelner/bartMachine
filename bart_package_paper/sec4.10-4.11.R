@@ -28,9 +28,8 @@ ytest = fr_data$y
 #build uninformed and informed models
 bart_machine = build_bart_machine(X, y)
 
-cov_prior_vec = c(rep(5, times = 5), rep(1, times = 95)) 
-bart_machine_informed = build_bart_machine(X, y, cov_prior_vec = cov_prior_vec)
-
+prior = c(rep(5, times = 5), rep(1, times = 95)) 
+bart_machine_informed = build_bart_machine(X, y, cov_prior_vec = prior)
 
 bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
 bart_predict_for_test_data(bart_machine_informed, Xtest, ytest)$rmse
@@ -39,7 +38,7 @@ bart_predict_for_test_data(bart_machine_informed, Xtest, ytest)$rmse
 
 fr_data = gen_friedman_data(500, 10, 1)
 y = fr_data$y
-X = fr_data[, 2 : 101]
+X = fr_data[, 2 : 11]
 
 bart_machine = build_bart_machine(X, y)
 
