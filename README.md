@@ -72,8 +72,8 @@ We also recommend making a system variable `ANT_HOME` which would be set to the 
 4. Compile the JAVA source code into a JAR using `ant`. You should see a compilation record and then `BUILD SUCCESSFUL` and a total time.
 
 5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can 
-be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. This may also fail if you don't have the required packages installed (run `install.packages("car")`, 
-`install.packages("randomForest")` and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. 
+be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. This may also fail if you don't have the required packages installed (run `install.packages("car")` 
+and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. 
 In R, you can now run `library(bartMachine)` and start building models.
 
 
