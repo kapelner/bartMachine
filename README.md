@@ -23,7 +23,7 @@ For a vignette describing BART and this package's features, see our [arXiv paper
 The Manual
 ----------
 
-See the [manual]() for detailed information about the package's functions and paramters.
+See the [manual](https://github.com/kapelner/bartMachine/blob/master/bartMachine.pdf?raw=true "BART package manual") for detailed information about the package's functions and paramters.
 
  
 Setup Instructions
@@ -34,7 +34,7 @@ can install the package from CRAN or compile from source
 
 ### Install Java
 
-1. Download the latest [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Download the Java JDK for all operating systems")
+Download the latest [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Download the Java JDK for all operating systems")
 and install it properly. We recommend having the JDK if you ever want to compile from source so you get the benefits of Java 7 (the shipped release is in Java 6).
 
 ### Install rJava
