@@ -68,7 +68,7 @@ We also recommend making a system variable `ANT_HOME` which would be set to the 
 
 4. Compile the JAVA source code into a JAR using `ant`. You should see a compilation record and then `BUILD SUCCESSFUL` and a total time.
 
-5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On windows this may fail because it expects multiple architectures. This can 
+5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can 
 be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. If successful, the last line of output should read `DONE (bartMachine)`. 
 In R, you can now run `library(bartMachine)`.
 
