@@ -23,7 +23,8 @@ For a vignette describing BART and this package's features, see our [arXiv paper
 The Manual
 ----------
 
-See the [manual](https://github.com/kapelner/bartMachine/blob/master/bartMachine.pdf?raw=true "BART package manual") for detailed information about the package's functions and paramters.
+See the [manual](https://github.com/kapelner/bartMachine/blob/master/bartMachine.pdf?raw=true "BART package manual") for detailed information about the 
+package's functions and parameters.
 
  
 Setup Instructions
@@ -32,16 +33,18 @@ Setup Instructions
 To install the bartMachine package in R, you first need to install Java and rJava and configure your computer, then you 
 can install the package from CRAN or compile from source
 
-### Install Java
+### Install Java JDK (not the JRE)
 
 Download the latest [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Download the Java JDK for all operating systems")
-and install it properly. We recommend having the JDK if you ever want to compile from source so you get the benefits of Java 7 (the shipped release is in Java 6).
+and install it properly. rJava requires the JDK; you cannot just have a JRE. We recommend installing JDK for Java 7 so you can get all the latest benefits (the shipped release of bartMachine 
+is in Java 6 for the most widespread compatibility).
 
 ### Install rJava
 
 Use `install.packages("rJava")` within R. If you experience errors, make sure your `JAVA_HOME` system variable is set to the root of your java installation (on a windows machine that
-would look something like `C:\Program Files\Java\jdk1.7.0_09`). Also try running `R CMD javareconf` from the command line. If you still have errors, google
-your error message. There are many people who have had problems with the rJava installation in the past and the majority of issues have been resolved on forums.
+would look something like `C:\Program Files\Java\jdk1.7.0_09`). Also try running `R CMD javareconf` from the command line. On ubuntu, you should run `sudo apt-get install r-cran-rjava`
+to install from the command prompt. If you still have errors, google your error message. There are many people who have had problems with the rJava installation in the past and the 
+majority of issues have been resolved on forums.
 
 ### Install bartMachine via CRAN
 

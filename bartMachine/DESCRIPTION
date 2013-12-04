@@ -7,5 +7,5 @@ Author: Adam Kapelner and Justin Bleich
 Maintainer: Adam Kapelner <kapelner@wharton.upenn.edu>
 Description: An advanced implementation of Bayesian Additive Regression Trees (BART, Chipman et al, 2010)
 License: MIT
-Depends: R (>= 2.15.0), rJava (>= 0.8-4), car, randomForest, missForest
+Depends: R (>= 2.14.0), rJava (>= 0.8-4), car, randomForest, missForest
 SystemRequirements: Java (>= 1.6.27)
