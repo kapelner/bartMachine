@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
 
 import CustomLogging.*;
 
@@ -369,4 +370,14 @@ public abstract class Classifier {
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;
 	}
+	
+	public void writeStdOutToLogFile(){
+		try {
+		  Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
+		  suppressOrWriteToDebugLog();
+		}
+		catch (Error e){
+			System.out.println("Logger and or suppressOrWriteToDebugLog FAILING\n");
+		}    
+ 	}
 }

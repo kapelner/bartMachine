@@ -55,7 +55,7 @@ software (see [changelog](https://github.com/kapelner/bartMachine/blob/master/ba
 1. Make sure you have [git](http://git-scm.com/downloads "Download git for all operating systems") 
 properly installed.
 
-2. Run `git clone git@github.com:kapelner/bartMachine.git` from your command line and navigate to the directory via `cd bartMachine`.
+2. Run `git clone https://github.com/kapelner/bartMachine.git` from your command line and navigate into the cloned project directory via `cd bartMachine`.
 
 3. Make sure you have a [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Install Java JDK 7 for all operating systems") 
 installed properly. Then make sure the bin directory is an element in the PATH variable (on a windows machine it would look something like 
@@ -69,7 +69,8 @@ We also recommend making a system variable `ANT_HOME` which would be set to the 
 4. Compile the JAVA source code into a JAR using `ant`. You should see a compilation record and then `BUILD SUCCESSFUL` and a total time.
 
 5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can 
-be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. If successful, the last line of output should read `DONE (bartMachine)`. 
-In R, you can now run `library(bartMachine)`.
+be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. This may also fail if you don't have the required packages installed (run `install.packages("car")`, 
+`install.packages("randomForest")` and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. 
+In R, you can now run `library(bartMachine)` and start building models.
 
 
