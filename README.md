@@ -17,7 +17,8 @@ as well as many other features.
 The Paper
 ---------
 
-For a vignette describing BART and this package's features, see our [arXiv paper]().
+For a vignette describing the BART model and bartMachine's features, see our [vignette]() which is also on arXiv 
+and is currently being reviewed by the Journal of Statistical Software.
 
 
 The Manual
@@ -67,7 +68,7 @@ installed properly. Then make sure the bin directory is an element in the PATH v
 3. Make sure you have [apache ant](http://ant.apache.org/bindownload.cgi "Download apache ant for all operating systems") installed properly. 
 Make sure you add the bin directory for ant to your system PATH variable (on a windows machine it would be something like `C:\Program Files\apache-ant-1.8.4\bin`).
 We also recommend making a system variable `ANT_HOME` which would be set to the root of ant (on a windows machine it would be something like 
-`C:\Program Files\apache-ant-1.8.4`).
+`C:\Program Files\apache-ant-1.8.4`). Also, double check the `JAVA_HOME` variable to make sure it points to the JDK 
 
 4. Compile the JAVA source code into a JAR using `ant`. You should see a compilation record and then `BUILD SUCCESSFUL` and a total time.
 
