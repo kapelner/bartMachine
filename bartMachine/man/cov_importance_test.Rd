@@ -67,6 +67,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+\dontrun{
 ##regression example
 
 ##generate Friedman data
@@ -85,6 +86,8 @@ cov_importance_test(bart_machine, covariates = c(1))
 
 ##destroy BART model
 destroy_bart_machine(bart_machine)
+
+}
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

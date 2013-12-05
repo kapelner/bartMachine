@@ -50,6 +50,7 @@ The `tree_depths'' plot separates different core estimates by vertical lines (po
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -65,6 +66,8 @@ plot_convergence_diagnostics(bart_machine)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -57,6 +57,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{build_bart_machine}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -67,6 +68,8 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 #evaluate default BART on 5 folds
 k_fold_val = k_fold_cv(X, y)
 print(k_fold_val$rmse)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

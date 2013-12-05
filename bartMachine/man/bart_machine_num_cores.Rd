@@ -37,7 +37,9 @@ Adam Kapelner and Justin Bleich
 \code{\link{set_bart_machine_num_cores}}
 }
 \examples{
+\dontrun{
 bart_machine_num_cores()
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

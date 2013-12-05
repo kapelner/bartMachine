@@ -66,6 +66,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{interaction_investigator}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -81,6 +82,8 @@ investigate_var_importance(bart_machine)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

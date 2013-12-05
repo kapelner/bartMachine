@@ -39,9 +39,12 @@ Adam Kapelner and Justin Bleich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+\dontrun{
 ##initialize a Java Virtual Machine with heap size of 3000MB
 ##this should be run before any BART models are built 
-##init_java_for_bart_machine_with_mem_in_mb(3000) ##not run
+init_java_for_bart_machine_with_mem_in_mb(3000) 
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

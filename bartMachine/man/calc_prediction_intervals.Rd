@@ -55,6 +55,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{calc_credible_intervals}}, \code{\link{bart_machine_get_posterior}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -71,6 +72,8 @@ print(head(pred_int))
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

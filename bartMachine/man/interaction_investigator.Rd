@@ -68,6 +68,7 @@ In the plot, the red bars correspond to the standard error of the variable inclu
 \code{\link{investigate_var_importance}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -83,6 +84,8 @@ interaction_investigator(bart_machine)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -76,6 +76,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{var_selection_by_permute_response_cv}}, \code{\link{investigate_var_importance}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 300 
@@ -93,6 +94,7 @@ print(var_sel$important_vars_global_max_names)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
   }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

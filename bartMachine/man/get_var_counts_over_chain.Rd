@@ -41,6 +41,8 @@ Adam Kapelner and Justin Bleich
 \code{\link{get_var_props_over_chain}}
 }
 \examples{
+\dontrun{
+
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -57,6 +59,7 @@ print(var_counts)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

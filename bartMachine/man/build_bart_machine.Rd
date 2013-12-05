@@ -177,6 +177,7 @@ summary(bart_machine)
 #destroy BART model
 destroy_bart_machine(bart_machine)
 
+\dontrun{
 ##Build another BART regression model
 bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500,
 num_iterations_after_burn_in =1000)
@@ -201,6 +202,9 @@ bart_machine$confusion_matrix
 
 #destroy BART model 
 destroy_bart_machine(bart_machine)
+}
+
+
 
 
 }

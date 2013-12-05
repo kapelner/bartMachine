@@ -63,6 +63,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{build_bart_machine}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -78,6 +79,8 @@ summary(bart_machine_cv)
 
 #destroy BART model
 destroy_bart_machine(bart_machine_cv)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

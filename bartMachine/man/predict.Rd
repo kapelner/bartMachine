@@ -58,7 +58,7 @@ Adam Kapelner and Justin Bleich
 }
 \examples{
 #Regression example
-
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -92,6 +92,8 @@ y_hat_class_conservative = predict(bart_machine, X, type = "class", prob_rule_cl
 
 ##destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -38,8 +38,10 @@ Adam Kapelner and Justin Bleich
 \code{\link{bart_machine_num_cores}}
 }
 \examples{
+\dontrun{
 ## set all parallelized functions to use 4 cores
-## set_bart_machine_num_cores(4) ##not run
+## set_bart_machine_num_cores(4) 
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

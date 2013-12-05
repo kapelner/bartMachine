@@ -56,6 +56,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 }
 
 \examples{
+\dontrun{
 #generate linear data
 set.seed(11)
 n  = 500 
@@ -74,6 +75,8 @@ plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

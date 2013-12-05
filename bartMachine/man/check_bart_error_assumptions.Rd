@@ -42,6 +42,7 @@ Adam Kapelner and Justin Bleich
 \code{\link{plot_convergence_diagnostics}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 300 
@@ -57,6 +58,8 @@ check_bart_error_assumptions(bart_machine)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

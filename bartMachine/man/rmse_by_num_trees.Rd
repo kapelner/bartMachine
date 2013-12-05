@@ -55,6 +55,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -70,6 +71,8 @@ rmse_by_num_trees(bart_machine)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

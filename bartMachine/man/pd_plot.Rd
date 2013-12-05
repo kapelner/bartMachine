@@ -55,7 +55,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-
+\dontrun{
 #Regression example
 
 #generate Friedman data
@@ -90,6 +90,8 @@ pd_plot(bart_machine, "Petal.Width")
 
 #destroy BART model
 destroy_bart_machine(bart_machine)
+}
+
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
