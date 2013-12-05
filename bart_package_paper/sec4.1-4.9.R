@@ -122,6 +122,11 @@ cov_importance_test(bart_machine, covariates = c("M_normalized_losses", "M_bore"
 bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE)
 bart_machine
 
+x_star = X[20, ]
+calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+x_star[c("curb_weight", "symboling")] = NA
+calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+
 ##### section 4.10
 
 #Figure 10

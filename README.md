@@ -37,8 +37,8 @@ can install the package from CRAN or compile from source
 ### Install Java JDK (not the JRE)
 
 Download the latest [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Download the Java JDK for all operating systems")
-and install it properly. rJava requires the JDK; you cannot just have a JRE. We recommend installing JDK for Java 7 so you can get all the latest benefits (the shipped release of bartMachine 
-is in Java 6 for the most widespread compatibility).
+and install it properly. rJava requires the JDK; you cannot just have a JRE. We recommend installing JDK for Java 7 so you can get all the latest benefits (the shipped release 
+of bartMachine is in Java 6r27 for the most widespread compatibility).
 
 ### Install rJava
 
@@ -75,6 +75,6 @@ We also recommend making a system variable `ANT_HOME` which would be set to the 
 5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can 
 be corrected by running `R CMD INSTALL --no-multiarch bartMachine`. This may also fail if you don't have the required packages installed (run `install.packages("car")` 
 and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. 
-In R, you can now run `library(bartMachine)` and start building models.
+In R, you can now run `library(bartMachine)` and start using the package normally.
 
 
