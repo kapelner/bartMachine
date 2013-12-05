@@ -17,8 +17,8 @@ as well as many other features.
 The Paper
 ---------
 
-For a vignette describing the BART model and bartMachine's features, see our [vignette]() which is also on arXiv 
-and is currently being reviewed by the Journal of Statistical Software.
+For a vignette describing the BART model and bartMachine's features, see our [vignette](https://github.com/kapelner/bartMachine/blob/master/bartMachine/vignettes/bartMachine_vignette.pdf?raw=true "Download the vignette") 
+which is also on arXiv and is currently being reviewed by the Journal of Statistical Software.
 
 
 The Manual

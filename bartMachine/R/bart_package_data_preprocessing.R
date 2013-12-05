@@ -64,6 +64,10 @@ is.missing = function(x){
 
 pre_process_new_data = function(new_data, bart_machine){
 	new_data = as.data.frame(new_data)
+	n = nrow(new_data)
+	
+	print("new_data_before")
+	print(new_data)
 	
 	imputations = NULL #global namespace?
 	if (bart_machine$impute_missingness_with_rf_impute){
@@ -72,23 +76,34 @@ pre_process_new_data = function(new_data, bart_machine){
 		imputations = imputations[1 : nrow(new_data), ]
 		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
 	}
-	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data_dummies_as_covars, imputations)
-	n = nrow(new_data)
-	new_data_features = colnames(new_data)
+	#preprocess the new data with the training data to ensure proper dummies
+	new_data = pre_process_training_data(rbind(new_data, bart_machine$X), bart_machine$use_missing_data_dummies_as_covars, imputations)
+	
+	
+	
 	
 	if (bart_machine$use_missing_data){
 		training_data_features = bart_machine$training_data_features_with_missing_features
 	} else {
 		training_data_features = bart_machine$training_data_features
 	}
-	if (!all(colnames(new_data) == training_data_features)){
-		print("colnames(new_data)")
-		print(colnames(new_data))
-		print("training_data_features")
-		print(training_data_features)
-		warning("Are you sure you have the same feature names in the new record(s) as the training data?", call. = FALSE)
-	}
 	
+	#The new data features has to be a superset of the training data features, so pare it down even more
+	new_data = new_data[1 : n, training_data_features, drop = FALSE]
+	
+	new_data_features = colnames(new_data)
+	
+	if (!all(colnames(new_data) == training_data_features)){
+		warning("Are you sure you have the same feature names in the new record(s) as the training data?", call. = FALSE)
+	}	
+	
+	print("new_data_after")
+	print(new_data)
+	
+	print("new_data_features")
+	print(new_data_features)
+	print("training_data_features")
+	print(training_data_features)
 	
 	#iterate through and see
 	for (j in 1 : length(training_data_features)){
