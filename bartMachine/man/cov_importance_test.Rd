@@ -10,7 +10,8 @@ do not affect the response under the assumptions of the BART
 model.
 }
 \usage{
-cov_importance_test(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE)
+cov_importance_test(bart_machine, covariates = NULL, 
+num_permutation_samples = 100, plot = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
