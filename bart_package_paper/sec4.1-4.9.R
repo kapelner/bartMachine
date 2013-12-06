@@ -126,7 +126,6 @@ x_star = X[20, ]
 calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
 x_star[c("curb_weight", "symboling")] = NA
 calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
-x_star[c("body_style")] = "doodoo"
 
 
 ##### section 4.10
