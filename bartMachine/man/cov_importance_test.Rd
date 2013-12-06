@@ -52,7 +52,7 @@ on the original training data set.}
 }
 }
 \references{
-A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
+A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich
@@ -63,9 +63,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 \dontrun{
 ##regression example

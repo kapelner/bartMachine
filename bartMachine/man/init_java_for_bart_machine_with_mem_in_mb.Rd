@@ -23,21 +23,13 @@ default heap size of 1.5GB will be used.
 \value{
 None.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
 
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 \dontrun{
 ##initialize a Java Virtual Machine with heap size of 3000MB

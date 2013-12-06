@@ -39,9 +39,7 @@ Number of folds for cross-validation
 Additional arguments to be passed to \code{build_bart_machine}.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Returns an object of class ``bartMachine'' with the set of hyperparameters chosen via cross-validation.
 }

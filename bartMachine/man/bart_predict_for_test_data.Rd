@@ -22,9 +22,7 @@ Data frame for test data containing rows at which predictions are to be made. Co
 Actual outcomes for test data.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 For regression models, a list with the following components is returned:
 
@@ -40,15 +38,10 @@ For classification models, a list with the following components is returned:
 
 %% ...
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-%%  ~~further notes~~
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

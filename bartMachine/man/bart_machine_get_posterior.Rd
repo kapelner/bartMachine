@@ -19,9 +19,7 @@ An object of class ``bartMachine''.
 A data frame containing observations at which draws from posterior distribution of \eqn{\hat{f}(x)} are to be obtained.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Returns a list with the following components:
 %%  If it is a LIST, use
@@ -29,9 +27,6 @@ Returns a list with the following components:
   \item{new_data}{The data frame with rows at which the posterior draws are to be generated. Column names should match that of the training data.}
   \item{y_hat_posterior_samples}{The full set of posterior samples of size \code{num_iterations_after_burn_in} for each observation. For regression, the estimates have the same units as the response. For classification, the estimates are probabilities.}
 %% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
 }
 \author{
 Adam Kapelner and Justin Bleich

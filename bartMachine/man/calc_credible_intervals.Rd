@@ -30,9 +30,7 @@ for each of the Gibbs samples post-burn in.
 \value{
 Returns a matrix of the lower and upper bounds of the credible intervals for each observation in \code{new_data}.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }

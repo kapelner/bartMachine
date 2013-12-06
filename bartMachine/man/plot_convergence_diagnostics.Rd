@@ -31,9 +31,7 @@ is the average number of nodes over all trees.
 \value{
 None.
 }
-\references{
 
-}
 \author{
 Adam Kapelner and Justin Bleich
 }
@@ -46,9 +44,7 @@ The `tree_depths'' plot separates different core estimates by vertical lines (po
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 \dontrun{
 #generate Friedman data

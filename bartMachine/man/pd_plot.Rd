@@ -51,9 +51,7 @@ Adam Kapelner and Justin Bleich
 This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 \dontrun{
 #Regression example

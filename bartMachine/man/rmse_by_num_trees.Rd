@@ -32,15 +32,11 @@ Percentage of the data to be treated as an out-of-sample holdout.
 Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Invisibly, returns the out-of-sample average RMSEs for each tree size. 
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
@@ -51,9 +47,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 \dontrun{
 #generate Friedman data

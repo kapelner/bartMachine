@@ -19,21 +19,16 @@ An object of class ``bartMachine''.
 If ``splits'', then the number of times each variable is chosen for a splitting rule is computed. If ``trees'', then the number of times each variable appears in a tree is computed.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Returns a matrix of counts of each predictor across all trees by Gibbs sample. Thus, the dimension is \code{num_interations_after_burn_in} 
 by \code{p} (where \code{p} is the number of predictors after dummifying factors and adding missingness dummies if specified by \code{use_missing_data_dummies_as_covars}).
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

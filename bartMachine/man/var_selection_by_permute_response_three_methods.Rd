@@ -60,7 +60,7 @@ Invisibly, returns a list with the following components:
 J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
 Additive Regression Trees. ArXiv e-prints, 2013.
 
-A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
+A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich

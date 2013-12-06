@@ -19,20 +19,15 @@ An object of class ``bartMachine''.
 If ``splits'', then the proportion of times each variable is chosen for a splitting rule versus all splitting rules is computed. If ``trees'', then the proportion of times each variable appears in a tree versus all appearances of variables in trees is computed.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Returns a vector of the variable inclusion proportions.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
