@@ -51,6 +51,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		colnames(X) = colnames(Xy)[1 : (ncol(Xy) - 1)]
 	}
 	
+	#make sure it's a data frame
+	if (class(X) != "data.frame"){
+		stop(paste("The training data X must be a data frame."), call. = FALSE)	
+	}
+	
 	#now take care of classification or regression
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -72,6 +77,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
 	}	
 	
+
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
@@ -94,10 +100,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("The grow, prune, change ratio parameter vector must all be greater than 0.")
 	}
 	
-	#check for errors in data
-	if (check_for_errors_in_training_data(X)){
-		return;
+	#now we should regenerate the factors for the factor columns
+	predictors_which_are_factors = names(which(sapply(X, is.factor)))
+	for (predictor in predictors_which_are_factors){
+		X[, predictor] = factor(X[, predictor])
 	}
+	
 	
 	if (length(na.omit(y_remaining)) != length(y_remaining)){
 		stop("You cannot have any missing data in your response vector.")
@@ -135,8 +143,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}	
 
 	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing), y_remaining)
-#	cat("original model_matrix\n")
-#	print(model_matrix_training_data[1 : 5, ])
+
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
 		for (cov in covariates_to_permute){
@@ -145,8 +152,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			}
 			model_matrix_training_data[, cov] = sample(model_matrix_training_data[, cov])
 		}
-#		cat("after permute covariates", paste(covariates_to_permute), "\n")
-#		print(model_matrix_training_data[1 : 5, ])
 	}
 	
 	#now set whether we want the program to log to a file
