@@ -131,9 +131,11 @@ calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
 
 #Figure 10
 vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples = 10)
+
 vs$important_vars_local_names
 vs$important_vars_global_max_names
 vs$important_vars_global_se_names
+
 cv_vars = var_selection_by_permute_response_cv(bart_machine, num_permute_samples = 10)
 cv_vars
 
