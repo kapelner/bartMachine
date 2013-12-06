@@ -63,8 +63,17 @@ pre_process_new_data = function(new_data, bart_machine){
 		imputations = imputations[1 : nrow(new_data), ]
 		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
 	}
+	
 	#preprocess the new data with the training data to ensure proper dummies
-	new_data = pre_process_training_data(rbind(new_data, bart_machine$X), bart_machine$use_missing_data_dummies_as_covars, imputations)
+	new_data_and_training_data = rbind(new_data, bart_machine$X)
+	#kill all factors again
+	predictors_which_are_factors = names(which(sapply(new_data_and_training_data, is.factor)))
+	for (predictor in predictors_which_are_factors){
+		new_data_and_training_data[, predictor] = factor(new_data_and_training_data[, predictor])
+	}
+	
+	
+	new_data = pre_process_training_data(new_data_and_training_data, bart_machine$use_missing_data_dummies_as_covars, imputations)
 		
 	if (bart_machine$use_missing_data){
 		training_data_features = bart_machine$training_data_features_with_missing_features
@@ -73,8 +82,16 @@ pre_process_new_data = function(new_data, bart_machine){
 	}
 	
 	#The new data features has to be a superset of the training data features, so pare it down even more
+	new_data_features_before = colnames(new_data)	
+	
 	new_data = new_data[1 : n, training_data_features, drop = FALSE]
-		
+	
+	differences = setdiff(new_data_features_before, training_data_features)
+	
+	if (length(differences) > 0){
+		warning("The following features were found in records for prediction which were not found in the original training data:\n    ", paste(differences, collapse = ", "), "\n  These features will be ignored during prediction.")
+	}
+	
 	new_data_features = colnames(new_data)
 	
 	if (!all(new_data_features == training_data_features)){
