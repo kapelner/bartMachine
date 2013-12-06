@@ -22,21 +22,14 @@ Removing a ``bart_machine'' object from \code{R} does not free heap space from J
 \value{
 None.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 ##Generate Friedman Data
 set.seed(11)

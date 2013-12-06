@@ -29,21 +29,15 @@ Confidence level for credible interval on histogram.
 If TRUE, plots \eqn{\sigma} instead of \eqn{\sigma^2}.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-%%  ~~further notes~~
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

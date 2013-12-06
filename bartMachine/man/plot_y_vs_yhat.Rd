@@ -33,15 +33,11 @@ If TRUE, Bayesian predictive intervals are computed using the a draw of from \eq
 Desired level of confidence for credible or prediction intervals. 
 }
 }
-\details{
 
-}
 \value{
 None.
 }
-\references{
 
-}
 \author{
 Adam Kapelner and Justin Bleich
 }

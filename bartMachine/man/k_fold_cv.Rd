@@ -41,9 +41,7 @@ For classification models, a list with the following components is returned:
   \item{confusion_matrix}{Aggregate confusion matrix across the folds.}
     \item{misclassification_error}{Total misclassification error across the folds.}
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }

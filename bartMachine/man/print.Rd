@@ -18,27 +18,17 @@ This is an alias for the \code{\link{summary}} function. See description in that
 	Parameters that are ignored.
 }
 }
-\details{
 
-}
 \value{
 None.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 #Regression example
 

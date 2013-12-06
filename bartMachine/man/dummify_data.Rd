@@ -22,9 +22,7 @@ The column names of the dummy variables are given by the ``FactorName_LevelName'
 \value{
 Returns a data frame with factors converted to dummy indicator variables.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
@@ -34,9 +32,7 @@ BART handles dummification internally. This function is provided as a utility fu
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+
 \examples{
 #generate data
 set.seed(11)

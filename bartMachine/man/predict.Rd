@@ -33,28 +33,22 @@ Makes a prediction on new data given a fitted BART model for regression or class
 	Parameters that are ignored.
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
+
 \value{
 If regression, a numeric vector of \code{y_hat}, the best guess as to the response. If classification and \code{type = ``prob''}, 
 a numeric vector of \code{p_hat}, the best guess as to the probability of the response class being  the ''positive'' class. If classification and 
 \code{type = ''class''}, a character vector of the best guess of the response's class labels. 
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Adam Kapelner and Justin Bleich
 }
-\note{
-%%  ~~further notes~~
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{bart_predict_for_test_data}}
 }
 \examples{
 #Regression example
