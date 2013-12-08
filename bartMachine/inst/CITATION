@@ -2,7 +2,7 @@ citHeader("")
 
 citEntry(
      entry       = "Article",
-	 title       = "bart{M}achine: A Powerful Tool for Machine Learning in {R}",
+	 title       = "bart{M}achine: A Powerful Tool for Machine Learning",
 	 author      = personList(as.person("Adam Kapelner"), as.person("Justin Bleich")),
 	 journal     = "Ar{X}iv e-prints",
 	 year        = "2013", 
