@@ -11,13 +11,12 @@
 \usepackage{enumerate}
 \usepackage{textcomp}
 \usepackage{phaistos}
+\usepackage[margin=1.00in]{geometry}
 \usepackage{subcaption}
-\usepackage{subfigure}
-\usepackage{caption}
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
-\usepackage{natbib}[round]
+\usepackage[round]{natbib}
 \usepackage{hyperref}
 
 
@@ -97,6 +96,7 @@
 \newcommand{\etaonestar}{\eta_{1^*}}
 \newcommand{\etatwostar}{\eta_{2^*}}
 \renewcommand{\exp}[1]{\text{exp}\parens{#1}}
+\newcommand{\pval}{p_{\text{val}}}
 
 \title{\texttt{bartMachine}: A Powerful Tool for Machine Learning}
 \author{Adam Kapelner\footnote{Both authors contributed equally to this work.} ~and Justin Bleich$^*$ \\~\\\vspace{0.2cm}
@@ -312,6 +312,7 @@ We first set some computing parameters. We allow up to 5GB of RAM for the Java h
 
 \begin{verbatim}
 > library(bartMachine)
+> data(automobile)
 > set_bart_machine_num_cores(4)
 > init_java_for_bart_machine_with_mem_in_mb(5000)
 \end{verbatim}
