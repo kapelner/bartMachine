@@ -2,6 +2,11 @@ library(bartMachine)
 
 #load the data (for information on the dataset, see the footer of this file)
 data(automobile)
+#kill rows with missingness
+automobile = na.omit(automobile)
+#pull out X and y
+y = automobile$price
+X = automobile; X$price = NULL
 
 
 ###### section 4.1
@@ -89,15 +94,10 @@ pd_plot(bart_machine_cv, j = "stroke")
 
 ##### section 4.9
 
-Xy = read.csv("datasets/r_automobile.csv")
-Xy = Xy[!is.na(Xy$price), ] #kill rows without a response but do not kill rows that are missing
-y = log(as.numeric(Xy$price))
-Xy$price = log(Xy$price)
-Xy$make = NULL
-Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
-X = Xy
-X$price = NULL
+data(automobile)
+#pull out X and y
+y = automobile$price
+X = automobile; X$price = NULL
 
 bart_machine = build_bart_machine(X, y, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine

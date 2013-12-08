@@ -48,7 +48,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init {
 	/** Print a Gibbs sample debug message */
 	protected void GibbsSampleDebugMessage(int t) {
 		if (t == 0 && gibbs_sample_num % 100 == 0){
-			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
+			String message = "Iteration " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);
 			}

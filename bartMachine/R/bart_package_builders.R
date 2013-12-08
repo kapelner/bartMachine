@@ -28,6 +28,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
+	cat("BART initialized with", num_trees, "trees. ")
 	t0 = Sys.time()
 	
 	#immediately initialize Java (if it has not already been initialized with a custom amount of memory)
@@ -251,7 +252,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
-		cat("Building BART for", pred_type, "...")
+		cat("\nNow building bartMachine for", pred_type, "...")
 		if (length(cov_prior_vec) != 0){
 			cat("Covariate importance prior ON. ")
 		}
