@@ -1,3 +1,4 @@
+#set your working directory here to the root of the cloned git repository
 setwd("C:\\Users\\Kapelner\\workspace\\bartMachine")
 
 library(bartMachine)
@@ -113,13 +114,13 @@ Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylind
 X = Xy
 X$price = NULL
 
-bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
+bart_machine = build_bart_machine(X, y, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
 
 cov_importance_test(bart_machine, covariates = c("M_normalized_losses", "M_bore", "M_stroke", "M_horsepower", "M_peak_rpm"))
 
 #build the model without these dummies but still incorporating missing data
-bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE)
+bart_machine = build_bart_machine(X, y, use_missing_data = TRUE)
 bart_machine
 
 x_star = X[20, ]
