@@ -1,22 +1,7 @@
-#set your working directory here to the root of the cloned git repository
-setwd("C:\\Users\\Kapelner\\workspace\\bartMachine")
-
 library(bartMachine)
 
 #load the data (for information on the dataset, see the footer of this file)
-Xy = read.csv("datasets/r_automobile.csv")
-Xy = rbind(Xy)
-Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
-Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
-y = log(as.numeric(Xy$price))
-Xy$price = log(Xy$price)
-
-#now remove some variables and coerce some to numeric
-Xy$make = NULL
-Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
-X = Xy
-X$price = NULL
+data(automobile)
 
 
 ###### section 4.1
