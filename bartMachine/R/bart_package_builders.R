@@ -28,7 +28,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
-	cat("BART initialized with", num_trees, "trees. ")
+	if (verbose){
+		cat("BART initialized with", num_trees, "trees. ")	
+	}	
 	t0 = Sys.time()
 	
 	#immediately initialize Java (if it has not already been initialized with a custom amount of memory)
