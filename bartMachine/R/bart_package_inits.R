@@ -22,13 +22,26 @@ bart_machine_num_cores = function(){
 	}
 }
 
-##initialize JVM
+##initialize JVM and let the user know how much RAM is available
 init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
-	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
-	.jinit(parameters = jinit_params)
+	if (exists("JVM_INITIALIZED", envir = bartMachine_globals)){
+		stop("Java can only be initialized once per R session. If you would like\nto change the amount of memory available to bartMachine, please\nrestart R and run this function again.")
+	}
+	
+	#Actually initialzie the Java (once per R session)
+	.jinit(parameters = paste("-Xmx", bart_max_mem, "m", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(find.package("bartMachine"), "/java/", dependency, sep = ""))
 	} 
+	
+	if (!exists("JVM_INITIALIZED", envir = bartMachine_globals)){
+		cat("Java initialized with ", 
+			round(.jcall(.jnew("java/lang/Runtime"), "J", "maxMemory") / 1e9, 2), 
+			"GB maximum memory", 
+			ifelse(bart_max_mem == BART_MAX_MEM_MB_DEFAULT, " (the default)", ""), 
+			".\n", sep = "")
+		assign("JVM_INITIALIZED", TRUE, bartMachine_globals)
+	}
 }
 
 ##get variable counts

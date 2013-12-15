@@ -1,6 +1,13 @@
+version 1.0.2
+
+* Upon initialization of the JVM there is now a message indicating how much maximum memory is available and an error thrown if the user attempts to reinitialize the RAM amount.
+* Default JVM memory is now 1.1GB which is the maximum found to initialize on 32-bit Windows machines
+* Automobile data manual update
+* Removed unnecessary verbosity during model building
+
 version 1.0.1
 
-* Updated vignette
+* Updated vignette to load from R
 * Better verbose messages in R
 
 version 1.0

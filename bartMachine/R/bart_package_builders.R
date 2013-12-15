@@ -1,5 +1,5 @@
-BART_MAX_MEM_MB_DEFAULT = 1500
-BART_NUM_CORES_DEFAULT = 1
+BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give without throwing an error or crashing
+BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
 ##build a BART model
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
@@ -29,13 +29,14 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		verbose = TRUE){
 	
 	if (verbose){
-		cat("BART initialized with", num_trees, "trees. ")	
+		cat("BART initializing with", num_trees, "trees...\n")	
 	}	
 	t0 = Sys.time()
 	
-	#immediately initialize Java (if it has not already been initialized with a custom amount of memory)
-	#if it has already been initialized, running this function has no effect so no need for an if (initialized?) statement
-	init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
+	#immediately initialize Java (if it has not already been initialized) with a custom amount of memory
+	if (!exists("JVM_INITIALIZED", envir = bartMachine_globals)){
+		init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
+	}
 	
 	if (use_missing_data_dummies_as_covars && replace_missing_data_with_x_j_bar){
 		stop("You cannot impute by averages and use missing data as dummies simultaneously.")
@@ -141,7 +142,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	} else if (replace_missing_data_with_x_j_bar){
 		X = imputeMatrixByXbarjContinuousOrModalForBinary(X, X)
 		if (verbose){
-			cat("Imputed missing data using attribute averages. ")
+			cat("Imputed missing data using attribute averages.\n")
 		}
 	}	
 
@@ -159,7 +160,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#now set whether we want the program to log to a file
 	if (debug_log & verbose){
-		cat("warning: printing out the log file will slow down the runtime significantly\n")
+		cat("warning: printing out the log file will slow down the runtime significantly.\n")
 		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
 	}
 	#set whether we want there to be tree illustrations
@@ -254,7 +255,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
-		cat("\nNow building bartMachine for", pred_type, "...")
+		cat("Now building bartMachine for", pred_type, "...")
 		if (length(cov_prior_vec) != 0){
 			cat("Covariate importance prior ON. ")
 		}

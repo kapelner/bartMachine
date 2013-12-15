@@ -5,14 +5,14 @@ data(automobile)
 #kill rows with missingness
 automobile = na.omit(automobile)
 #pull out X and y
-y = automobile$price
+y = automobile$price #already logged
 X = automobile; X$price = NULL
 
 
 ###### section 4.1
 
 set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(2500)
+init_java_for_bart_machine_with_mem_in_mb(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
 
 ###### section 4.2
 
