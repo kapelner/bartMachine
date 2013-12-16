@@ -98,8 +98,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
 			return Double.NEGATIVE_INFINITY;					
 		}			
 		grow_node.isLeaf = false;
-		grow_node.left = new bartMachineTreeNode(grow_node);
-		grow_node.right = new bartMachineTreeNode(grow_node);
+		createChildrenOnGrowNode(grow_node);
 		grow_node.propagateDataByChangedRule();
 
 		if (grow_node.left.n_eta <= 0 || grow_node.right.n_eta <= 0){
@@ -127,6 +126,16 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
+	/**
+	 * Taking a node to be grown, add children on its left and right
+	 * 
+	 * @param grow_node		The node selected to be grown who gets a node on the left and right
+	 */
+	protected void createChildrenOnGrowNode(bartMachineTreeNode grow_node) {
+		grow_node.left = new bartMachineTreeNode(grow_node);
+		grow_node.right = new bartMachineTreeNode(grow_node);
+	}
+
 	/**
 	 * Perform the prune step on a tree and return the log Metropolis-Hastings ratio
 	 * 
@@ -349,7 +358,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
 	 * @return			The log likelihood ratio
 	 * @see 			Section A.3.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	private double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
+	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
 		int n_1_star = eta_star.left.n_eta;
 		int n_2_star = eta_star.right.n_eta;
 		int n_1 = eta.left.n_eta;

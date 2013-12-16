@@ -43,11 +43,15 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug {
 		//create the array of trees for the zeroth gibbs sample
 		bartMachineTreeNode[] bart_trees = new bartMachineTreeNode[num_trees];		
 		for (int i = 0; i < num_trees; i++){
-			bartMachineTreeNode stump = new bartMachineTreeNode(this);
+			bartMachineTreeNode stump = InitializeStump();
 			stump.setStumpData(X_y, y_trans, p);
 			bart_trees[i] = stump;
 		}	
 		gibbs_samples_of_bart_trees[0] = bart_trees;	
+	}
+	
+	protected bartMachineTreeNode InitializeStump(){
+		return new bartMachineTreeNode(this);
 	}
 
 	

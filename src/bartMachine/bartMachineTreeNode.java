@@ -27,7 +27,7 @@ public class bartMachineTreeNode implements Cloneable {
 	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
 	
 	/** a link back to the overall bart model */
-	private bartMachine_b_hyperparams bart;	
+	protected bartMachine_b_hyperparams bart;	
 	/** the parent node of this node */
 	public bartMachineTreeNode parent;
 	/** the left daughter node */
@@ -57,13 +57,13 @@ public class bartMachineTreeNode implements Cloneable {
 	/** the y's in this node */
 	protected transient double[] responses;
 	/** the square of the sum of the responses, y */
-	private transient double sum_responses_qty_sqd;
+	protected transient double sum_responses_qty_sqd;
 	/** the sum of the responses, y */
-	private transient double sum_responses_qty;	
+	protected transient double sum_responses_qty;	
 	/** this caches the possible split variables populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient TIntArrayList possible_rule_variables;
+	protected transient TIntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
+	protected transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this number of possible split variables at this node */
 	protected transient Integer padj;	
 	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */

@@ -23,7 +23,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval {
 	 * @param node	The node of interest
 	 * @return		The index of the column to split on
 	 */
-	private int pickRandomPredictorThatCanBeAssignedF1(bartMachineTreeNode node){
+	private int pickRandomPredictorThatCanBeAssignedPriorCovSpec(bartMachineTreeNode node){
 		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);
@@ -37,7 +37,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval {
 	 * @param node		The node of interest
 	 * @return			The prior-adjusted number of covariates that can be split
 	 */
-	private double pAdjF1(bartMachineTreeNode node) {
+	private double pAdjPriorCovSpec(bartMachineTreeNode node) {
 		if (node.padj == null){
 			node.padj = node.predictorsThatCouldBeUsedToSplitAtNode().size();
 		}
@@ -91,14 +91,14 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval {
 	
 	public int pickRandomPredictorThatCanBeAssigned(bartMachineTreeNode node){
 		if (use_prior_cov_spec){
-			return pickRandomPredictorThatCanBeAssignedF1(node);
+			return pickRandomPredictorThatCanBeAssignedPriorCovSpec(node);
 		}
 		return super.pickRandomPredictorThatCanBeAssigned(node);
 	}	
 	
 	public double pAdj(bartMachineTreeNode node){
 		if (use_prior_cov_spec){
-			return pAdjF1(node);
+			return pAdjPriorCovSpec(node);
 		}
 		return super.pAdj(node);
 	}	
