@@ -15,11 +15,12 @@ plot(X[, 3], y)
 plot(X[, 2], y)
 
 X = data.frame(cbind(X[, 2 : 3], x4))
+write.csv(cbind(X, y), "hbart.csv")
 
 library(bartMachine)
-#bart_machine = build_bart_machine(X, y)
-#bart_machine
-#check_bart_error_assumptions(bart_machine)
+bart_machine = build_bart_machine(X, y)
+bart_machine
+check_bart_error_assumptions(bart_machine)
 
 hbart_machine = build_bart_machine(X, y, use_heteroskedastic_linear_model = TRUE, debug_log = T)
 hbart_machine

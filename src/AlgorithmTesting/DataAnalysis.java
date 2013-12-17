@@ -20,7 +20,8 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_friedman_hd";	
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-	private static final String DataSetFilename = "r_boston";
+//	private static final String DataSetFilename = "r_boston";
+	private static final String DataSetFilename = "r_hbart";
 //	private static final String DataSetFilename = "r_boston_half";	
 //	private static final String DataSetFilename = "r_boston_tiny_with_missing";	
 //	private static final String DataSetFilename = "r_zach";
@@ -59,6 +60,7 @@ public class DataAnalysis {
 //			for (int num_times = 0; num_times < 100; num_times++){
 			machine = new bartMachineRegressionMultThread();
 			machine.setData(data.getX_y());
+			((bartMachineRegressionMultThread)machine).useHeteroskedasticLinearModel();
 			machine.Build();
 			long L2 = Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4));
 			System.out.println("(in sample) L1 error: " + 

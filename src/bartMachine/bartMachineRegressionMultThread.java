@@ -22,7 +22,7 @@ public class bartMachineRegressionMultThread extends Classifier {
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1;
 	/** the number of trees in this BART model on all Gibbs chains */
-	protected int num_trees = 50;
+	protected int num_trees = 100;
 	
 	/** the collection of <code>num_cores</code> BART models which will run separate Gibbs chains */
 	protected transient bartMachineRegression[] bart_gibbs_chain_threads;
@@ -32,9 +32,9 @@ public class bartMachineRegressionMultThread extends Classifier {
 	/** the estimate of some upper limit of the variance of the response which is usually the MSE from a a linear regression */
 	private Double sample_var_y;
 	/** the number of burn-in samples in each Gibbs chain */
-	protected int num_gibbs_burn_in = 250;
+	protected int num_gibbs_burn_in = 10;
 	/** the total number of gibbs samples where each chain gets a number of burn-in and then the difference from the total divided by <code>num_cores</code> */ 
-	protected int num_gibbs_total_iterations = 1250;
+	protected int num_gibbs_total_iterations = 500;
 	/** the total number of Gibbs samples for each of the <code>num_cores</code> chains */
 	protected int total_iterations_multithreaded;
 

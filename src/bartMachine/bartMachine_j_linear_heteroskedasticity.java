@@ -21,7 +21,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	private int p_Z;
 	
 	/** convenience caches */
-	private ArrayList<Matrix> z_is_mc;
+	private ArrayList<Matrix> z_is_mc_t;
 	private Matrix Sigmainv_times_gamma_0;
 	private Matrix Bmat;
 	private Matrix Bmat_inverse;
@@ -35,29 +35,29 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	public void Build(){
 		super.Build();
 		if (use_linear_heteroskedastic_model){
-			for (int j = 0; j < p + 1; j++){
+//			for (int j = 0; j < p_Z; j++){
 				double prop_accepted_tot = m_h_num_accept_over_gibbs_samples  / (double) num_gibbs_total_iterations;
-				System.out.println("prop gibbs accepted tot for j = " + j + ": " + prop_accepted_tot);
-			}
+				System.out.println("prop gibbs accepted tot: " + prop_accepted_tot);
+//			}
 			System.out.println("\n\n");
-			for (int j = 0; j < p + 1; j++){
+//			for (int j = 0; j < p_Z; j++){
 				double prop_accepted_after_burn_in = m_h_num_accept_over_gibbs_samples_after_burn_in  / (double) (num_gibbs_total_iterations - num_gibbs_burn_in);
-				System.out.println("prop gibbs accepted after burn in for j = " + j + ": " + prop_accepted_after_burn_in);
-			}
+				System.out.println("prop gibbs accepted after burn in: " + prop_accepted_after_burn_in);
+//			}
 			System.out.println("\n\n");
 			
 			
 			
 			double gamma_j_avg = 0;
 			double gamma_j_sd = 0;
-			for (int j = 0; j < p + 1; j++){
+			for (int j = 0; j < p_Z; j++){
 				double[] gibbs_samples_gamma_j = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 				for (int g = num_gibbs_burn_in; g < num_gibbs_total_iterations; g++){
 					gibbs_samples_gamma_j[g - num_gibbs_burn_in] = gibbs_samples_of_gamma_for_lm_sigsqs[g].get(j, 0);
 					gamma_j_avg = StatToolbox.sample_average(gibbs_samples_gamma_j);
 					gamma_j_sd = StatToolbox.sample_standard_deviation(gibbs_samples_gamma_j);
 				}
-				System.out.println("gamma_" + j + " = " + TreeIllustration.two_digit_format.format(gamma_j_avg) + " +- " + TreeIllustration.two_digit_format.format(gamma_j_sd) +
+				System.out.println("gamma_" + (j + 1) + " = " + TreeIllustration.two_digit_format.format(gamma_j_avg) + " +- " + TreeIllustration.two_digit_format.format(gamma_j_sd) +
 						((gamma_j_avg - 2 * gamma_j_sd < 0 && gamma_j_avg + 2 * gamma_j_sd > 0) ? " => plausibly 0" : " => *NOT* plausibly 0"));
 			}
 		}
@@ -84,7 +84,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 		
 		p_Z = Z.getColumnDimension();
-		System.out.println("p_Z: " + p_Z);
+//		System.out.println("p_Z: " + p_Z);
 		
 		double minus_one_over_n = - 1 / n;
 		double one_minus_one_over_n = 1 + minus_one_over_n;			
@@ -104,9 +104,11 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		Matrix Z_mc_t = Z_mc.transpose();
 		Matrix Z_mc_t_times_Z_mc = Z_mc_t.times(Z_mc);
 		
-		z_is_mc = new ArrayList<Matrix>(n);
+		z_is_mc_t = new ArrayList<Matrix>(n);
 		for (int i = 0; i < n; i ++){
-			z_is_mc.add(Z_mc.getMatrix(i, i, 1, p_Z));
+			z_is_mc_t.add(Z_mc.getMatrix(i, i, 0, p_Z - 1));
+//			System.out.println("z_is_mc_t[" + i + "]");
+//			z_is_mc_t.get(i).print(2, 2);
 		}	
 		
 		Matrix half = new Matrix(p_Z, p_Z);
@@ -131,10 +133,10 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p: " + p);
 			
 			setZ(); //to be changed later when the user inputs Z on their own			
-			System.out.println("Z set");
+//			System.out.println("Z set");
 			
 			//set hyperparameters
-			hyper_gamma_0 = new Matrix(p_Z, 0);			
+			hyper_gamma_0 = new Matrix(p_Z, 1);			
 			Matrix hyper_Sigma = new Matrix(p_Z, p_Z);
 			for (int j = 0; j < p_Z; j++){
 				hyper_Sigma.set(j, j, hyper_sigma_weights[j]);
@@ -147,8 +149,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 //			hyper_gamma_mean_vec.set(3, 0, 0.3);
 //			hyper_gamma_mean_vec.set(4, 0, 0.2);
 //			hyper_gamma_mean_vec.set(5, 0, 0.5);
-			System.out.println("hyper_gamma_var_mat");
-			hyper_gamma_0.print(3, 5);
+			System.out.println("hyper_gamma_0");
+			hyper_gamma_0.print(2, 2);
 
 			
 			//now we can cache intermediate values we'll use everywhere
@@ -268,45 +270,56 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	
 	private void SampleSigsqsHeterogeneously(int sample_num, double[] es) {
 		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
-		System.out.println("es: " + Tools.StringJoin(es));
-
-		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
-		
-		double[] es_sq = new double[n];
+//		System.out.println("es: " + Tools.StringJoin(es));
+//
+//		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
+		double[] es_untransformed = new double[n];
+		double[] es_untransformed_sq = new double[n];
 		for (int i = 0; i < n; i++){
-			es_sq[i] = un_transform_sigsq(Math.pow(es[i], 2));
+			es_untransformed[i] = un_transform_e(es[i]);
+			es_untransformed_sq[i] = Math.pow(es_untransformed[i], 2);
+			
 		}
-		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
-		
+		System.out.println("es: " + Tools.StringJoin(es_untransformed));
+		System.out.println("es_sq: " + Tools.StringJoin(es_untransformed_sq));
+		System.out.println("mse: " + Tools.sum_array(es_untransformed_sq) / n);
 		//now we need to compute d_i for all data points
 		Matrix gamma = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1];
 		System.out.println("gamma: ");
 		gamma.print(3, 5);
+		
 		double[] d_is = new double[n];
 		for (int i = 0; i < n; i++){
-			d_is[i] = Math.exp(z_is_mc.get(i).times(gamma).get(0, 0));
+			d_is[i] = Math.exp(z_is_mc_t.get(i).times(gamma).get(0, 0));
 		}
-		System.out.println("d_is: " + Tools.StringJoin(d_is));
+		System.out.println("old d_is: " + Tools.StringJoin(d_is));
 		
 		//now get the scale factor
-		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es, d_is);
+//		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
+		double sigsq = drawSigsqFromPosterior(sample_num, es);
 		System.out.println("sigsq: " + sigsq);
 		
 		
 		//now we need to draw a gamma
-		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_sq, sample_num, d_is, sigsq);
+		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_untransformed_sq, sample_num, d_is, sigsq);
 		System.out.println("gamma_draw: ");
 		gamma_draw.print(3, 5);
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
 		
-	
-		System.out.println("d_is: " + Tools.StringJoin(d_is));
-		
-		
-		
+		////inefficient: only do this if gamma changed
 		for (int i = 0; i < n; i++){
-			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq * d_is[i]); //make sure we re-transform them
+			d_is[i] = Math.exp(z_is_mc_t.get(i).times(gamma_draw).get(0, 0));
 		}
+		System.out.println("new d_is: " + Tools.StringJoin(d_is));
+		
+//		for (int i = 0; i < n; i++){
+//			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq * d_is[i]); //make sure we re-transform them
+//			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq);
+//		}
+		gibbs_samples_of_sigsq[sample_num] = sigsq;
+		
+//		System.out.println("gibbs_samples_of_sigsq_i: " + Tools.StringJoin(gibbs_samples_of_sigsq_i[sample_num]));
+		
 	}
 	
 	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es, double[] d_is) {
@@ -320,32 +333,50 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (weighted_sse + hyper_nu * hyper_lambda)); //JB
 	}
 
-	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] es_sq, int sample_num, double[] d_is_current, double sigsq) {
-		
+	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] untransformed_es_sq, int sample_num, double[] d_is_current, double untransformed_sigsq) {
+		System.out.println("===========sampleGammaVecViaMH begin");
 		//generate the w vector from the old d_i's		
-		Matrix w_gamma = new Matrix(1, n);
+		Matrix w_gamma = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			double d_i = d_is_current[i];
-			w_gamma.set(0, i, Math.log(d_i) + es_sq[i] / (sigsq * d_i) - 1);
+			w_gamma.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq * d_i) - 1);
 		}
+		
+//		System.out.println("Sigmainv_times_gamma_0: " + Sigmainv_times_gamma_0.getRowDimension() + " x " + Sigmainv_times_gamma_0.getColumnDimension());
+//		Sigmainv_times_gamma_0.print(2, 2);
+//		
+//		System.out.println("half_times_Z_mc_t: " + half_times_Z_mc_t.getRowDimension() + " x " + half_times_Z_mc_t.getColumnDimension());
+//		half_times_Z_mc_t.print(2, 2);
+//		
+//		System.out.println("w_gamma: " + w_gamma.getRowDimension() + " x " + w_gamma.getColumnDimension());
+//		w_gamma.print(2, 2);
+//		
+//		System.out.println("Bmat: " + Bmat.getRowDimension() + " x " + Bmat.getColumnDimension());
+//		Bmat.print(2, 2);
 		
 		Matrix a_gamma = Bmat.times(Sigmainv_times_gamma_0.plus(half_times_Z_mc_t.times(w_gamma)));
 		
+//		System.out.println("a_gamma: " + a_gamma.getRowDimension() + " x " + a_gamma.getColumnDimension());
+//		a_gamma.print(2, 2);
+		
 		//now sample the new gamma proposal
 		Matrix gamma_star = StatToolbox.sample_from_mult_norm_dist(a_gamma, Bmat);
+		
+		System.out.println("gamma_star: " + gamma_star.getRowDimension() + " x " + gamma_star.getColumnDimension());
+		gamma_star.print(3, 5);
 		
 		//now we need a_gamma_star
 		//generate the new d_i's
 		double[] d_is_star = new double[n];
 		for (int i = 0; i < n; i++){
-			d_is_star[i] = Math.exp(z_is_mc.get(i).times(gamma_star).get(0, 0));
+			d_is_star[i] = Math.exp(z_is_mc_t.get(i).times(gamma_star).get(0, 0));
 		}
 		
 		//generate the w vector from the new d_i's		
-		Matrix w_gamma_star = new Matrix(1, n);
+		Matrix w_gamma_star = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			double d_i = d_is_star[i];
-			w_gamma_star.set(0, i, Math.log(d_i) + es_sq[i] / (sigsq * d_i) - 1);
+			w_gamma_star.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq * d_i) - 1);
 		}
 		
 		Matrix a_gamma_star = Bmat.times(Sigmainv_times_gamma_0.plus(half_times_Z_mc_t.times(w_gamma_star)));		
@@ -360,21 +391,21 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		Matrix gamma_minus_gamma_star = gamma.minus(gamma_star);
 		
 		for (int i = 0; i < n; i++){
-			bottom_a += z_is_mc.get(i).times(gamma_minus_gamma_star).get(0, 0);
-			bottom_b += es_sq[i] * (Math.exp(-z_is_mc.get(i).times(gamma).get(0, 0)) - Math.exp(-z_is_mc.get(i).times(gamma_star).get(0, 0)));
+			bottom_a += z_is_mc_t.get(i).times(gamma_minus_gamma_star).get(0, 0);
+			bottom_b += untransformed_es_sq[i] * (Math.exp(-z_is_mc_t.get(i).times(gamma).get(0, 0)) - Math.exp(-z_is_mc_t.get(i).times(gamma_star).get(0, 0)));
 		}
 		
 		double bottom_c = 0;
 		for (int j = 0; j < p_Z; j++){
-			double gamma_j = gamma.get(0, j);
-			double gamma_star_j = gamma_star.get(0, j);
+			double gamma_j = gamma.get(j, 0);
+			double gamma_star_j = gamma_star.get(j, 0);
 			double gamma_j_sq = Math.pow(gamma_j, 2);
 			double gamma_j_star_sq = Math.pow(gamma_star_j, 2);
-			double hyper_gamma_0_j = hyper_gamma_0.get(0, j);
+			double hyper_gamma_0_j = hyper_gamma_0.get(j, 0);
 			bottom_c += 1 / hyper_sigma_weights[j] * (gamma_j_sq - gamma_j_star_sq + 2 * hyper_gamma_0_j * (gamma_star_j - gamma_j));
 		}
 		
-		double log_mh_ratio = 0.5 * (top_term + bottom_a + 1 / sigsq * bottom_b + bottom_c);
+		double log_mh_ratio = 0.5 * (top_term + bottom_a + 1 / untransformed_sigsq * bottom_b + bottom_c);
 		
 		
 		System.out.println("log_mh_ratio: " + log_mh_ratio);
@@ -386,21 +417,35 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			if (sample_num > num_gibbs_burn_in){
 				m_h_num_accept_over_gibbs_samples_after_burn_in++;
 			}
+			System.out.println("===========sampleGammaVecViaMH end");
 			return gamma_star;
 		}
 		System.out.println("VAR REJECT MH");
+		System.out.println("===========sampleGammaVecViaMH end");
 		return gamma;
 	} 
 
 	private void SampleMusWrapperWithHeterogeneity(int sample_num, int t) {
-//			System.out.println("\n\nGibbs sample_num: " + sample_num + "  Mus \n" + "----------------------------------------------------");
-		double[] current_sigsqs = gibbs_samples_of_sigsq_i[sample_num - 1];
+		
+		bartMachineTreeNode previous_tree = gibbs_samples_of_bart_trees[sample_num - 1][t];
+		//subtract out previous tree's yhats
+		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
 		bartMachineTreeNode tree = gibbs_samples_of_bart_trees[sample_num][t];
-		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsWithHeterogeneity(tree, current_sigsqs);
-//			sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num - 1];
+
+		//homo
+		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
+		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
+		
+		//hetero
+//		double[] current_sigsqs = gibbs_samples_of_sigsq_i[sample_num - 1];
+//		assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(tree, current_sigsqs);
+		
+		//after mus are sampled, we need to update the sum_resids_vec
+		//add in current tree's yhats		
+		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
 	}	
 	
-	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsWithHeterogeneity(bartMachineTreeNode node, double[] sigsqs) {
+	protected void assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(bartMachineTreeNode node, double[] sigsqs) {
 //			System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsqs: " + Tools.StringJoin(sigsqs));
 		if (node.isLeaf){
 			
@@ -439,8 +484,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 //				System.out.println("assignLeafFINAL g = " + gibbs_sample_num + " y_hat = " + node.y_pred + " (sigsqs = " + Tools.StringJoin(sigsqs) + ")");
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsWithHeterogeneity(node.left, sigsqs);
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsWithHeterogeneity(node.right, sigsqs);
+			assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(node.left, sigsqs);
+			assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(node.right, sigsqs);
 		}
 	}	
 	
@@ -476,11 +521,11 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			gibbs_samples_of_sigsq_i = new double[num_gibbs_total_iterations + 1][n];	
 			gibbs_samples_of_sigsq_i_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
 			gibbs_samples_of_gamma_for_lm_sigsqs = new Matrix[num_gibbs_total_iterations + 1];
-			gibbs_samples_of_gamma_for_lm_sigsqs[0] = new Matrix(p + 1, 1); //start it up
+			gibbs_samples_of_gamma_for_lm_sigsqs[0] = new Matrix(p_Z, 1); //start it up
 			
 			
 			//set the beginning of the Gibbs chain to be the prior
-			for (int j = 0; j < p + 1; j++){
+			for (int j = 0; j < p_Z; j++){
 				gibbs_samples_of_gamma_for_lm_sigsqs[0].set(j, 0, hyper_gamma_0.get(j, 0));
 			}	
 			
@@ -525,19 +570,19 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}		
 	}
 
-	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
-		if (use_linear_heteroskedastic_model){
-			return calcLnLikRatioGrowHeteroskedastic(grow_node);
-		}
-		return super.calcLnLikRatioGrow(grow_node);
-	}
-	
-	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
-		if (use_linear_heteroskedastic_model){
-			return calcLnLikRatioChangeHeteroskedastic(eta, eta_star);
-		}
-		return super.calcLnLikRatioChange(eta, eta_star);
-	}
+//	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
+//		if (use_linear_heteroskedastic_model){
+//			return calcLnLikRatioGrowHeteroskedastic(grow_node);
+//		}
+//		return super.calcLnLikRatioGrow(grow_node);
+//	}
+//	
+//	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
+//		if (use_linear_heteroskedastic_model){
+//			return calcLnLikRatioChangeHeteroskedastic(eta, eta_star);
+//		}
+//		return super.calcLnLikRatioChange(eta, eta_star);
+//	}
 
 	/**
 	 * The user specifies this flag. Once set, the functions in this class are used over the default homoskedastic functions
@@ -548,8 +593,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	}
 	
 	public void setHyper_gamma_mean_vec(double[] hyper_gamma_mean_vec) {
-		for (int i = 0; i < hyper_gamma_mean_vec.length; i++){
-			this.hyper_gamma_0.set(0, i, hyper_gamma_mean_vec[i]);
+		for (int j = 0; j < hyper_gamma_mean_vec.length; j++){
+			this.hyper_gamma_0.set(j, 0, hyper_gamma_mean_vec[j]);
 		}
 	}
 	
