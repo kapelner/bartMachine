@@ -65,6 +65,8 @@ public class bartMachineRegressionMultThread extends Classifier {
 	protected boolean mem_cache_for_speed = true;
 	/** "Destroyed" means this model's Gibbs samplers' data has been released to RAM and hence cannot be operated on */
 	protected boolean destroyed;
+	/** Use the heteroskedastic linear model feature if true */
+	protected boolean useLinearHeteroskedasticModel;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -131,6 +133,9 @@ public class bartMachineRegressionMultThread extends Classifier {
 		if (!(bart instanceof bartMachineClassification)){
 			bart.setNu(hyper_nu);		
 			bart.setQ(hyper_q);
+		}
+		if (useLinearHeteroskedasticModel){
+			bart.useLinearHeteroskedasticModel();
 		}
 		//once the params are set, now you can set the data
 		bart.setData(X_y);
@@ -516,6 +521,10 @@ public class bartMachineRegressionMultThread extends Classifier {
 		this.X_y = X_y;
 	 	n = X_y.size();
 	 	p = X_y.get(0).length - 1;
+	}
+	
+	public void useHeteroskedasticLinearModel(){
+		useLinearHeteroskedasticModel = true;
 	}
 	
 	public void setCovSplitPrior(double[] cov_split_prior){

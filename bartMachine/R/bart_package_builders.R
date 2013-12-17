@@ -26,6 +26,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
+		use_heteroskedastic_linear_model = FALSE,
 		verbose = TRUE){
 	
 	if (verbose){
@@ -245,6 +246,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			return(TRUE)
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
+	}
+	
+	if (use_heteroskedastic_linear_model){
+		.jcall(java_bart_machine, "V", "useHeteroskedasticLinearModel")
 	}
 	
 	#now load the training data into BART
