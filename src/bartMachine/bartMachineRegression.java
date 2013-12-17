@@ -6,7 +6,7 @@ package bartMachine;
  * @author Adam Kapelner and Justin Bleich
  *
  */
-public class bartMachineRegression extends bartMachine_i_prior_cov_spec {
+public class bartMachineRegression extends bartMachine_j_linear_heteroskedasticity {
 	
 	/**
 	 * Constructs the BART classifier for regression.

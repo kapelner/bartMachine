@@ -349,7 +349,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
 	 * @return			The log likelihood ratio
 	 * @see 			Section A.3.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	private double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
+	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
 		int n_1_star = eta_star.left.n_eta;
 		int n_2_star = eta_star.right.n_eta;
 		int n_1 = eta.left.n_eta;

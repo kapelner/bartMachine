@@ -156,6 +156,16 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base {
 	}
 	
 	/**
+	 * Transforms a variance value on the original scale to the transformed scale
+	 * 
+	 * @param sigsq_t_i		The original variance value
+	 * @return				The transformed variance value
+	 */
+	public double transform_sigsq(double sigsq_t_i){
+        return sigsq_t_i / y_range_sq;
+	} 
+	
+	/**
 	 * Untransforms many variance values on the transformed scale back to the original scale
 	 * 
 	 * @param sigsq_t_is	The transformed variance values

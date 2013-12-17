@@ -30,6 +30,8 @@ import gnu.trove.list.array.TIntArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import Jama.Matrix;
+
 /**
  * This is a class where we're going to put all sorts of useful functions
  * as a utility-style class
@@ -50,7 +52,7 @@ public class StatToolbox {
 	 * @return			The sampled value
 	 */
 	public static double sample_from_inv_gamma(double k, double theta){
-		return (1 / (theta / 2)) / bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n_length)];
+		return 2 / (theta * bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n_length)]);
 	}
 	
 	/**
@@ -63,6 +65,24 @@ public class StatToolbox {
 	public static double sample_from_norm_dist(double mu, double sigsq){
 		double std_norm_realization = bartMachine_b_hyperparams.samps_std_normal[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_std_normal_length)];
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
+	}
+	
+    public static double sample_from_std_norm_dist(){
+        return bartMachine_b_hyperparams.samps_std_normal[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_std_normal_length)];
+    }	
+	
+    public static Matrix sample_from_mult_norm_dist(Matrix mu, Matrix Sigma){
+        Matrix Sigma_sqrt = Sigma.chol().getL();
+        return sample_from_mult_norm_dist_with_Sigma_sqrt(mu, Sigma_sqrt);
+    }
+
+    public static Matrix sample_from_mult_norm_dist_with_Sigma_sqrt(Matrix mu, Matrix Sigma_sqrt){
+        int n = mu.getRowDimension();
+        Matrix z_vec = new Matrix(n, 1);
+        for (int i = 0; i < n; i++){
+        	z_vec.set(i, 0, sample_from_std_norm_dist());
+        }                
+        return (Sigma_sqrt.times(z_vec)).plus(mu);
 	}
 	
 	// constants for the {@link normal_cdf} function
