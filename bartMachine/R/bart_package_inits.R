@@ -1,6 +1,6 @@
 ##package constants
 VERSION = "1.0b"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
+JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar", "Jama-1.0.3.jar")
 
 ##color array 
 COLORS = array(NA, 500)

@@ -84,6 +84,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 		
 		p_Z = Z.getColumnDimension();
+		System.out.println("p_Z: " + p_Z);
 		
 		double minus_one_over_n = - 1 / n;
 		double one_minus_one_over_n = 1 + minus_one_over_n;			
@@ -130,7 +131,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p: " + p);
 			
 			setZ(); //to be changed later when the user inputs Z on their own			
-		
+			System.out.println("Z set");
+			
 			//set hyperparameters
 			hyper_gamma_0 = new Matrix(p_Z, 0);			
 			Matrix hyper_Sigma = new Matrix(p_Z, p_Z);
@@ -145,8 +147,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 //			hyper_gamma_mean_vec.set(3, 0, 0.3);
 //			hyper_gamma_mean_vec.set(4, 0, 0.2);
 //			hyper_gamma_mean_vec.set(5, 0, 0.5);
-//			System.out.println("hyper_gamma_var_mat");
-//			hyper_gamma_var_mat.print(3, 5);
+			System.out.println("hyper_gamma_var_mat");
+			hyper_gamma_0.print(3, 5);
 
 			
 			//now we can cache intermediate values we'll use everywhere
@@ -265,33 +267,40 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	}
 	
 	private void SampleSigsqsHeterogeneously(int sample_num, double[] es) {
-//		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
-//		System.out.println("es: " + Tools.StringJoin(es));
+		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
+		System.out.println("es: " + Tools.StringJoin(es));
 
-//		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
+		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
 		
 		double[] es_sq = new double[n];
 		for (int i = 0; i < n; i++){
 			es_sq[i] = un_transform_sigsq(Math.pow(es[i], 2));
 		}
-//		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
+		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
 		
 		//now we need to compute d_i for all data points
 		Matrix gamma = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1];
+		System.out.println("gamma: ");
+		gamma.print(3, 5);
 		double[] d_is = new double[n];
 		for (int i = 0; i < n; i++){
 			d_is[i] = Math.exp(z_is_mc.get(i).times(gamma).get(0, 0));
 		}
+		System.out.println("d_is: " + Tools.StringJoin(d_is));
 		
 		//now get the scale factor
 		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es, d_is);
+		System.out.println("sigsq: " + sigsq);
+		
 		
 		//now we need to draw a gamma
 		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_sq, sample_num, d_is, sigsq);
+		System.out.println("gamma_draw: ");
+		gamma_draw.print(3, 5);
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
 		
 	
-//		System.out.println("d_is: " + Tools.StringJoin(d_is));
+		System.out.println("d_is: " + Tools.StringJoin(d_is));
 		
 		
 		
