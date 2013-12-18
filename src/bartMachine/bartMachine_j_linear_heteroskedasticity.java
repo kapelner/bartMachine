@@ -86,21 +86,16 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		p_Z = Z.getColumnDimension();
 //		System.out.println("p_Z: " + p_Z);
 		
-		double minus_one_over_n = - 1 / n;
-		double one_minus_one_over_n = 1 + minus_one_over_n;			
-		Matrix I_min_one_over_n_times_J = new Matrix(n, n);
-		for (int i = 0; i < n; i++){
-			for (int j = 0; j < n; j++){
-				if (i == j){
-					I_min_one_over_n_times_J.set(i, j, one_minus_one_over_n);
-				}
-				else {
-					I_min_one_over_n_times_J.set(i, j, minus_one_over_n);
-				}
-			}
+		Matrix ones = new Matrix(n, 1);
+		for (int i = 0; i < n; i ++){
+			ones.set(i, 0, 1);
 		}
+		Matrix quad_ones = ones.times((ones.transpose().times(ones)).inverse()).times(ones.transpose());
 		
-		Matrix Z_mc = I_min_one_over_n_times_J.times(Z);
+		Matrix Z_mc = Z.minus(quad_ones.times(Z));
+		
+//		System.out.println("Z_mc: " + Z_mc.getRowDimension() + " x " + Z_mc.getColumnDimension());
+//		Z_mc.print(3, 5);
 		Matrix Z_mc_t = Z_mc.transpose();
 		Matrix Z_mc_t_times_Z_mc = Z_mc_t.times(Z_mc);
 		
@@ -255,10 +250,10 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell = 1 + hyper_sigsq_mu * sum_inv_sigsq_ell;
 		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r = 1 + hyper_sigsq_mu * sum_inv_sigsq_r;
 		
-		double a = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star);
-		double b = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star);
-		double c = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell);
-		double d = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r);
+		double a = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell);
+		double b = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r);
+		double c = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star);
+		double d = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star);
 		
 		double e = Math.pow(sum_responses_weighted_by_inv_sigsq_ell_star, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star;
 		double f = Math.pow(sum_responses_weighted_by_inv_sigsq_r_star, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star;
@@ -295,8 +290,14 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		System.out.println("old d_is: " + Tools.StringJoin(d_is));
 		
 		//now get the scale factor
-//		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
-		double sigsq = drawSigsqFromPosterior(sample_num, es);
+		
+		//hetero
+		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
+
+		//homo
+//		double sigsq = drawSigsqFromPosterior(sample_num, es);
+		
+		
 		System.out.println("sigsq: " + sigsq);
 		
 		
@@ -304,6 +305,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_untransformed_sq, sample_num, d_is, sigsq);
 		System.out.println("gamma_draw: ");
 		gamma_draw.print(3, 5);
+		
+//		gamma_draw.set(0, 0, 7);
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
 		
 		////inefficient: only do this if gamma changed
@@ -312,15 +315,20 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 		System.out.println("new d_is: " + Tools.StringJoin(d_is));
 		
-//		for (int i = 0; i < n; i++){
-//			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq * d_is[i]); //make sure we re-transform them
-//			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq);
-//		}
-		gibbs_samples_of_sigsq[sample_num] = sigsq;
+		//hetero
+		for (int i = 0; i < n; i++){
+			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq) * d_is[i]; //make sure we re-transform them
+		}
+//		gibbs_samples_of_sigsq_i[sample_num] = transform_sigsq(TRUE_SIGSQS);
+		
+//		//homo
+//		gibbs_samples_of_sigsq[sample_num] = sigsq;
 		
 //		System.out.println("gibbs_samples_of_sigsq_i: " + Tools.StringJoin(gibbs_samples_of_sigsq_i[sample_num]));
 		
 	}
+	
+	public static final double[] TRUE_SIGSQS = {14.7564438126604, 124.795176342157, 1.12822066179643, 49.7045018004305, 825.719038578746, 106.761862374075, 639.415909971605, 173.376491782475, 69.124333909772, 5.20559517036163, 23.7754703204292, 1.56971696307988, 70.7709256830803, 18.8950290758269, 19.1941117642176, 8.30221144867605, 498.14240638306, 4.77901349588003, 69.2135769429817, 93.8130379535436, 24.1994731688103, 9.76352722236251, 956.100439255812, 71.8310847362022, 388.272292540103, 4.0763898470658, 17.7635918135455, 71.2837098997644, 1.21674792994847, 143.102705950482, 1.98934871805753, 20.0819578318794, 3.31533519790039, 61.5773785986645, 82.5353185231496, 6.4410225245463, 7.70094631309298, 111.697245989711, 939.968045639186, 25.6974133981529, 139.227412500008, 1.65261733853617, 6.75178544976796, 199.905398649489, 507.91230437683, 257.028275861091, 131.989101120696, 86.1332070126934, 1096.15852161645, 13.3301102029082, 79.5417725873373, 28.4633723799568, 4.22508078684881, 27.7383063640925, 85.140361305758, 3.27573682059601, 16.9953802842945, 493.902072443857, 27.0327945952774, 8.39743506312853, 3.14288341615423, 262.626218692793, 463.096291236288, 21.9309876690995, 2.7759541103822, 210.908151758389, 18.2469949407178, 53.6493930779028, 6.85672436077896, 3.17231229731845, 228.815707701133, 3.01309097157997, 10.2395061662961, 32.9633579953923, 2.3447009858767, 6.76802751502552, 207.935651337173, 3.51202827773632, 5.56833861665702, 2.40753478428134, 241.716810254808, 38.4810389132474, 7.64925043173583, 112.329292067647, 161.693392094941, 12.3432146173595, 4.68947725140437, 1.07788849754766, 173.830272231542, 25.8395292793772, 2.27974292689905, 1.24295784380125, 2.01996807675772, 671.383571824707, 8.1954918449588, 2.91067068676492, 1.23853938738709, 3.11598781302569, 79.6794070764348, 563.769606396879};
 	
 	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es, double[] d_is) {
 		//first calculate the SSE
@@ -433,12 +441,12 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		bartMachineTreeNode tree = gibbs_samples_of_bart_trees[sample_num][t];
 
 		//homo
-		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
+//		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
+//		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
 		
 		//hetero
-//		double[] current_sigsqs = gibbs_samples_of_sigsq_i[sample_num - 1];
-//		assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(tree, current_sigsqs);
+		double[] current_sigsqs = gibbs_samples_of_sigsq_i[sample_num - 1];
+		assignLeafValsBySamplingFromPosteriorMeanAndSigsqsAndUpdateYhatsWithHeterogeneity(tree, current_sigsqs);
 		
 		//after mus are sampled, we need to update the sum_resids_vec
 		//add in current tree's yhats		
@@ -570,19 +578,19 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}		
 	}
 
-//	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
-//		if (use_linear_heteroskedastic_model){
-//			return calcLnLikRatioGrowHeteroskedastic(grow_node);
-//		}
-//		return super.calcLnLikRatioGrow(grow_node);
-//	}
-//	
-//	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
-//		if (use_linear_heteroskedastic_model){
-//			return calcLnLikRatioChangeHeteroskedastic(eta, eta_star);
-//		}
-//		return super.calcLnLikRatioChange(eta, eta_star);
-//	}
+	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
+		if (use_linear_heteroskedastic_model){
+			return calcLnLikRatioGrowHeteroskedastic(grow_node);
+		}
+		return super.calcLnLikRatioGrow(grow_node);
+	}
+	
+	protected double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
+		if (use_linear_heteroskedastic_model){
+			return calcLnLikRatioChangeHeteroskedastic(eta, eta_star);
+		}
+		return super.calcLnLikRatioChange(eta, eta_star);
+	}
 
 	/**
 	 * The user specifies this flag. Once set, the functions in this class are used over the default homoskedastic functions

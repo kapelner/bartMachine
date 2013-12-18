@@ -297,15 +297,19 @@ public abstract class Classifier {
 		long t0 = System.currentTimeMillis();
 		System.out.print("calculating in-sample residuals...");
 		in_sample_residuals = new double[n];
+		double[] yhats = new double[n];
 		for (int i = 0; i < n; i++){
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
 			double yhat = Evaluate(record, num_cores_evaluate);
+			yhats[i] = yhat;
 //			System.out.println("y: " + y + " yhat: " + yhat);
 			in_sample_residuals[i] = y - yhat;
 		}
 		long t1 = System.currentTimeMillis();
 		System.out.print("done in " + ((t1 - t0) / 1000.0) + " sec \n");
+		
+		System.out.println("yhats: " + Tools.StringJoin(yhats));
 	}
 	
 	/**

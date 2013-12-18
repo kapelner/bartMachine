@@ -32,9 +32,9 @@ public class bartMachineRegressionMultThread extends Classifier {
 	/** the estimate of some upper limit of the variance of the response which is usually the MSE from a a linear regression */
 	private Double sample_var_y;
 	/** the number of burn-in samples in each Gibbs chain */
-	protected int num_gibbs_burn_in = 10;
+	protected int num_gibbs_burn_in = 1000;
 	/** the total number of gibbs samples where each chain gets a number of burn-in and then the difference from the total divided by <code>num_cores</code> */ 
-	protected int num_gibbs_total_iterations = 500;
+	protected int num_gibbs_total_iterations = 2000;
 	/** the total number of Gibbs samples for each of the <code>num_cores</code> chains */
 	protected int total_iterations_multithreaded;
 
