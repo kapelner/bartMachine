@@ -1,26 +1,42 @@
-n = 100
-x1 = rep(1,times = n)
-x2 = runif(n, 0, 400)
-x3 = runif(n, 10, 23)
-x4 = runif(n, 0, 10)
-X = cbind(x1,x2,x3)
-Z = cbind(x1,x2,x4)
+n = 1000
 
-beta_vec = c(-35, .35, -1.7)
-gamma_vec = c(-5, .02, -.4)
-true_sigsq = exp(Z %*% gamma_vec)
-dim(diag(length(true_sigsq)))
-y = as.numeric(X %*% beta_vec + rnorm(n, mean = 0, sd = sqrt(true_sigsq)))
-plot(X[, 3], y)
-plot(X[, 2], y)
+gamma = 7
+beta = 100
 
-X = data.frame(cbind(X[, 2 : 3], x4))
-write.csv(cbind(X, y), "hbart.csv")
+X = runif(n)
+sigsq = exp(X * gamma)
+y = beta * X + rnorm(n, 0, sqrt(sigsq))
+plot(X, y)
+
+write.csv(cbind(X, y), "r_hbart.csv")
 
 library(bartMachine)
-bart_machine = build_bart_machine(X, y)
-bart_machine
-check_bart_error_assumptions(bart_machine)
+set_bart_nu
+set_bart_machine_num_cores(4)
+init_java_for_bart_machine_with_mem_in_mb(5000)
 
-hbart_machine = build_bart_machine(X, y, use_heteroskedastic_linear_model = TRUE, debug_log = T)
+bart_machine = build_bart_machine(data.frame(X), y)
+bart_machine
+plot_y_vs_yhat(bart_machine)
+
+
+windows()
+plot(bart_machine$y_hat, y)
+plot(X, bart_machine$y_hat)
+
+#check_bart_error_assumptions(bart_machine)
+
+hbart_machine = build_bart_machine(data.frame(X), y, use_heteroskedastic_linear_model = TRUE)
 hbart_machine
+plot_y_vs_yhat(hbart_machine)
+
+plot(X, bart_machine$y_hat)
+points(X, hbart_machine$y_hat, col = "green")
+
+#oos testing
+Xtest = runif(n)
+sigsq_test = exp(Xtest * gamma)
+ytest = beta * Xtest + rnorm(n, 0, sqrt(sigsq_test))
+
+bart_predict_for_test_data(bart_machine, data.frame(Xtest), ytest)
+bart_predict_for_test_data(hbart_machine, data.frame(Xtest), ytest)
