@@ -84,26 +84,25 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 		
 		p_Z = Z.getColumnDimension();
-		System.out.println("p_Z: " + p_Z);
+//		System.out.println("p_Z: " + p_Z);
 		
 		Matrix ones = new Matrix(n, 1);
 		for (int i = 0; i < n; i ++){
 			ones.set(i, 0, 1);
 		}
-		Matrix quad_ones = ones.times((ones.transpose().times(ones)).inverse()).times(ones.transpose());
-		
+		Matrix quad_ones = ones.times((ones.transpose().times(ones)).inverse()).times(ones.transpose());		
 		Matrix Z_mc = Z.minus(quad_ones.times(Z));
 		
-		System.out.println("Z_mc: " + Z_mc.getRowDimension() + " x " + Z_mc.getColumnDimension());
-		Z_mc.print(3, 5);
+//		System.out.println("Z_mc: " + Z_mc.getRowDimension() + " x " + Z_mc.getColumnDimension());
+//		Z_mc.print(3, 5);
 		Matrix Z_mc_t = Z_mc.transpose();
 		Matrix Z_mc_t_times_Z_mc = Z_mc_t.times(Z_mc);
 		
 		z_is_mc_t = new ArrayList<Matrix>(n);
 		for (int i = 0; i < n; i ++){
 			z_is_mc_t.add(Z_mc.getMatrix(i, i, 0, p_Z - 1));
-			System.out.println("z_is_mc_t[" + i + "]");
-			z_is_mc_t.get(i).print(2, 2);
+//			System.out.println("z_is_mc_t[" + i + "]");
+//			z_is_mc_t.get(i).print(2, 2);
 		}	
 		
 		Matrix half = new Matrix(p_Z, p_Z);
@@ -275,8 +274,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			es_untransformed_sq[i] = Math.pow(es_untransformed[i], 2);
 			
 		}
-		System.out.println("es: " + Tools.StringJoin(es_untransformed));
-		System.out.println("es_sq: " + Tools.StringJoin(es_untransformed_sq));
+//		System.out.println("es: " + Tools.StringJoin(es_untransformed));
+//		System.out.println("es_sq: " + Tools.StringJoin(es_untransformed_sq));
 		System.out.println("mse: " + Tools.sum_array(es_untransformed_sq) / n);
 		//now we need to compute d_i for all data points
 		Matrix gamma = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1];
@@ -287,7 +286,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		for (int i = 0; i < n; i++){
 			d_is[i] = Math.exp(z_is_mc_t.get(i).times(gamma).get(0, 0));
 		}
-		System.out.println("old d_is: " + Tools.StringJoin(d_is));
+//		System.out.println("old d_is: " + Tools.StringJoin(d_is));
 		
 		//now get the scale factor
 		
@@ -313,7 +312,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		for (int i = 0; i < n; i++){
 			d_is[i] = Math.exp(z_is_mc_t.get(i).times(gamma_draw).get(0, 0));
 		}
-		System.out.println("new d_is: " + Tools.StringJoin(d_is));
+//		System.out.println("new d_is: " + Tools.StringJoin(d_is));
 		
 		//hetero
 		for (int i = 0; i < n; i++){
