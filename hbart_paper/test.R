@@ -23,10 +23,18 @@ bart_machine
 
 hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE)
 hbart_machine
+
+hbart_machine_shrunk = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE, hyper_sigma_weights = c(1, 1))
+hbart_machine_shrunk
+
+hbart_machine_unshrunk = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE, hyper_sigma_weights = c(1e9, 1))
+hbart_machine_unshrunk
 #plot_y_vs_yhat(hbart_machine)
 
 plot(X, bart_machine$y_hat)
 points(X, hbart_machine$y_hat, col = "green")
+points(X, hbart_machine_shrunk$y_hat, col = "red")
+points(X, hbart_machine_unshrunk$y_hat, col = "blue")
 
 #oos testing
 Xtest = runif(n)
@@ -58,7 +66,7 @@ ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 bart_machine = build_bart_machine(Xtrain, ytrain)
 bart_machine
 
-hbart_machine = build_bart_machine(Xtrain, ytrain, use_heteroskedastic_linear_model = TRUE)
+hbart_machine = build_bart_machine(Xtrain, ytrain, use_heteroskedastic_linear_model = TRUE, hyper_sigma_weights = rep(1e9, ncol(X)))
 hbart_machine
 
 bart_oosrmse = bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse

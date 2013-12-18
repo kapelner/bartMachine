@@ -5,6 +5,8 @@ import Jama.Matrix;
 
 public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior_cov_spec {
 
+	private static final double DEFAULT_HYPER_SIGMA_WEIGHT = 1000;
+
 	protected boolean use_linear_heteroskedastic_model;
 	
 	protected Matrix hyper_gamma_0;
@@ -113,9 +115,12 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		half_times_Z_mc_t = half.times(Z_mc_t);
 		half_times_Z_mc_t_times_Z_mc = half.times(Z_mc_t_times_Z_mc);
 		
-		hyper_sigma_weights = new double[p_Z];
-		for (int j = 0; j < p_Z; j++){
-			hyper_sigma_weights[j] = 1000; //default, the user should set it later
+		//if it hasn't been specified by the user, use default
+		if (hyper_sigma_weights == null){			
+			hyper_sigma_weights = new double[p_Z];
+			for (int j = 0; j < p_Z; j++){
+				hyper_sigma_weights[j] = DEFAULT_HYPER_SIGMA_WEIGHT; 
+			}
 		}
 	}
 	
@@ -605,7 +610,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 	}
 	
-	public void setHyperSigma(double[] hyper_sigma_weights){
+	public void setHyperSigmaWeights(double[] hyper_sigma_weights){
 		this.hyper_sigma_weights = hyper_sigma_weights;
 	}
 }
