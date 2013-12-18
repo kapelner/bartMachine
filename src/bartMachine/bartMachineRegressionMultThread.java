@@ -67,6 +67,8 @@ public class bartMachineRegressionMultThread extends Classifier {
 	protected boolean destroyed;
 	/** Use the heteroskedastic linear model feature if true */
 	protected boolean useLinearHeteroskedasticModel;
+	/** A set of shrinkage weights for the Z variables that form the log-linear heteroskedastic model */
+	protected double[] hyper_sigma_weights;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -120,6 +122,7 @@ public class bartMachineRegressionMultThread extends Classifier {
 		bart.setK(hyper_k);
 		bart.setProbGrow(prob_grow);
 		bart.setProbPrune(prob_prune);
+		bart.setHyperSigmaWeights(hyper_sigma_weights);
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
@@ -600,6 +603,10 @@ public class bartMachineRegressionMultThread extends Classifier {
 	
 	public boolean isDestroyed(){		
 		return destroyed;
+	}
+	
+	public void setHyperSigmaWeights(double[] hyper_sigma_weights){
+		this.hyper_sigma_weights = hyper_sigma_weights;
 	}
 	
 	/** Must be implemented, but does nothing */

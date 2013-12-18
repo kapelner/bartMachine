@@ -27,6 +27,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		use_heteroskedastic_linear_model = FALSE,
+		hyper_sigma_weights = NULL,
 		verbose = TRUE){
 	
 	if (verbose){
@@ -249,7 +250,20 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	if (use_heteroskedastic_linear_model){
+		if (verbose){
+			cat("Heteroskedastic Linear Model Feature ON.\n")
+		}
 		.jcall(java_bart_machine, "V", "useHeteroskedasticLinearModel")
+	}
+	
+	if (!is.null(hyper_sigma_weights)){
+		if (length(hyper_sigma_weights) != ncol(model_matrix_training_data) - 1){
+			stop("The parameter \"hyper_sigma_weights\" must be the same length as the design model matrix including dummified factors.")
+		}
+		if (length(hyper_sigma_weights) == 1){
+			hyper_sigma_weights = c(hyper_sigma_weights, 0) #need to coerce it to be a vector for the Java signature to be found
+		}
+		.jcall(java_bart_machine, "V", "setHyperSigmaWeights", as.numeric(hyper_sigma_weights))
 	}
 	
 	#now load the training data into BART
