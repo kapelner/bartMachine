@@ -61,7 +61,9 @@ public class DataAnalysis {
 			machine = new bartMachineRegressionMultThread();
 			machine.setData(data.getX_y());
 			((bartMachineRegressionMultThread)machine).useHeteroskedasticLinearModel();
+			
 			machine.Build();
+			((bartMachineRegressionMultThread)machine).getGibbsSamplesSigsqsHeteroskedastic();
 			long L2 = Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4));
 			System.out.println("(in sample) L1 error: " + 
 				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +

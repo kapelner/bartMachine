@@ -1,28 +1,60 @@
 n = 1000
 
-gamma = 7
+gamma = 9
 beta = 100
 
 X = runif(n)
-sigsq = exp(X * gamma)
-y = beta * X + rnorm(n, 0, sqrt(sigsq))
-plot(X, y)
+sigsqs = exp(X * gamma)
+sigmas = sqrt(sigsqs)
+y = beta * X + rnorm(n, 0, sigmas)
 
-write.csv(cbind(X, y), "r_hbart.csv")
+
+#write.csv(cbind(X, y), "r_hbart.csv")
 
 library(bartMachine)
+graphics.off()
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
-
+plot(X, y)
 bart_machine = build_bart_machine(Xy = cbind(X, y))
 bart_machine
+
+
 #plot(bart_machine$y_hat, y)
-#plot(X, bart_machine$y_hat)
+plot(X, bart_machine$y_hat)
 
 #check_bart_error_assumptions(bart_machine)
 
 hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE)
 hbart_machine
+windows()
+plot(X, hbart_machine$y_hat)
+
+sigsqs_hetero_after_burn_in = get_sigsqs_hetero(hbart_machine)
+sigma_hats = colMeans(sqrt(sigsqs_hetero_after_burn_in))
+
+windows()
+plot(sigmas, sigma_hats, xlim = c(0, max(sigmas)), ylim = c(0, max(sigma_hats)))
+abline(a = 0, b = 1)
+cred_ints_sigmas = sqrt(apply(sigsqs_hetero_after_burn_in, 2, quantile, c(0.025, 0.975)))
+
+windows()
+plot(1 : n, sigmas, ylim = c(min(sigmas) * 0.5, max(sigmas) * 1.5))
+for (i in 1 : n){
+	a = cred_ints_sigmas[1, i]
+	b = cred_ints_sigmas[2, i]
+	segments(i, a, i, b, col = ifelse(sigmas[i] > a && sigmas[i] < b, "green", "red"))
+}
+points(1 : n, sigmas)
+
+
+###look at some points individually
+for (i in 1 : n){
+#	i = 56
+	hist(sqrt(sigsqs_hetero_after_burn_in[i, ]), br = 100, xlim = c(0, 500))
+	abline(v = sigmas[i], col="blue")
+	Sys.sleep(1)
+}
 
 hbart_machine_shrunk = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE, hyper_sigma_weights = c(1, 1))
 hbart_machine_shrunk

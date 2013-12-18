@@ -266,12 +266,12 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE, plot_hist = FALSE, plo
 	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	if(plot_hist){
-    if(plot_sigma){
-      var_est_to_plot = sqrt(sigsqs_after_burnin)
-    }
-    else{
-      var_est_to_plot = sigsqs_after_burnin
-    }
+	    if(plot_sigma){
+	      var_est_to_plot = sqrt(sigsqs_after_burnin)
+	    }
+	    else{
+	      var_est_to_plot = sigsqs_after_burnin
+	    }
 
 	  ppi_a = quantile(var_est_to_plot, (.5 - plot_CI/2))
 	  ppi_b = quantile(var_est_to_plot, (.5 + plot_CI/2))
@@ -284,10 +284,10 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE, plot_hist = FALSE, plo
 	  abline(v = ppi_b, col = "red")
 	}
   
-	if(after_burn_in == T){
-    return(sigsqs_after_burnin)
-	}else{
-    return(sigsqs)
+	if (after_burn_in){
+		sigsqs_after_burnin
+	} else {
+		sigsqs
 	}
 }
 
@@ -299,15 +299,18 @@ get_sigsqs_hetero = function(bart_machine, after_burn_in = TRUE){
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no sigsq's for classification.")
 	}
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no sigsq's for classification.")
+	}
 	
-	sigsqs = t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesSigsqsHeteroskedastic", .jevalArray))) 
+	sigsqs_hetero = t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesSigsqsHeteroskedastic"), .jevalArray))
 	
-	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs), ]
+	sigsqs_hetero_after_burnin = sigsqs_hetero[(nrow(sigsqs_hetero) - bart_machine$num_iterations_after_burn_in + 1) : nrow(sigsqs_hetero), ]
 	
 	if (after_burn_in){
-		sigsqs_after_burnin
+		sigsqs_hetero_after_burnin
 	} else {
-		sigsqs
+		sigsqs_hetero
 	}
 }
 

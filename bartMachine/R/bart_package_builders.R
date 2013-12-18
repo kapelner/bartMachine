@@ -328,7 +328,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			verbose = verbose,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
-			num_rand_samps_in_library = num_rand_samps_in_library
+			num_rand_samps_in_library = num_rand_samps_in_library,
+			use_heteroskedastic_linear_model = use_heteroskedastic_linear_model,
+			hyper_sigma_weights = hyper_sigma_weights
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants

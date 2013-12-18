@@ -339,16 +339,20 @@ public class bartMachineRegressionMultThread extends Classifier {
 	
 	public double[][] getGibbsSamplesSigsqsHeteroskedastic(){
 		ArrayList<double[]> sigsqs_to_export = new ArrayList<double[]>(num_gibbs_total_iterations);
-		for (int t = 0; t < num_cores; t++){
-			ArrayList<double[]> sigsqs_to_export_by_thread = new ArrayList<double[]>(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqsHetero());
-			if (t == 0){
+		for (int c = 0; c < num_cores; c++){
+			ArrayList<double[]> sigsqs_to_export_by_thread = new ArrayList<double[]>(bart_gibbs_chain_threads[c].getGibbsSamplesSigsqsHeteroskedastic());
+			if (c == 0){
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
 			}
 			else {
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
 			}
 		}
-		return (double[][])sigsqs_to_export.toArray();
+		double[][] sigsqs_to_export_double_arr = new double[num_gibbs_total_iterations][n];
+		for (int g = 0; g < num_gibbs_total_iterations; g++){
+			sigsqs_to_export_double_arr[g] = sigsqs_to_export.get(g);
+		}
+		return sigsqs_to_export_double_arr;
 	}
 	
 	/**

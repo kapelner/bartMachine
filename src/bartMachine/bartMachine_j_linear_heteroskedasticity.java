@@ -268,7 +268,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	}
 	
 	private void SampleSigsqsHeterogeneously(int sample_num, double[] es) {
-		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
+//		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
 //		System.out.println("es: " + Tools.StringJoin(es));
 //
 //		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
@@ -281,11 +281,11 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 //		System.out.println("es: " + Tools.StringJoin(es_untransformed));
 //		System.out.println("es_sq: " + Tools.StringJoin(es_untransformed_sq));
-		System.out.println("mse: " + Tools.sum_array(es_untransformed_sq) / n);
+//		System.out.println("mse: " + Tools.sum_array(es_untransformed_sq) / n);
 		//now we need to compute d_i for all data points
 		Matrix gamma = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1];
-		System.out.println("gamma: ");
-		gamma.print(3, 5);
+//		System.out.println("gamma: ");
+//		gamma.print(3, 5);
 		
 		double[] d_is = new double[n];
 		for (int i = 0; i < n; i++){
@@ -307,8 +307,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		
 		//now we need to draw a gamma
 		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_untransformed_sq, sample_num, d_is, sigsq);
-		System.out.println("gamma_draw: ");
-		gamma_draw.print(3, 5);
+//		System.out.println("gamma_draw: ");
+//		gamma_draw.print(3, 5);
 		
 //		gamma_draw.set(0, 0, 7);
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
@@ -328,11 +328,9 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 //		//homo
 //		gibbs_samples_of_sigsq[sample_num] = sigsq;
 		
-//		System.out.println("gibbs_samples_of_sigsq_i: " + Tools.StringJoin(gibbs_samples_of_sigsq_i[sample_num]));
+		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
 		
 	}
-	
-	public static final double[] TRUE_SIGSQS = {14.7564438126604, 124.795176342157, 1.12822066179643, 49.7045018004305, 825.719038578746, 106.761862374075, 639.415909971605, 173.376491782475, 69.124333909772, 5.20559517036163, 23.7754703204292, 1.56971696307988, 70.7709256830803, 18.8950290758269, 19.1941117642176, 8.30221144867605, 498.14240638306, 4.77901349588003, 69.2135769429817, 93.8130379535436, 24.1994731688103, 9.76352722236251, 956.100439255812, 71.8310847362022, 388.272292540103, 4.0763898470658, 17.7635918135455, 71.2837098997644, 1.21674792994847, 143.102705950482, 1.98934871805753, 20.0819578318794, 3.31533519790039, 61.5773785986645, 82.5353185231496, 6.4410225245463, 7.70094631309298, 111.697245989711, 939.968045639186, 25.6974133981529, 139.227412500008, 1.65261733853617, 6.75178544976796, 199.905398649489, 507.91230437683, 257.028275861091, 131.989101120696, 86.1332070126934, 1096.15852161645, 13.3301102029082, 79.5417725873373, 28.4633723799568, 4.22508078684881, 27.7383063640925, 85.140361305758, 3.27573682059601, 16.9953802842945, 493.902072443857, 27.0327945952774, 8.39743506312853, 3.14288341615423, 262.626218692793, 463.096291236288, 21.9309876690995, 2.7759541103822, 210.908151758389, 18.2469949407178, 53.6493930779028, 6.85672436077896, 3.17231229731845, 228.815707701133, 3.01309097157997, 10.2395061662961, 32.9633579953923, 2.3447009858767, 6.76802751502552, 207.935651337173, 3.51202827773632, 5.56833861665702, 2.40753478428134, 241.716810254808, 38.4810389132474, 7.64925043173583, 112.329292067647, 161.693392094941, 12.3432146173595, 4.68947725140437, 1.07788849754766, 173.830272231542, 25.8395292793772, 2.27974292689905, 1.24295784380125, 2.01996807675772, 671.383571824707, 8.1954918449588, 2.91067068676492, 1.23853938738709, 3.11598781302569, 79.6794070764348, 563.769606396879};
 	
 	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es, double[] d_is) {
 		//first calculate the SSE
@@ -346,7 +344,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	}
 
 	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] untransformed_es_sq, int sample_num, double[] d_is_current, double untransformed_sigsq) {
-		System.out.println("===========sampleGammaVecViaMH begin");
+//		System.out.println("===========sampleGammaVecViaMH begin");
 		//generate the w vector from the old d_i's		
 		Matrix w_gamma = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
@@ -374,8 +372,8 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		//now sample the new gamma proposal
 		Matrix gamma_star = StatToolbox.sample_from_mult_norm_dist(a_gamma, Bmat);
 		
-		System.out.println("gamma_star: " + gamma_star.getRowDimension() + " x " + gamma_star.getColumnDimension());
-		gamma_star.print(3, 5);
+//		System.out.println("gamma_star: " + gamma_star.getRowDimension() + " x " + gamma_star.getColumnDimension());
+//		gamma_star.print(3, 5);
 		
 		//now we need a_gamma_star
 		//generate the new d_i's
@@ -420,20 +418,20 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		double log_mh_ratio = 0.5 * (top_term + bottom_a + 1 / untransformed_sigsq * bottom_b + bottom_c);
 		
 		
-		System.out.println("log_mh_ratio: " + log_mh_ratio);
+//		System.out.println("log_mh_ratio: " + log_mh_ratio);
 		
 		double log_r = Math.log(StatToolbox.rand());
 		if (log_r < log_mh_ratio){
-			System.out.println("VAR ACCEPT MH");
+//			System.out.println("VAR ACCEPT MH");
 			m_h_num_accept_over_gibbs_samples++;
 			if (sample_num > num_gibbs_burn_in){
 				m_h_num_accept_over_gibbs_samples_after_burn_in++;
 			}
-			System.out.println("===========sampleGammaVecViaMH end");
+//			System.out.println("===========sampleGammaVecViaMH end");
 			return gamma_star;
 		}
-		System.out.println("VAR REJECT MH");
-		System.out.println("===========sampleGammaVecViaMH end");
+//		System.out.println("VAR REJECT MH");
+//		System.out.println("===========sampleGammaVecViaMH end");
 		return gamma;
 	} 
 
@@ -555,10 +553,10 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}	
 	}	
 	
-	public ArrayList<double[]> getGibbsSamplesSigsqsHetero(){
+	public ArrayList<double[]> getGibbsSamplesSigsqsHeteroskedastic(){
 		ArrayList<double[]> gibbs_samples_of_sigsq_i_arraylist = new ArrayList<double[]>(num_gibbs_total_iterations);
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
-			gibbs_samples_of_sigsq_i_arraylist.add(gibbs_samples_of_sigsq_i[g]);
+			gibbs_samples_of_sigsq_i_arraylist.add(un_transform_sigsq(gibbs_samples_of_sigsq_i[g]));
 		}
 		return gibbs_samples_of_sigsq_i_arraylist;				
 	}
