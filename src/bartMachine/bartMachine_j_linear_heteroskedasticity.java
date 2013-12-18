@@ -11,7 +11,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	
 	/** the variance of the errors as well as other things necessary for Gibbs sampling */
 	protected double[][] gibbs_samples_of_sigsq_i;
-	protected double[][] gibbs_samples_of_sigsq_i_hetero_after_burn_in;	
+	protected double[][] gibbs_samples_of_sigsq_i_after_burn_in;	
 	protected Matrix[] gibbs_samples_of_gamma_for_lm_sigsqs;
 	protected Matrix[] gibbs_samples_of_gamma_for_lm_sigsqs_after_burn_in;
 	
@@ -526,7 +526,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		super.InitGibbsSamplingData();
 		if (use_linear_heteroskedastic_model){
 			gibbs_samples_of_sigsq_i = new double[num_gibbs_total_iterations + 1][n];	
-			gibbs_samples_of_sigsq_i_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
+			gibbs_samples_of_sigsq_i_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
 			gibbs_samples_of_gamma_for_lm_sigsqs = new Matrix[num_gibbs_total_iterations + 1];
 			gibbs_samples_of_gamma_for_lm_sigsqs[0] = new Matrix(p_Z, 1); //start it up
 			
@@ -549,6 +549,14 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			initial_sigsqs[i] = StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda));
 		}	
 	}	
+	
+	public ArrayList<double[]> getGibbsSamplesSigsqsHetero(){
+		ArrayList<double[]> gibbs_samples_of_sigsq_i_arraylist = new ArrayList<double[]>(num_gibbs_total_iterations);
+		for (int g = 0; g < num_gibbs_total_iterations; g++){
+			gibbs_samples_of_sigsq_i_arraylist.add(gibbs_samples_of_sigsq_i[g]);
+		}
+		return gibbs_samples_of_sigsq_i_arraylist;				
+	}
 	
 	/////////////nothing but scaffold code below, do not alter!
 

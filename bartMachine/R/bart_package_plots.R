@@ -247,7 +247,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 }
 
 ##get sigsqs and plot a histogram, if desired
-get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
+get_sigsqs = function(bart_machine, after_burn_in = TRUE, plot_hist = FALSE, plot_CI = .95, plot_sigma = F){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -290,6 +290,27 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
     return(sigsqs)
 	}
 }
+
+##get sigsqs and plot a histogram, if desired
+get_sigsqs_hetero = function(bart_machine, after_burn_in = TRUE){
+	if (is_bart_destroyed(bart_machine)){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no sigsq's for classification.")
+	}
+	
+	sigsqs = t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesSigsqsHeteroskedastic", .jevalArray))) 
+	
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs), ]
+	
+	if (after_burn_in){
+		sigsqs_after_burnin
+	} else {
+		sigsqs
+	}
+}
+
 
 #private function for plotting convergence diagnostics for sigma^2
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
