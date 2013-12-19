@@ -299,10 +299,10 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
 
 		//homo
-//		double sigsq = drawSigsqFromPosterior(sample_num, es);
+//		double sigsq = un_transform_sigsq(drawSigsqFromPosterior(sample_num, es));
 		
 		
-		System.out.println("sigsq: " + sigsq);
+//		System.out.println("sigsq: " + sigsq);
 		
 		
 		//now we need to draw a gamma
@@ -321,26 +321,26 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		
 		//hetero
 		for (int i = 0; i < n; i++){
-			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq) * d_is[i]; //make sure we re-transform them
+			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq * d_is[i]); //make sure we re-transform them
 		}
 //		gibbs_samples_of_sigsq_i[sample_num] = transform_sigsq(TRUE_SIGSQS);
 		
 //		//homo
 //		gibbs_samples_of_sigsq[sample_num] = sigsq;
 		
-		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
+//		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
 		
 	}
 	
-	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es, double[] d_is) {
+	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es_untransformed, double[] d_is) {
 		//first calculate the SSE
 		double weighted_sse = 0;
 		for (int i = 0; i < n; i++){			
-			weighted_sse += Math.pow(es[i], 2) * d_is[i]; 
+			weighted_sse += Math.pow(es_untransformed[i], 2) / d_is[i]; //it's exp(-z_i^T gamma) which means it's to the power -1 
 		}
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, (sum_i wt_error^2_i + lambda * nu) / 2)
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (weighted_sse + hyper_nu * hyper_lambda)); //JB
+		return StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (weighted_sse + hyper_nu * hyper_lambda)); //JB
 	}
 
 	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] untransformed_es_sq, int sample_num, double[] d_is_current, double untransformed_sigsq) {
