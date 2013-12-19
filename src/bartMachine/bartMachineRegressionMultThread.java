@@ -69,6 +69,8 @@ public class bartMachineRegressionMultThread extends Classifier {
 	protected boolean useLinearHeteroskedasticModel;
 	/** A set of shrinkage weights for the Z variables that form the log-linear heteroskedastic model */
 	protected double[] hyper_sigma_weights;
+	/** a data frame that contains information about the linear variance model - the default is to use the same covariates as used in the BART mean model */
+	private ArrayList<double[]> Z;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -141,8 +143,17 @@ public class bartMachineRegressionMultThread extends Classifier {
 			bart.useLinearHeteroskedasticModel();
 		}
 		//once the params are set, now you can set the data
+		bart.setZ(Z);
 		bart.setData(X_y);
 		bart_gibbs_chain_threads[t] = bart;
+	}
+	
+	public void addTrainingDataRowHeteroModel(double[] z_i){
+		Z.add(z_i);
+	}
+	
+	public void setZ(ArrayList<double[]> Z){
+		this.Z = Z;
 	}
 	
 	/**

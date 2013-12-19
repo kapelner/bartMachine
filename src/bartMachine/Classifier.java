@@ -257,7 +257,20 @@ public abstract class Classifier {
 	 */
 	public int getN() {
 		return n;
-	}	
+	}
+	
+	public ArrayList<double[]> getX(){
+		 ArrayList<double[]> X = new  ArrayList<double[]>(n);
+		 for (int i = 0; i < n; i++){
+			 double[] record_y = X_y.get(i);
+			 double[] record = new double[p];
+			 for (int j = 0; j < p; j++){
+				 record[j] = record_y[j];
+			 }
+			 X.add(record);
+		 }
+		 return X;
+	}
 	
 	/** Useful for debugging. Undocumented */
 	public void dumpDataToFile(String optional_title){

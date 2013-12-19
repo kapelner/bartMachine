@@ -28,6 +28,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		mem_cache_for_speed = TRUE,
 		use_heteroskedastic_linear_model = FALSE,
 		hyper_sigma_weights = NULL,
+		Z_heteroskedastic_model = NULL,
 		verbose = TRUE){
 	
 	if (verbose){
@@ -254,17 +255,41 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			cat("Heteroskedastic Linear Model Feature ON.\n")
 		}
 		.jcall(java_bart_machine, "V", "useHeteroskedasticLinearModel")
+		
+		if (!is.null(hyper_sigma_weights)){
+			if (length(hyper_sigma_weights) != ncol(model_matrix_training_data) - 1){
+				stop("The parameter \"hyper_sigma_weights\" must be the same length as the design model matrix including dummified factors.")
+			}
+			if (length(hyper_sigma_weights) == 1){
+				hyper_sigma_weights = c(hyper_sigma_weights, 0) #need to coerce it to be a vector for the Java signature to be found
+			}
+			.jcall(java_bart_machine, "V", "setHyperSigmaWeights", as.numeric(hyper_sigma_weights))
+		}
+		
+		if (is.null(Z_heteroskedastic_model)){
+			#the user did not specify covariates to be used for the heteroskedastic linear model. We defualt to using X
+			for (i in 1 : nrow(model_matrix_training_data)){
+				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(model_matrix_training_data[i, ]))
+			}
+		} else {
+			#the user specified covariates
+			if (nrow(Z_heteroskedastic_model) != nrow(X)){
+				stop("The covariates for the heteroskedastic model must have the same number of observations as the training data for the mean model.")
+			}
+			#first make them numeric by dummifying factors and ensure it's a data frame
+			Z_heteroskedastic_model = dummify_data(Z_heteroskedastic_model)
+			#if there is missing data, throw an error
+			if (nrow(Z_heteroskedastic_model) != nrow(na.omit(Z_heteroskedastic_model))){
+				stop("Missing data in the covariates for the heteroskedastic model is not allowed.")
+			}
+			for (i in 1 : nrow(Z_heteroskedastic_model)){
+				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(Z_heteroskedastic_model[i, ]))
+			}
+		}
+		
 	}
 	
-	if (!is.null(hyper_sigma_weights)){
-		if (length(hyper_sigma_weights) != ncol(model_matrix_training_data) - 1){
-			stop("The parameter \"hyper_sigma_weights\" must be the same length as the design model matrix including dummified factors.")
-		}
-		if (length(hyper_sigma_weights) == 1){
-			hyper_sigma_weights = c(hyper_sigma_weights, 0) #need to coerce it to be a vector for the Java signature to be found
-		}
-		.jcall(java_bart_machine, "V", "setHyperSigmaWeights", as.numeric(hyper_sigma_weights))
-	}
+
 	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){

@@ -20,6 +20,9 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	protected int m_h_num_accept_over_gibbs_samples;
 	protected int m_h_num_accept_over_gibbs_samples_after_burn_in;
 
+	/** a data frame that contains information about the linear variance model - the default is to use the same covariates as used in the BART mean model */
+	private ArrayList<double[]> Z;
+	/** the number of attributes in the covariate model for heteroskedasticity */
 	private int p_Z;
 	
 	/** convenience caches */
@@ -27,16 +30,22 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	private Matrix Sigmainv_times_gamma_0;
 	private Matrix Bmat;
 	private Matrix Bmat_inverse;
-	private Matrix half_times_Z_mc_t_times_Z_mc;
 	private Matrix half_times_Z_mc_t;
 
 	private double[] hyper_sigma_weights;
 
 	
 
+	
+
 	public void Build(){
-		super.Build();
 		if (use_linear_heteroskedastic_model){
+			//wasteful to run once for each thread... but conveninent since it's only O(1)
+			cacheInformationForGibbsSamplingAndSetupHyperparameters();
+			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p_Z: " + p_Z);
+		}
+		super.Build();
+		if (use_linear_heteroskedastic_model){			
 //			for (int j = 0; j < p_Z; j++){
 				double prop_accepted_tot = m_h_num_accept_over_gibbs_samples  / (double) num_gibbs_total_iterations;
 				System.out.println("prop gibbs accepted tot: " + prop_accepted_tot);
@@ -66,34 +75,40 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 	}
 	
 	public double[][] getGammas(){
-		double[][] gammas = new double[num_gibbs_total_iterations][p + 1];
+		double[][] gammas = new double[num_gibbs_total_iterations][p_Z];
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
-			for (int j = 0; j < p + 1; j++){
+			for (int j = 0; j < p_Z; j++){
 				gammas[g][j] = gibbs_samples_of_gamma_for_lm_sigsqs[g].get(j, 0); 
 			}
 			
 		}
 		return gammas;
 	}
-
-	public void setZ(){
-		//first create the Z matrix and mean center it
-		Matrix Z = new Matrix(n, p);
+	
+	public void setZ(ArrayList<double[]> Z){
+		this.Z = Z;
+	}
+	
+	private void cacheInformationForGibbsSamplingAndSetupHyperparameters() {
+		//cache information concerning Z
+		p_Z = Z.get(0).length;
+		//first create the Z matrix from the data entered from R for the covariate model
+		Matrix Zmat = new Matrix(n, p_Z);
 		for (int i = 0; i < n; i++){
-			for (int j = 0; j < p; j++){
-				Z.set(i, j, X_y.get(i)[j]);
+			for (int j = 0; j < p_Z; j++){
+				Zmat.set(i, j, Z.get(i)[j]);
 			}
 		}
+		//no need for Z anymore
+		Z = null;
 		
-		p_Z = Z.getColumnDimension();
-//		System.out.println("p_Z: " + p_Z);
-		
+		//mean center the data
 		Matrix ones = new Matrix(n, 1);
 		for (int i = 0; i < n; i ++){
 			ones.set(i, 0, 1);
 		}
 		Matrix quad_ones = ones.times((ones.transpose().times(ones)).inverse()).times(ones.transpose());		
-		Matrix Z_mc = Z.minus(quad_ones.times(Z));
+		Matrix Z_mc = Zmat.minus(quad_ones.times(Zmat));
 		
 //		System.out.println("Z_mc: " + Z_mc.getRowDimension() + " x " + Z_mc.getColumnDimension());
 //		Z_mc.print(3, 5);
@@ -113,8 +128,9 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 		
 		half_times_Z_mc_t = half.times(Z_mc_t);
-		half_times_Z_mc_t_times_Z_mc = half.times(Z_mc_t_times_Z_mc);
 		
+		
+		//set hyperparameters
 		//if it hasn't been specified by the user, use default
 		if (hyper_sigma_weights == null){			
 			hyper_sigma_weights = new double[p_Z];
@@ -122,45 +138,26 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 				hyper_sigma_weights[j] = DEFAULT_HYPER_SIGMA_WEIGHT; 
 			}
 		}
-	}
-	
-
-	
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
-		if (use_linear_heteroskedastic_model){
-			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p: " + p);
-			
-			setZ(); //to be changed later when the user inputs Z on their own			
-//			System.out.println("Z set");
-			
-			//set hyperparameters
-			hyper_gamma_0 = new Matrix(p_Z, 1);			
-			Matrix hyper_Sigma = new Matrix(p_Z, p_Z);
-			for (int j = 0; j < p_Z; j++){
-				hyper_Sigma.set(j, j, hyper_sigma_weights[j]);
-			}
-			
-			///////////informed model
-//			hyper_gamma_mean_vec.set(0, 0, 1);
-//			hyper_gamma_mean_vec.set(1, 0, 0.3);
-//			hyper_gamma_mean_vec.set(2, 0, 0.5);
-//			hyper_gamma_mean_vec.set(3, 0, 0.3);
-//			hyper_gamma_mean_vec.set(4, 0, 0.2);
-//			hyper_gamma_mean_vec.set(5, 0, 0.5);
-			System.out.println("hyper_gamma_0");
-			hyper_gamma_0.print(2, 2);
-
-			
-			//now we can cache intermediate values we'll use everywhere
-			Matrix Sigmainv = hyper_Sigma.inverse();
-			Sigmainv_times_gamma_0 = Sigmainv.times(hyper_gamma_0);
-
-			Bmat_inverse = (Sigmainv.plus(half_times_Z_mc_t_times_Z_mc));
-			Bmat = Bmat_inverse.inverse();
+		
+		hyper_gamma_0 = new Matrix(p_Z, 1);			
+		Matrix hyper_Sigma = new Matrix(p_Z, p_Z);
+		for (int j = 0; j < p_Z; j++){
+			hyper_Sigma.set(j, j, hyper_sigma_weights[j]);
 		}
+
+//		System.out.println("hyper_gamma_0");
+//		hyper_gamma_0.print(2, 2);
+
+		
+		//now we can cache intermediate values we'll use everywhere
+		Matrix Sigmainv = hyper_Sigma.inverse();
+		Sigmainv_times_gamma_0 = Sigmainv.times(hyper_gamma_0);
+
+		Matrix half_times_Z_mc_t_times_Z_mc = half.times(Z_mc_t_times_Z_mc);
+		Bmat_inverse = (Sigmainv.plus(half_times_Z_mc_t_times_Z_mc));
+		Bmat = Bmat_inverse.inverse();
 	}
-	
+
 	private double calcLnLikRatioGrowHeteroskedastic(bartMachineTreeNode grow_node) {
 		double[] sigsqs = gibbs_samples_of_sigsq_i[gibbs_sample_num - 1];
 
