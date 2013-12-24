@@ -149,6 +149,9 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, nor
     if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
   	}
+	if (bart_machine$use_heteroskedastic_linear_model){
+		warning("Prediction intervals cannot be generated for non-training data")
+	}
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)

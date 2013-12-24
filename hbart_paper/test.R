@@ -177,6 +177,7 @@ plot_y_vs_yhat(hbart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, pred = 
 plot_y_vs_yhat(bart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, pred = T)
 
 #### BHD
+library(bartMachine)
 library(MASS)
 data(Boston)
 X = Boston
@@ -189,11 +190,28 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 
+bart_machine = build_bart_machine(X, y)
+bart_machine
+
+heteroskedasticity_test(bart_machine = bart_machine)
+
+#let's take a look at this model and see if we see blatant heteroskedasticity linearly in any attribute
+bart_machine_for_investigating_hetero = build_bart_machine(X, log(bart_machine$residuals^2))
+for (feature in colnames(X)){
+	pd_plot(bart_machine_for_investigating_hetero, j = feature)
+	windows()
+}
+
 bart_machine = build_bart_machine(Xtrain, ytrain)
 bart_machine
 
-hbart_machine = build_bart_machine(Xtrain, ytrain, use_heteroskedastic_linear_model = TRUE, hyper_sigma_weights = rep(0.01, 13))
+#do a linear model with just tax and nox
+hbart_machine = build_bart_machine(Xtrain, ytrain, use_heteroskedastic_linear_model = TRUE, 
+		Z_heteroskedastic_model = Xtrain[, c("tax", "nox")])
 hbart_machine
+
+ggs = get_gammas_hetero(hbart_machine)
+heteroskedastic_linear_model_significance(ggs)
 
 bart_oosrmse = bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
 hbart_oosrmse = bart_predict_for_test_data(hbart_machine, Xtest, ytest)$rmse
@@ -201,6 +219,10 @@ bart_oosrmse
 hbart_oosrmse
 #how much better does it do?
 (bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
+
+k_fold_cv(X, y, k_folds = 20, verbose = F)$rmse
+k_fold_cv(X, y, k_folds = 20, verbose = F, use_heteroskedastic_linear_model = TRUE, 
+		Z_heteroskedastic_model = Xtrain[, c("tax", "nox")])$rmse
 
 
 

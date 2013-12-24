@@ -1,5 +1,5 @@
 ##performs out-of-sample error estimation for a BART model
-k_fold_cv = function(X, y, k_folds = 5, ...){
+k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 	
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -44,8 +44,13 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 		
+		Z_heteroskedastic_model_k = NULL
+		if (!is.null(Z_heteroskedastic_model)){
+			Z_heteroskedastic_model_k = Z_heteroskedastic_model[holdout_index_i : holdout_index_f, ]
+		}
+		
    		#build bart object
-		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, ...)
+		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, Z_heteroskedastic_model = Z_heteroskedastic_model_k, ...)
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		

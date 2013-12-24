@@ -335,6 +335,18 @@ get_gammas_hetero = function(hbart_machine, after_burn_in = TRUE){
 	}
 }
 
+heteroskedastic_linear_model_significance = function(ggs){
+	ggs = as.matrix(ggs)
+	num_gibbs_samples = nrow(ggs)
+	pvals = array(NA, ncol(ggs))
+	for (j in 1 : ncol(ggs)){
+		num_below_zero = sum(ggs[, j] < 0)
+		num_above_zero = sum(ggs[, j] > 0)
+		pvals[j] = min(num_below_zero, num_above_zero) / (num_gibbs_samples + 1) * 2
+	}
+	pvals
+}
+
 #private function for plotting convergence diagnostics for sigma^2
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){

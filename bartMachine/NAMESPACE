@@ -15,12 +15,14 @@ export(get_var_counts_over_chain)
 export(get_var_props_over_chain)
 
 export(cov_importance_test)
+export(heteroskedasticity_test)
 
 export(plot_y_vs_yhat)
 export(check_bart_error_assumptions)
 export(get_sigsqs)
 export(get_sigsqs_hetero)
 export(get_gammas_hetero)
+export(heteroskedastic_linear_model_significance)
 
 export(investigate_var_importance)
 export(plot_convergence_diagnostics)

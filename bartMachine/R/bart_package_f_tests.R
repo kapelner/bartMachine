@@ -1,3 +1,49 @@
+heteroskedasticity_test = function(X = NULL, log_residual_sqds = NULL, bart_machine = NULL, num_permutation_samples = 100, plot = TRUE, ...){
+	if (!is.null(bart_machine)){
+		cat("Running BART heteroskedasticity test for BART model...\n")
+		X = bart_machine$X
+		log_residual_sqds = log(bart_machine$residuals^2)
+	} else {
+		cat("Running BART heteroskedasticity test...\n")
+	}
+	
+	bart_machine_log_residual_sqds = build_bart_machine(X, log_residual_sqds, verbose = FALSE, ...)
+	
+	observed_error_estimate = bart_machine_log_residual_sqds$PseudoRsq
+	
+	permutation_samples_of_error = array(NA, num_permutation_samples)
+	for (nsim in 1 : num_permutation_samples){
+		cat(".")
+		if (nsim %% 50 == 0){
+			cat("\n")
+		}	
+		#omnibus F-like test - just permute y
+		bart_machine_log_residual_sqds_samp = bart_machine_duplicate(bart_machine_log_residual_sqds, 
+			y = sample(bart_machine_log_residual_sqds$y), run_in_sample = TRUE, verbose = FALSE, ...) #we have to turn verbose off otherwise there would be too many outputs
+		
+		#record permutation result
+		permutation_samples_of_error[nsim] = bart_machine_log_residual_sqds_samp$PseudoRsq
+		destroy_bart_machine(bart_machine_log_residual_sqds_samp)		
+	}
+	cat("\n")
+	destroy_bart_machine(bart_machine_log_residual_sqds)	
+	
+	##compute p-value
+	pval = sum(observed_error_estimate < permutation_samples_of_error) / (num_permutation_samples + 1)
+	
+	if (plot){
+		hist(permutation_samples_of_error, 
+				xlim = c(min(permutation_samples_of_error, 0.99 * observed_error_estimate), max(permutation_samples_of_error, 1.01 * observed_error_estimate)),
+				xlab = paste("permutation samples\n pval = ", round(pval, 3)),
+				br = num_permutation_samples / 10,
+				main = paste("Heteroskedasticity Test\nNull Samples of Pseudo-R^2's"))
+		abline(v = observed_error_estimate, col = "blue", lwd = 3)
+	}
+	cat("p_val = ", pval, "\n")
+	invisible(list(permutation_samples_of_error = permutation_samples_of_error, observed_error_estimate = observed_error_estimate, pval = pval))
+}
+
+
 ##function to permute columns of X and check BART's performance
 cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE){
 	#be able to handle regular expressions to find the covariates
