@@ -148,10 +148,19 @@ public class bartMachineRegressionMultThread extends Classifier {
 		bart_gibbs_chain_threads[t] = bart;
 	}
 	
+	/**
+	 * Adds the ith observation to the training set of covariates for the linear heteroskedastic model 
+	 * 
+	 * @param z_i	The ith observation to add to the training set
+	 */
 	public void addTrainingDataRowHeteroModel(double[] z_i){
+		if (Z == null){
+			Z = new ArrayList<double[]>(n);
+		}
 		Z.add(z_i);
 	}
 	
+	/** For debug purposes only */
 	public void setZ(ArrayList<double[]> Z){
 		this.Z = Z;
 	}

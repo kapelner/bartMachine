@@ -268,6 +268,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		
 		if (is.null(Z_heteroskedastic_model)){
 			#the user did not specify covariates to be used for the heteroskedastic linear model. We defualt to using X
+			if (verbose){
+				cat("Heteroskedastic model covariates not specified. Using X as default.\n")
+			}
 			for (i in 1 : nrow(model_matrix_training_data)){
 				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(model_matrix_training_data[i, ]))
 			}
@@ -278,6 +281,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			}
 			#first make them numeric by dummifying factors and ensure it's a data frame
 			Z_heteroskedastic_model = dummify_data(Z_heteroskedastic_model)
+			if (verbose){
+				cat("Heteroskedastic model covariates specified. p_Z =", ncol(Z_heteroskedastic_model),"\n")
+			}
 			#if there is missing data, throw an error
 			if (nrow(Z_heteroskedastic_model) != nrow(na.omit(Z_heteroskedastic_model))){
 				stop("Missing data in the covariates for the heteroskedastic model is not allowed.")

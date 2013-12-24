@@ -205,28 +205,33 @@ hbart_oosrmse
 
 
 ###motorcycle
+library(bartMachine)
 library(boot)
 data(motor)
 y = motor$accel
+X = as.data.frame(motor$times)
 
-mod = lm(y ~ poly(motor$time, 3))
-X = as.matrix(mod$model)[, 2 : 3]
+MAX_POLY = 30
+mod = lm(y ~ poly(motor$time, MAX_POLY))
+Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
 
-bart_machine = build_bart_machine(data.frame(X), y, num_burn_in = 1500)
+bart_machine = build_bart_machine(X, y, num_burn_in = 1500)
 bart_machine
 
-hbart_machine = build_bart_machine(data.frame(X), y, use_heteroskedastic_linear_model = TRUE, num_burn_in = 1500)
+hbart_machine = build_bart_machine(X, y, 
+		use_heteroskedastic_linear_model = TRUE,
+		Z_heteroskedastic_model = Z)
 hbart_machine
 
 plot(X[, 1], bart_machine$y_hat, col = "red", ylim = c(-160, 120))
 points(X[, 1], y, pch = "+")
 points(X[, 1], hbart_machine$y_hat, col = "blue")
-cred_ints = calc_credible_intervals(bart_machine, data.frame(X))
+cred_ints = calc_credible_intervals(bart_machine, X)
 lines(X[, 1], cred_ints[, 1], col = "red", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "red", lty = 2)
 
-cred_ints = calc_credible_intervals(hbart_machine, data.frame(X))
+cred_ints = calc_credible_intervals(hbart_machine, X)
 lines(X[, 1], cred_ints[, 1], col = "blue", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "blue", lty = 2)
 
