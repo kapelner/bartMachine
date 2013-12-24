@@ -13,14 +13,13 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 	
 	p = ncol(Xpreprocess)
 	
+	if (k_folds == Inf){ #leave-one-out
+		k_folds = n
+	}
+	
 	if (k_folds <= 1 || k_folds > n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
 	}
-	
-	
-	if (k_folds == Inf){ #leave-one-out
-		k_folds = n
-	}	
 	
 	holdout_size = round(n / k_folds)
 	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
@@ -46,7 +45,7 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 		
 		Z_heteroskedastic_model_k = NULL
 		if (!is.null(Z_heteroskedastic_model)){
-			Z_heteroskedastic_model_k = Z_heteroskedastic_model[holdout_index_i : holdout_index_f, ]
+			Z_heteroskedastic_model_k = Z_heteroskedastic_model[-c(holdout_index_i : holdout_index_f), , drop = FALSE]
 		}
 		
    		#build bart object

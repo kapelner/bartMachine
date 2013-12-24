@@ -178,6 +178,10 @@ plot_y_vs_yhat(bart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, pred = T
 
 #### BHD
 library(bartMachine)
+set_bart_machine_num_cores(4)
+init_java_for_bart_machine_with_mem_in_mb(5000)
+
+
 library(MASS)
 data(Boston)
 X = Boston
@@ -190,24 +194,24 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 
-bart_machine = build_bart_machine(X, y)
-bart_machine
+#bart_machine = build_bart_machine(X, y)
+#bart_machine
 
-heteroskedasticity_test(bart_machine = bart_machine)
-
-#let's take a look at this model and see if we see blatant heteroskedasticity linearly in any attribute
-bart_machine_for_investigating_hetero = build_bart_machine(X, log(bart_machine$residuals^2))
-for (feature in colnames(X)){
-	pd_plot(bart_machine_for_investigating_hetero, j = feature)
-	windows()
-}
+#heteroskedasticity_test(bart_machine = bart_machine)
+#
+##let's take a look at this model and see if we see blatant heteroskedasticity linearly in any attribute
+#bart_machine_for_investigating_hetero = build_bart_machine(X, log(bart_machine$residuals^2))
+#for (feature in colnames(X)){
+#	pd_plot(bart_machine_for_investigating_hetero, j = feature)
+#	windows()
+#}
 
 bart_machine = build_bart_machine(Xtrain, ytrain)
 bart_machine
 
 #do a linear model with just tax and nox
 hbart_machine = build_bart_machine(Xtrain, ytrain, use_heteroskedastic_linear_model = TRUE, 
-		Z_heteroskedastic_model = Xtrain[, c("tax", "nox")])
+		Z_heteroskedastic_model = Xtrain[, c("nox"), drop = FALSE])
 hbart_machine
 
 ggs = get_gammas_hetero(hbart_machine)
@@ -220,10 +224,9 @@ hbart_oosrmse
 #how much better does it do?
 (bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
 
-k_fold_cv(X, y, k_folds = 20, verbose = F)$rmse
-k_fold_cv(X, y, k_folds = 20, verbose = F, use_heteroskedastic_linear_model = TRUE, 
-		Z_heteroskedastic_model = Xtrain[, c("tax", "nox")])$rmse
 
+k_fold_cv(X, y, k_folds = Inf, verbose = F, use_heteroskedastic_linear_model = TRUE, Z = X[, c("nox"), drop = FALSE])$rmse
+k_fold_cv(X, y, k_folds = Inf, verbose = F)$rmse
 
 
 ###motorcycle

@@ -325,8 +325,11 @@ get_gammas_hetero = function(hbart_machine, after_burn_in = TRUE){
 	}
 	
 	gammas_hetero = t(sapply(.jcall(hbart_machine$java_bart_machine, "[[D", "getGammaSamplesSigsqsHeteroskedastic"), .jevalArray))
-	
-	gammas_hetero_after_burnin = gammas_hetero[(nrow(gammas_hetero) - hbart_machine$num_iterations_after_burn_in + 1) : nrow(gammas_hetero), ]
+	#with one dimension it gets transposed
+	if (nrow(gammas_hetero) == 1){
+		gammas_hetero = t(gammas_hetero)
+	}
+	gammas_hetero_after_burnin = gammas_hetero[(nrow(gammas_hetero) - hbart_machine$num_iterations_after_burn_in + 1) : nrow(gammas_hetero), , drop = FALSE]
 	
 	if (after_burn_in){
 		gammas_hetero_after_burnin

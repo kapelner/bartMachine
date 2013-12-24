@@ -160,6 +160,17 @@ public class bartMachineRegressionMultThread extends Classifier {
 		Z.add(z_i);
 	}
 	
+	/**
+	 * Adds the ith observation to the training set of covariates for the linear heteroskedastic model.
+	 * We need this function if there is only one dimension of z's
+	 * 
+	 * @param z_i	The ith observation to add to the training set
+	 */
+	public void addTrainingDataRowHeteroModel(double z_i){
+		double[] z_i_arr = {z_i};
+		addTrainingDataRowHeteroModel(z_i_arr);
+	}	
+	
 	/** For debug purposes only */
 	public void setZ(ArrayList<double[]> Z){
 		this.Z = Z;
