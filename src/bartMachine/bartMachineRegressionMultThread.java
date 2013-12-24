@@ -375,6 +375,24 @@ public class bartMachineRegressionMultThread extends Classifier {
 		return sigsqs_to_export_double_arr;
 	}
 	
+	public double[][] getGammaSamplesSigsqsHeteroskedastic(){
+		ArrayList<double[]> gammas_to_export = new ArrayList<double[]>(num_gibbs_total_iterations);
+		for (int c = 0; c < num_cores; c++){
+			ArrayList<double[]> gammas_to_export_by_thread = new ArrayList<double[]>(bart_gibbs_chain_threads[c].getGammas());
+			if (c == 0){
+				gammas_to_export.addAll(gammas_to_export_by_thread);
+			}
+			else {
+				gammas_to_export.addAll(gammas_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
+			}
+		}
+		double[][] gammas_to_export_double_arr = new double[num_gibbs_total_iterations][n];
+		for (int g = 0; g < num_gibbs_total_iterations; g++){
+			gammas_to_export_double_arr[g] = gammas_to_export.get(g);
+		}
+		return gammas_to_export_double_arr;
+	}
+	
 	/**
 	 * Returns a record of Metropolis-Hastings acceptances or rejections for all trees during burn-in
 	 * 

@@ -20,6 +20,7 @@ export(plot_y_vs_yhat)
 export(check_bart_error_assumptions)
 export(get_sigsqs)
 export(get_sigsqs_hetero)
+export(get_gammas_hetero)
 
 export(investigate_var_importance)
 export(plot_convergence_diagnostics)

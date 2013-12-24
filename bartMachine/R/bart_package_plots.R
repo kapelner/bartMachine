@@ -291,21 +291,20 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE, plot_hist = FALSE, plo
 	}
 }
 
-##get sigsqs and plot a histogram, if desired
-get_sigsqs_hetero = function(bart_machine, after_burn_in = TRUE){
-	if (is_bart_destroyed(bart_machine)){
+get_sigsqs_hetero = function(hbart_machine, after_burn_in = TRUE){
+	if (is_bart_destroyed(hbart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
-	}	
-	if (bart_machine$pred_type == "classification"){
-		stop("There are no sigsq's for classification.")
 	}
-	if (bart_machine$pred_type == "classification"){
-		stop("There are no sigsq's for classification.")
+	if (!hbart_machine$use_heteroskedastic_linear_model){
+		stop("This bart model was not build with the heteroskedastic feature ennabled.")
+	}
+	if (hbart_machine$pred_type == "classification"){
+		stop("There are no variance estimates for classification.")
 	}
 	
-	sigsqs_hetero = t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesSigsqsHeteroskedastic"), .jevalArray))
+	sigsqs_hetero = t(sapply(.jcall(hbart_machine$java_bart_machine, "[[D", "getGibbsSamplesSigsqsHeteroskedastic"), .jevalArray))
 	
-	sigsqs_hetero_after_burnin = sigsqs_hetero[(nrow(sigsqs_hetero) - bart_machine$num_iterations_after_burn_in + 1) : nrow(sigsqs_hetero), ]
+	sigsqs_hetero_after_burnin = sigsqs_hetero[(nrow(sigsqs_hetero) - hbart_machine$num_iterations_after_burn_in + 1) : nrow(sigsqs_hetero), ]
 	
 	if (after_burn_in){
 		sigsqs_hetero_after_burnin
@@ -314,6 +313,27 @@ get_sigsqs_hetero = function(bart_machine, after_burn_in = TRUE){
 	}
 }
 
+get_gammas_hetero = function(hbart_machine, after_burn_in = TRUE){
+	if (is_bart_destroyed(hbart_machine)){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}
+	if (!hbart_machine$use_heteroskedastic_linear_model){
+		stop("This bart model was not build with the heteroskedastic feature ennabled.")
+	}
+	if (hbart_machine$pred_type == "classification"){
+		stop("There are no variance estimates for classification.")
+	}
+	
+	gammas_hetero = t(sapply(.jcall(hbart_machine$java_bart_machine, "[[D", "getGammaSamplesSigsqsHeteroskedastic"), .jevalArray))
+	
+	gammas_hetero_after_burnin = gammas_hetero[(nrow(gammas_hetero) - hbart_machine$num_iterations_after_burn_in + 1) : nrow(gammas_hetero), ]
+	
+	if (after_burn_in){
+		gammas_hetero_after_burnin
+	} else {
+		gammas_hetero
+	}
+}
 
 #private function for plotting convergence diagnostics for sigma^2
 plot_sigsqs_convergence_diagnostics = function(bart_machine){

@@ -211,7 +211,7 @@ data(motor)
 y = motor$accel
 X = as.data.frame(motor$times)
 
-MAX_POLY = 30
+MAX_POLY = 3
 mod = lm(y ~ poly(motor$time, MAX_POLY))
 Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
@@ -223,6 +223,8 @@ hbart_machine = build_bart_machine(X, y,
 		use_heteroskedastic_linear_model = TRUE,
 		Z_heteroskedastic_model = Z)
 hbart_machine
+
+ggs = get_gammas_hetero(hbart_machine)
 
 plot(X[, 1], bart_machine$y_hat, col = "red", ylim = c(-160, 120))
 points(X[, 1], y, pch = "+")

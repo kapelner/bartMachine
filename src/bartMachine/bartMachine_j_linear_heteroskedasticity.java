@@ -74,13 +74,14 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		}
 	}
 	
-	public double[][] getGammas(){
-		double[][] gammas = new double[num_gibbs_total_iterations][p_Z];
+	public ArrayList<double[]> getGammas(){
+		ArrayList<double[]> gammas = new ArrayList<double[]>(num_gibbs_total_iterations);
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
+			double[] gammas_g = new double[p_Z];
 			for (int j = 0; j < p_Z; j++){
-				gammas[g][j] = gibbs_samples_of_gamma_for_lm_sigsqs[g].get(j, 0); 
+				gammas_g[j] = gibbs_samples_of_gamma_for_lm_sigsqs[g].get(j, 0); 
 			}
-			
+			gammas.add(gammas_g);
 		}
 		return gammas;
 	}
