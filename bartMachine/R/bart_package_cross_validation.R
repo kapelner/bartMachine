@@ -1,5 +1,11 @@
 ##performs out-of-sample error estimation for a BART model
 k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
+	if (class(X) != "data.frame"){
+		stop("X must be a data frame.")
+	}
+	if (!(class(y) %in% c("numeric", "integer", "factor"))){
+		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
+	}
 	
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -18,7 +24,7 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 	}
 	
 	if (k_folds <= 1 || k_folds > n){
-		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
+		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" or \"n\" for leave one out")
 	}
 	
 	holdout_size = round(n / k_folds)
@@ -49,8 +55,8 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 		}
 		
    		#build bart object
-		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, Z_heteroskedastic_model = Z_heteroskedastic_model_k, ...)
-		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
+		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p, drop = FALSE], training_data_k[, (p + 1)], run_in_sample = FALSE, Z_heteroskedastic_model = Z_heteroskedastic_model_k, ...)
+		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p, drop = FALSE], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors
@@ -72,7 +78,6 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
 		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
 		list(confusion_matrix = confusion_matrix, misclassification_error = confusion_matrix[3, 3])
-	}
-	
+	}	
 }
 

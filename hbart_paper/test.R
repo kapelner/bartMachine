@@ -91,6 +91,12 @@ hbart_oosrmse
 #how much better does it do?
 (bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
 
+#leave one out
+hbart_oosrmse = k_fold_cv(data.frame(X), y, k_folds = 50, verbose = F, use_heteroskedastic_linear_model = TRUE)$rmse
+bart_oosrmse = k_fold_cv(data.frame(X), y, k_folds = 50, verbose = F)$rmse
+#how much better does it do?
+(bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
+
 ######################JB MODEL
 
 n = 500
@@ -121,6 +127,14 @@ bart_machine
 
 hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE)
 hbart_machine
+
+#leave one out
+hbart_oosrmse = k_fold_cv(data.frame(X), as.numeric(y), k_folds = 10, verbose = F, use_heteroskedastic_linear_model = TRUE)$rmse
+bart_oosrmse = k_fold_cv(data.frame(X), as.numeric(y), k_folds = 10, verbose = F)$rmse
+#how much better does it do?
+(bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
+
+
 windows()
 plot(X %*% beta_vec, bart_machine$y_hat, col = "red")
 points(X %*% beta_vec, hbart_machine$y_hat, col = "green")
@@ -175,6 +189,9 @@ plot_y_vs_yhat(bart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, cred = T
 
 plot_y_vs_yhat(hbart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, pred = T)
 plot_y_vs_yhat(bart_machine, Xtest = Xtest, ytest = exp_y_given_X_test, pred = T)
+
+
+
 
 #### BHD
 library(bartMachine)
@@ -262,5 +279,13 @@ cred_ints = calc_credible_intervals(hbart_machine, X)
 lines(X[, 1], cred_ints[, 1], col = "blue", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "blue", lty = 2)
 
-k_fold_cv(X, y, k_folds = 20, verbose = F)$rmse
-k_fold_cv(X, y, k_folds = 20, verbose = F, use_heteroskedastic_linear_model = TRUE)$rmse
+
+hbart_oosrmse = k_fold_cv(X, y, k_folds = Inf, verbose = F, use_heteroskedastic_linear_model = TRUE, Z = Z)$rmse
+bart_oosrmse = k_fold_cv(X, y, k_folds = Inf, verbose = F)$rmse
+
+bart_oosrmse = bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
+hbart_oosrmse = bart_predict_for_test_data(hbart_machine, Xtest, ytest)$rmse
+bart_oosrmse
+hbart_oosrmse
+#how much better does it do?
+(bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
