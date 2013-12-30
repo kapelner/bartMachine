@@ -1,5 +1,11 @@
 ##performs out-of-sample error estimation for a BART model
 k_fold_cv = function(X, y, k_folds = 5, ...){
+	if (class(X) != "data.frame"){
+		stop("X must be a data frame.")
+	}
+	if (!(class(y) %in% c("numeric", "integer", "factor"))){
+		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
+	}	
 	
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -13,14 +19,16 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 	
 	p = ncol(Xpreprocess)
 	
+	if (k_folds == Inf){ #leave-one-out
+		k_folds = n
+	}
+	
 	if (k_folds <= 1 || k_folds > n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
 	}
 	
 	
-	if (k_folds == Inf){ #leave-one-out
-		k_folds = n
-	}	
+	
 	
 	holdout_size = round(n / k_folds)
 	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
@@ -46,7 +54,7 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		
    		#build bart object
 		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, ...)
-		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
+		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p, drop = FALSE], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors

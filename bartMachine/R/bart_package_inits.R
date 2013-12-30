@@ -29,7 +29,11 @@ init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	}
 	
 	#Actually initialzie the Java (once per R session)
-	.jinit(parameters = paste("-Xmx", bart_max_mem, "m", sep = ""))
+	mem_flag_as_string = paste("-Xmx", bart_max_mem, "m", sep = "")
+	#we pass in the mem flag TWICE due to bug in MAC OS X which will be fixed in rJava 0.9.6
+	#since it works with all versions of rJava, we keep this here in case someone may happen to
+	#be running MAC OS X with rJAVA version < 0.9.6
+	.jinit(parameters = c(mem_flag_as_string, mem_flag_as_string))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(find.package("bartMachine"), "/java/", dependency, sep = ""))
 	} 
