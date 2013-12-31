@@ -1,23 +1,4 @@
-library(randomForest)
-library(missForest)
-
-directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
-#if we're on windows, then we're on the dev box, so use a prespecified directory
-if (.Platform$OS.type == "windows"){
-	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\bartMachine"
-}
-
-setwd(directory_where_code_is)
-
-source("r_scripts/bart_package_inits.R")
-source("r_scripts/bart_package_data_preprocessing.R")
-source("r_scripts/bart_package_builders.R")
-source("r_scripts/bart_package_plots.R")
-source("r_scripts/bart_package_predicts.R")
-source("r_scripts/bart_package_summaries.R")
-source("r_scripts/bart_package_variable_selection.R")
-source("r_scripts/bart_package_f_tests.R")
-source("r_scripts/missing_data/sims_functions.R")
+library(bartMachine)
 
 
 ########## CRAZY MODEL
@@ -33,7 +14,26 @@ set_bart_machine_num_cores(4)
 
 graphics.off()
 
-Xy = generate_crazy_model(n_crazy, 0, offset_missing, sigma_e)
+if (is.null(Sigma)){
+	Sigma = 0.9 * diag(p_crazy) + 0.1
+	Sigma[1, p_crazy] = 2 * Sigma[1, p_crazy]
+	Sigma[p_crazy, 1] = 2 * Sigma[p_crazy, 1]
+}
+if (is.null(mu_vec)){
+	mu_vec = rep(0, p_crazy)
+}
+
+Xs_crazy = mvrnorm(n_crazy, mu_vec, Sigma)
+error_crazy = rnorm(n_crazy, 0, sigma_e)
+X1 = Xs_crazy[, 1]
+X2 = Xs_crazy[, 2]
+X3 = Xs_crazy[, 3]
+
+y_crazy = X1 + X2 + X3 - X1^2 + X2^2 + X1 * X2 + error_crazy
+
+Xy = data.frame(Xs_crazy, y_crazy)
+
+
 hist(Xy[, 4], br = 50, main = "distribution of response")
 bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000)
 plot_y_vs_yhat(bart_machine)

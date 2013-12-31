@@ -25,22 +25,25 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 		#now take care of missing data - add each column as a missingness dummy
 		predictor_columns_with_missingness = as.numeric(which(colSums(is.na(data)) > 0))
 		
-		M = matrix(0, nrow = nrow(data), ncol = length(predictor_columns_with_missingness))
-		for (i in 1 : nrow(data)){
-			for (j in 1 : length(predictor_columns_with_missingness)){
-				if (is.missing(data[i, predictor_columns_with_missingness[j]])){
-					M[i, j] = 1
+		#only do something if there are predictors with missingness
+		if (length(predictor_columns_with_missingness) > 0){
+			M = matrix(0, nrow = nrow(data), ncol = length(predictor_columns_with_missingness))
+			for (i in 1 : nrow(data)){
+				for (j in 1 : length(predictor_columns_with_missingness)){
+					if (is.missing(data[i, predictor_columns_with_missingness[j]])){
+						M[i, j] = 1
+					}
 				}
 			}
+			colnames(M) = paste("M_", colnames(data)[predictor_columns_with_missingness], sep = "")
+			
+			#now we may want to add imputations before the missingness dummies
+			if (!is.null(imputations)){
+				data = cbind(data, imputations)
+			}
+			#append the missing dummy columns to data as if they're real attributes themselves
+			data = cbind(data, M)			
 		}
-		colnames(M) = paste("M_", colnames(data)[predictor_columns_with_missingness], sep = "")
-		
-		#now we may want to add imputations before the missingness dummies
-		if (!is.null(imputations)){
-			data = cbind(data, imputations)
-		}
-		#append the missing dummy columns to data as if they're real attributes themselves
-		data = cbind(data, M)
 	} else if (!is.null(imputations)){ #now we may want to add imputations
 		data = cbind(data, imputations) 
 	}

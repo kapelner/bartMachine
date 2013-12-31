@@ -61,9 +61,19 @@ knockout_nmar = function(X, prop){
 }
 
 
-generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e){
+generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e, Sigma = NULL, mu_vec = NULL){
 	p_crazy = 3
-	Xs_crazy = matrix(runif(n_crazy * p_crazy, -1, 1), ncol = p_crazy)
+	
+	if (is.null(Sigma)){
+		Sigma = 0.9 * diag(p_crazy) + 0.1
+		Sigma[1, p_crazy] = 2 * Sigma[1, p_crazy]
+		Sigma[p_crazy, 1] = 2 * Sigma[p_crazy, 1]
+	}
+	if (is.null(mu_vec)){
+		mu_vec = rep(0, p_crazy)
+	}
+	
+	Xs_crazy = mvrnorm(n_crazy, mu_vec, Sigma)
 	error_crazy = rnorm(n_crazy, 0, sigma_e)
 	X1 = Xs_crazy[, 1]
 	X2 = Xs_crazy[, 2]
@@ -107,8 +117,6 @@ plot_hist_of_posterior = function(pred, expectation){
 		br = 50,
 		main = "",
 		xlab = ""
-#		main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "and se = ", round(sd(pred$y_hat_posterior_samples[1,]), 2)), 
-#		xlab = expression(hat(f)(x))
 	)
 	cat("yhat =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "se(yhat) =", round(sd(pred$y_hat_posterior_samples[1,]), 3), "\n")
 	abline(v = expectation, col = "blue", lwd = 3)
@@ -116,60 +124,6 @@ plot_hist_of_posterior = function(pred, expectation){
 	abline(v = pred$ppi_a[1], col = "orange", lwd = 3)
 	abline(v = pred$ppi_b[1], col = "orange", lwd = 3)
 }
-
-#k_fold_cv = function(Xmis, Xorig, y, k_folds = 5, ...){
-#	
-#	n = nrow(Xmis)
-#	Xpreprocess = pre_process_training_data(Xmis)
-#	
-#	p = ncol(Xpreprocess)
-#	
-#	if (k_folds <= 1 || k_folds > n){
-#		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
-#	}
-#	
-#	
-#	if (k_folds == Inf){ #leave-one-out
-#		k_folds = n
-#	}	
-#	
-#	holdout_size = round(n / k_folds)
-#	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
-#	
-#	L1_err = 0
-#	L2_err = 0
-#	
-#	
-#	for (k in 1 : k_folds){
-#		cat(".")
-#		holdout_index_i = split_points[k]
-#		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
-#		
-#		X_test_k = Xorig[holdout_index_i : holdout_index_f, ]
-#		X_train_k = Xmis[-c(holdout_index_i : holdout_index_f), ]
-#		y_test_k = y[holdout_index_i : holdout_index_f]
-#		y_train_k = y[-c(holdout_index_i : holdout_index_f)]
-#		
-#		bart_machine_cv = build_bart_machine(X_train_k, y_train_k, run_in_sample = FALSE, verbose = FALSE, ...)
-#		predict_obj = bart_predict_for_test_data(bart_machine_cv, X_test_k, y_test_k)
-#		destroy_bart_machine(bart_machine_cv)
-#		
-#		#tabulate errors
-#		L1_err = L1_err + predict_obj$L1_err
-#		L2_err = L2_err + predict_obj$L2_err
-#	}
-#	cat("\n")
-#	
-#	list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n))
-#}
-#
-#
-#
-#
-#
-#
-
-
 
 generate_simple_model_with_missingness = function(n, mu_1, mu_2, sigma_1 = 1, sigma_2 = 1, gamma = 0.1){
 	X_1 = rnorm(n, mu_1, sigma_1)

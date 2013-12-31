@@ -1,28 +1,10 @@
-library(randomForest)
-library(missForest)
+library(bartMachine)
 library(MASS)
 
 
 ###########GRID COMPUTING
 LAST_NAME = "kapelner"
 NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
-
-if (NOT_ON_GRID){
-	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\bartMachine"
-} else {
-	directory_where_code_is = getwd()
-}
-setwd(directory_where_code_is)
-
-source("r_scripts/bart_package_inits.R")
-source("r_scripts/bart_package_builders.R")
-source("r_scripts/bart_package_predicts.R")
-source("r_scripts/bart_package_data_preprocessing.R")
-source("r_scripts/bart_package_plots.R")
-source("r_scripts/bart_package_variable_selection.R")
-source("r_scripts/bart_package_f_tests.R")
-source("r_scripts/bart_package_summaries.R")
-source("r_scripts/missing_data/sims_functions.R")
 
 args = commandArgs(TRUE)
 print(paste("args:", args))
@@ -35,7 +17,11 @@ if (length(args) > 0){
 if (NOT_ON_GRID){
 	iter_num = 1
 	set_bart_machine_num_cores(4)
+	init_java_for_bart_machine_with_mem_in_mb(5000)
+} else {
+	init_java_for_bart_machine_with_mem_in_mb(2000)	
 }
+
 
 
 
@@ -48,7 +34,7 @@ y = X$medv
 X$medv = NULL
 
 #set simulation params
-Nsim = 500
+Nsim = 1
 ALPHA = 0.05
 BURN_IN = 1000
 KnockoutPROP = c(0.01, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5, 0.9)
