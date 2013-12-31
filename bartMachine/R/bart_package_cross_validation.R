@@ -48,7 +48,7 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		cat(".")
 		holdout_index_i = split_points[k]
 		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
-		
+		cat("holdout_index_i", holdout_index_i, "holdout_index_f", holdout_index_f, "holdout_size", holdout_size, "split_points", split_points)
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 		
