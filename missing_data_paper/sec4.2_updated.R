@@ -253,22 +253,22 @@ for (nsim in 1 : Nsim){
 
 avgs_nmar_all_all = apply(results_bart_all_all_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_all_all = apply(results_bart_all_all_nmar, 1, sd, na.rm = TRUE)
-rel_nmar_avgs_all_all = avgs_nmar_all_all / avgs_nmar_cc_all[1]
+rel_nmar_avgs_all_all = avgs_nmar_all_all / avgs_nmar_all_all[1]
 
 avgs_nmar_all_cc = apply(results_bart_all_cc_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_all_cc = apply(results_bart_all_cc_nmar, 1, sd, na.rm = TRUE)
-rel_nmar_avgs_all_cc = avgs_nmar_all_cc / avgs_nmar_cc_all[1]
+rel_nmar_avgs_all_cc = avgs_nmar_all_cc / avgs_nmar_all_all[1]
 
 avgs_nmar_cc_all = apply(results_bart_cc_all_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_cc_all = apply(results_bart_cc_all_nmar, 1, sd, na.rm = TRUE)
-rel_nmar_avgs_cc_all = avgs_nmar_cc_all / avgs_nmar_cc_all[1]
+rel_nmar_avgs_cc_all = avgs_nmar_cc_all / avgs_nmar_all_all[1]
 
 avgs_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, sd, na.rm = TRUE)
-rel_nmar_avgs_cc_cc = avgs_nmar_cc_cc / avgs_nmar_cc_all[1]
+rel_nmar_avgs_cc_cc = avgs_nmar_cc_cc / avgs_nmar_all_all[1]
 
 
-plot(beta2s, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(.6, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
+plot(beta2s, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
 points(beta2s, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
 points(beta2s, rel_nmar_avgs_cc_all, col = "red", type = "o")
 points(beta2s, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
