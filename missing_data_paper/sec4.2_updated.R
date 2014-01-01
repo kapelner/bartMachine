@@ -8,9 +8,9 @@ generate_response_model = function(n, sigma_e = 1, Sigma = NULL, mu_vec = NULL){
 	p = 3
 	
 	if (is.null(Sigma)){
-		Sigma = 0.9 * diag(p) + 0.1
-		Sigma[1, p] = 2 * Sigma[1, p]
-		Sigma[p, 1] = 2 * Sigma[p, 1]
+		Sigma = 0.5 * diag(p) + 0.5
+		Sigma[1, p] = 3 / 2 * Sigma[1, p]
+		Sigma[p, 1] = 3 / 2 * Sigma[p, 1]
 	}
 	if (is.null(mu_vec)){
 		mu_vec = rep(0, p)
@@ -116,17 +116,13 @@ points(gammas, rel_mcar_avgs_cc_cc, col = "red", type = "o", lty = 3)
 
 ###MAR
 
+beta_0 = -3
+betas = c(0, 0.8, 1.4, 2, 2.7, 4, 7, 30)
 
 
-
-beta0 = -1.5
-beta1 = 0.5
-beta2s = c(0, 0.2, 0.5, 1, 2, 3, 4.5, 8)
-
-
-generate_mar_model = function(Xy, beta_0, beta_1, beta_2){
+generate_mar_model = function(Xy, beta_0, beta){
 	for (i in 1 : nrow(Xy)){
-		prob = pnorm(beta_0 + beta_1 * Xy[i, 1] + beta_2 * Xy[i, 2]^2)
+		prob = pnorm(beta_0 + beta * Xy[i, 1] + beta * Xy[i, 2]^2)
 		if (runif(1) < prob){
 			Xy[i, 3] = NA #missingness in X3 is determined by a linear probit model of X1 and X2
 		}
@@ -134,26 +130,26 @@ generate_mar_model = function(Xy, beta_0, beta_1, beta_2){
 	Xy	
 }
 
-results_bart_all_all_mar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_all_cc_mar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_cc_all_mar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_cc_cc_mar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-rownames(results_bart_all_all_mar) = beta2s
-rownames(results_bart_all_cc_mar) = beta2s
-rownames(results_bart_cc_all_mar) = beta2s
-rownames(results_bart_cc_cc_mar) = beta2s
+results_bart_all_all_mar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_all_cc_mar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_cc_all_mar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_cc_cc_mar = matrix(NA, nrow = length(betas), ncol = Nsim)
+rownames(results_bart_all_all_mar) = betas
+rownames(results_bart_all_cc_mar) = betas
+rownames(results_bart_cc_all_mar) = betas
+rownames(results_bart_cc_cc_mar) = betas
 
 for (nsim in 1 : Nsim){
 	cat("nsim = ", nsim, "\n")
-	for (g in 1 : length(beta2s)){
-		beta2 = beta2s[g]
-		cat("beta2 = ", beta2, "\n")
+	for (g in 1 : length(betas)){
+		beta = betas[g]
+		cat("beta = ", beta, "\n")
 		
 		#generate data
-		Xy_train_all = generate_mar_model(generate_response_model(n), beta0, beta1, beta2)
+		Xy_train_all = generate_mar_model(generate_response_model(n))
 		Xy_train_cc = na.omit(Xy_train_all)
 		Xy_test_cc = generate_response_model(n)
-		Xy_test_all = generate_mar_model(Xy_test_cc, beta0, beta1, beta2)
+		Xy_test_all = generate_mar_model(Xy_test_cc, beta_0, beta)
 		
 		
 		#train models
@@ -190,24 +186,23 @@ sd_mar_cc_cc = apply(results_bart_cc_cc_mar, 1, sd, na.rm = TRUE)
 rel_mar_avgs_cc_cc = avgs_mar_cc_cc / avgs_mar_all_all[1]
 
 
-plot(beta2s, rel_mar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)))
-points(beta2s, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(beta2s, rel_mar_avgs_cc_all, col = "red", type = "o")
-points(beta2s, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+plot(betas, rel_mar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)))
+points(betas, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+points(betas, rel_mar_avgs_cc_all, col = "red", type = "o")
+points(betas, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3)
 
 
 ###NMAR
 
 
 
-beta0 = -1.5
-beta1 = 0.5
-beta2s = c(0, 0.2, 0.5, 1, 2, 3, 4.5, 8)
+beta_0 = -3
+betas = c(0, 0.8, 1.4, 2, 2.7, 4, 7, 30)
 
 
-generate_nmar_model = function(Xy, beta_0, beta_1, beta_2){
+generate_nmar_model = function(Xy, beta_0, beta){
 	for (i in 1 : nrow(Xy)){
-		prob = pnorm(beta_0 + beta_1 * Xy[i, 1] + beta_2 * Xy[i, 2]^2)
+		prob = pnorm(beta_0 + beta * Xy[i, 1] + beta * Xy[i, 2]^2)
 		if (runif(1) < prob){
 			Xy[i, 2] = NA #missingness in X2 is determined by a linear probit model of X1 and X2
 		}
@@ -215,26 +210,26 @@ generate_nmar_model = function(Xy, beta_0, beta_1, beta_2){
 	Xy	
 }
 
-results_bart_all_all_nmar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_all_cc_nmar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_cc_all_nmar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-results_bart_cc_cc_nmar = matrix(NA, nrow = length(beta2s), ncol = Nsim)
-rownames(results_bart_all_all_nmar) = beta2s
-rownames(results_bart_all_cc_nmar) = beta2s
-rownames(results_bart_cc_all_nmar) = beta2s
-rownames(results_bart_cc_cc_nmar) = beta2s
+results_bart_all_all_nmar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_all_cc_nmar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_cc_all_nmar = matrix(NA, nrow = length(betas), ncol = Nsim)
+results_bart_cc_cc_nmar = matrix(NA, nrow = length(betas), ncol = Nsim)
+rownames(results_bart_all_all_nmar) = betas
+rownames(results_bart_all_cc_nmar) = betas
+rownames(results_bart_cc_all_nmar) = betas
+rownames(results_bart_cc_cc_nmar) = betas
 
 for (nsim in 1 : Nsim){
 	cat("nsim = ", nsim, "\n")
-	for (g in 1 : length(beta2s)){
-		beta2 = beta2s[g]
-		cat("beta2 = ", beta2, "\n")
+	for (g in 1 : length(betas)){
+		beta = betas[g]
+		cat("beta = ", beta, "\n")
 		
 		#generate data 
-		Xy_train_all = generate_nmar_model(generate_response_model(n), beta0, beta1, beta2)
+		Xy_train_all = generate_nmar_model(generate_response_model(n))
 		Xy_train_cc = na.omit(Xy_train_all)
 		Xy_test_cc = generate_response_model(n)
-		Xy_test_all = generate_nmar_model(Xy_test_cc, beta0, beta1, beta2)
+		Xy_test_all = generate_nmar_model(Xy_test_cc, beta_0, beta)
 		
 		#train models
 		bart_machine_all = build_bart_machine(Xy = Xy_train_all, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, verbose = FALSE, run_in_sample = FALSE)
@@ -268,7 +263,7 @@ sd_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, sd, na.rm = TRUE)
 rel_nmar_avgs_cc_cc = avgs_nmar_cc_cc / avgs_nmar_cc_all[1]
 
 
-plot(beta2s, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(.6, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
-points(beta2s, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(beta2s, rel_nmar_avgs_cc_all, col = "red", type = "o")
-points(beta2s, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+plot(betas, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(.6, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
+points(betas, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+points(betas, rel_nmar_avgs_cc_all, col = "red", type = "o")
+points(betas, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
