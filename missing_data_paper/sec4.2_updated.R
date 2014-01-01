@@ -146,7 +146,7 @@ for (nsim in 1 : Nsim){
 		cat("beta = ", beta, "\n")
 		
 		#generate data
-		Xy_train_all = generate_mar_model(generate_response_model(n))
+		Xy_train_all = generate_mar_model(generate_response_model(n), beta_0, beta)
 		Xy_train_cc = na.omit(Xy_train_all)
 		Xy_test_cc = generate_response_model(n)
 		Xy_test_all = generate_mar_model(Xy_test_cc, beta_0, beta)
@@ -226,7 +226,7 @@ for (nsim in 1 : Nsim){
 		cat("beta = ", beta, "\n")
 		
 		#generate data 
-		Xy_train_all = generate_nmar_model(generate_response_model(n))
+		Xy_train_all = generate_nmar_model(generate_response_model(n), beta_0, beta)
 		Xy_train_cc = na.omit(Xy_train_all)
 		Xy_test_cc = generate_response_model(n)
 		Xy_test_all = generate_nmar_model(Xy_test_cc, beta_0, beta)
