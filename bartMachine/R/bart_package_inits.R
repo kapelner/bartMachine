@@ -22,6 +22,10 @@ bart_machine_num_cores = function(){
 	}
 }
 
+set_bart_machine_memory = function(bart_max_mem){
+	init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
+}
+
 ##initialize JVM and let the user know how much RAM is available
 init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	if (exists("JVM_INITIALIZED", envir = bartMachine_globals)){

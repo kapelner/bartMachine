@@ -69,6 +69,8 @@ public class bartMachineTreeNode implements Cloneable {
 	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */
 	protected int[] attribute_split_counts;
 
+	public Double ln_lik_ratio_grow;
+
 	
 	public bartMachineTreeNode(){}	
 	
