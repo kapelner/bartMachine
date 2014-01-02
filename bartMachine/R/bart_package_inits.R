@@ -11,6 +11,7 @@ for (i in 1 : 500){
 ##set number of cores in use
 set_bart_machine_num_cores = function(num_cores){
 	assign("BART_NUM_CORES", num_cores, bartMachine_globals)
+	cat("bartMachine now using", num_cores, "cores.\n")
 }
 
 ##get number of cores in use
