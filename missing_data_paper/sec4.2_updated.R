@@ -186,10 +186,11 @@ sd_mar_cc_cc = apply(results_bart_cc_cc_mar, 1, sd, na.rm = TRUE)
 rel_mar_avgs_cc_cc = avgs_mar_cc_cc / avgs_mar_all_all[1]
 
 
-plot(betas, rel_mar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)))
-points(betas, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(betas, rel_mar_avgs_cc_all, col = "red", type = "o")
-points(betas, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+plot(approx_prop_missing, rel_mar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)))
+points(approx_prop_missing, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+points(approx_prop_missing, rel_mar_avgs_cc_all, col = "red", type = "o")
+points(approx_prop_missing, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3)
 
 
 ###NMAR
@@ -262,13 +263,8 @@ avgs_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, sd, na.rm = TRUE)
 rel_nmar_avgs_cc_cc = avgs_nmar_cc_cc / avgs_nmar_all_all[1]
 
-
-plot(beta2s, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
-points(beta2s, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(beta2s, rel_nmar_avgs_cc_all, col = "red", type = "o")
-points(beta2s, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
-
-plot(betas, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(.6, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
-points(betas, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(betas, rel_nmar_avgs_cc_all, col = "red", type = "o")
-points(betas, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+plot(approx_prop_missing, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
+points(approx_prop_missing, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+points(approx_prop_missing, rel_nmar_avgs_cc_all, col = "red", type = "o")
+points(approx_prop_missing, rel_nmar_avgs_cc_cc, col = "red", type = "o", lty = 3)
