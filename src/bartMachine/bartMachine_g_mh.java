@@ -213,28 +213,25 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
 	 * @see 				Section A.1.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
-		if (grow_node.ln_lik_ratio_grow == null){
-			double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
-			int n_ell = grow_node.n_eta;
-			int n_ell_L = grow_node.left.n_eta;
-			int n_ell_R = grow_node.right.n_eta;
-	
-			//now go ahead and calculate it out	in an organized fashion:
-			double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
-			double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;
-			double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * hyper_sigsq_mu;
-			double c = 0.5 * (
-					Math.log(sigsq) 
-					+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
-					- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
-					- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
-			double d = hyper_sigsq_mu / (2 * sigsq);
-			double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
-					+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
-					- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
-			grow_node.ln_lik_ratio_grow = c + d * e;
-		}
-		return grow_node.ln_lik_ratio_grow;
+		double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+		int n_ell = grow_node.n_eta;
+		int n_ell_L = grow_node.left.n_eta;
+		int n_ell_R = grow_node.right.n_eta;
+
+		//now go ahead and calculate it out	in an organized fashion:
+		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
+		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;
+		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * hyper_sigsq_mu;
+		double c = 0.5 * (
+				Math.log(sigsq) 
+				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
+				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
+				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
+		double d = hyper_sigsq_mu / (2 * sigsq);
+		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
+				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
+				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
+		return c + d * e;
 	}	
 
 	/**

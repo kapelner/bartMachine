@@ -69,7 +69,9 @@ public class bartMachineTreeNode implements Cloneable {
 	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */
 	protected int[] attribute_split_counts;
 
-	public Double ln_lik_ratio_grow;
+	//special caches for gibbs sampler speedup. These are never to be duplicated during clone
+	//they are initialized to BAD_FLAG so we can save a pointer hop as well by using the Java primitive
+	public double qqqq = BAD_FLAG_double;
 
 	
 	public bartMachineTreeNode(){}	
