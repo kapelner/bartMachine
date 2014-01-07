@@ -8,9 +8,12 @@ generate_response_model = function(n, sigma_e = 1, Sigma = NULL, mu_vec = NULL){
 	p = 3
 	
 	if (is.null(Sigma)){
-		Sigma = 0.5 * diag(p) + 0.5
-		Sigma[1, p] = 3 / 2 * Sigma[1, p]
-		Sigma[p, 1] = 3 / 2 * Sigma[p, 1]
+		Sigma = 0.9 * diag(p) + 0.1
+		Sigma[1, p] = 2 * Sigma[1, p]
+		Sigma[p, 1] = 2 * Sigma[p, 1]
+#		Sigma = 0.5 * diag(p) + 0.5
+#		Sigma[1, p] = 3 / 2 * Sigma[1, p]
+#		Sigma[p, 1] = 3 / 2 * Sigma[p, 1]
 	}
 	if (is.null(mu_vec)){
 		mu_vec = rep(0, p)
@@ -47,18 +50,18 @@ generate_mcar_model = function(Xy, gamma){
 	Xy
 }
 
+approx_prop_missing = seq(from = 0, to = 0.7, by = 0.1)
+gammas = 1 - (1 - approx_prop_missing)^3
 
-gammas = seq(from = 0, to = 0.8, by = 0.1)
 
-
-results_bart_all_all_mcar = matrix(NA, nrow = length(gammas), ncol = Nsim)
-results_bart_all_cc_mcar = matrix(NA, nrow = length(gammas), ncol = Nsim)
-results_bart_cc_all_mcar = matrix(NA, nrow = length(gammas), ncol = Nsim)
-results_bart_cc_cc_mcar = matrix(NA, nrow = length(gammas), ncol = Nsim)
-rownames(results_bart_all_all_mcar) = gammas
-rownames(results_bart_all_cc_mcar) = gammas
-rownames(results_bart_cc_all_mcar) = gammas
-rownames(results_bart_cc_cc_mcar) = gammas
+results_bart_all_all_mcar = matrix(NA, nrow = length(approx_prop_missing), ncol = Nsim)
+results_bart_all_cc_mcar = matrix(NA, nrow = length(approx_prop_missing), ncol = Nsim)
+results_bart_cc_all_mcar = matrix(NA, nrow = length(approx_prop_missing), ncol = Nsim)
+results_bart_cc_cc_mcar = matrix(NA, nrow = length(approx_prop_missing), ncol = Nsim)
+rownames(results_bart_all_all_mcar) = approx_prop_missing
+rownames(results_bart_all_cc_mcar) = approx_prop_missing
+rownames(results_bart_cc_all_mcar) = approx_prop_missing
+rownames(results_bart_cc_cc_mcar) = approx_prop_missing
 
 for (nsim in 1 : Nsim){
 	cat("nsim = ", nsim, "\n")
@@ -105,10 +108,10 @@ sd_mcar_cc_cc = apply(results_bart_cc_cc_mcar, 1, sd, na.rm = TRUE)
 rel_mcar_avgs_cc_cc = avgs_mcar_cc_cc / avgs_mcar_all_all[1]
 
 
-plot(gammas, rel_mcar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mcar_avgs_all_all, rel_mcar_avgs_all_cc, rel_mcar_avgs_cc_all, rel_mcar_avgs_cc_cc, na.rm = TRUE)))
-points(gammas, rel_mcar_avgs_all_cc, col = "blue", type = "o", lty = 3)
-points(gammas, rel_mcar_avgs_cc_all, col = "red", type = "o")
-points(gammas, rel_mcar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+plot(approx_prop_missing, rel_mcar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mcar_avgs_all_all, rel_mcar_avgs_all_cc, rel_mcar_avgs_cc_all, rel_mcar_avgs_cc_cc, na.rm = TRUE)))
+points(approx_prop_missing, rel_mcar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+points(approx_prop_missing, rel_mcar_avgs_cc_all, col = "red", type = "o")
+points(approx_prop_missing, rel_mcar_avgs_cc_cc, col = "red", type = "o", lty = 3)
 
 
 
@@ -186,7 +189,7 @@ sd_mar_cc_cc = apply(results_bart_cc_cc_mar, 1, sd, na.rm = TRUE)
 rel_mar_avgs_cc_cc = avgs_mar_cc_cc / avgs_mar_all_all[1]
 
 
-approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7) #this was figured out during simulation to be approximately accurate (the plots don't change that much anyway)
 plot(approx_prop_missing, rel_mar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)))
 points(approx_prop_missing, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
 points(approx_prop_missing, rel_mar_avgs_cc_all, col = "red", type = "o")
@@ -194,8 +197,6 @@ points(approx_prop_missing, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3
 
 
 ###NMAR
-
-
 
 beta_0 = -3
 betas = c(0, 0.8, 1.4, 2, 2.7, 4, 7, 30)
@@ -263,7 +264,7 @@ avgs_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, mean, na.rm = TRUE)
 sd_nmar_cc_cc = apply(results_bart_cc_cc_nmar, 1, sd, na.rm = TRUE)
 rel_nmar_avgs_cc_cc = avgs_nmar_cc_cc / avgs_nmar_all_all[1]
 
-approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7) #this was figured out during simulation to be approximately accurate (the plots don't change that much anyway)
 plot(approx_prop_missing, rel_nmar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_nmar_avgs_all_all, rel_nmar_avgs_all_cc, rel_nmar_avgs_cc_all, rel_nmar_avgs_cc_cc, na.rm = TRUE)))
 points(approx_prop_missing, rel_nmar_avgs_all_cc, col = "blue", type = "o", lty = 3)
 points(approx_prop_missing, rel_nmar_avgs_cc_all, col = "red", type = "o")
