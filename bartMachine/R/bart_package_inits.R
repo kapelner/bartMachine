@@ -32,6 +32,7 @@ init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	if (exists("JVM_INITIALIZED", envir = bartMachine_globals)){
 		mem_in_gb = get("JVM_INITIALIZED", bartMachine_globals)
 		warning(paste("Java can only be initialized once per R session. Currently \n  there is ", mem_in_gb, "GB available. If you would like\n  to change the amount of memory available to bartMachine, please\n  restart R and run this function again.", sep = ""))
+		return
 	}
 	
 	#Actually initialzie the Java (once per R session)

@@ -100,8 +100,14 @@ for (nsim in 1 : Nsim){
 	sd_mcar_cc_cc = apply(results_bart_cc_cc_mcar, 1, sd, na.rm = TRUE)
 	rel_mcar_avgs_cc_cc = avgs_mcar_cc_cc / avgs_mcar_all_all[1]
 	
-	
-	plot(approx_prop_missing, rel_mcar_avgs_all_all, col = "blue", type = "o", ylim = c(1, max(rel_mcar_avgs_all_all, rel_mcar_avgs_all_cc, rel_mcar_avgs_cc_all, rel_mcar_avgs_cc_cc, na.rm = TRUE)))
+	par(mar = c(4.2,4,0.2,0.2))
+	plot(approx_prop_missing, 
+			rel_mcar_avgs_all_all, 
+			col = "blue", 
+			type = "o", 
+			ylim = c(1, max(rel_mcar_avgs_all_all, rel_mcar_avgs_all_cc, rel_mcar_avgs_cc_all, rel_mcar_avgs_cc_cc, na.rm = TRUE)),
+			xlab = "Approx. Prop. Missing",
+			ylab = "Multiple of Baseline Error")
 	points(approx_prop_missing, rel_mcar_avgs_all_cc, col = "blue", type = "o", lty = 3)
 	points(approx_prop_missing, rel_mcar_avgs_cc_all, col = "red", type = "o")
 	points(approx_prop_missing, rel_mcar_avgs_cc_cc, col = "red", type = "o", lty = 3)
