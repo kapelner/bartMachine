@@ -43,9 +43,9 @@ create_mar_model_of_bhd = function(X, beta_0, beta){
 
 beta_0 = -3
 betas = c(0, 1.33, 1.47, 1.67, 2.1, 2.6, 3.1, 3.8)
+approx_prop_missing = seq(from = 0, to = 0.7, by = 0.1)
 
 ##test to see if betas are appropriate
-#approx_prop_missing = seq(from = 0, to = 0.8, by = 0.1)
 #for (i in 1 : length(betas)){
 #	Xmar = create_mar_model_of_bhd(X, beta_0, betas[i])
 #	actual_prop_missing = 1 - nrow(na.omit(Xmar)) / nrow(Xmar)
@@ -72,15 +72,12 @@ for (nsim in 1 : Nsim){
 		ytest = y[test_indices]	
 		
 		#now start training models and predicting on them
-		if (nrow(na.omit(Xtrain)) == nrow(Xtrain)){
-			Xtrain_rf_impute = Xtrain		
-		} else {
-			Xtrain_rf_impute = rfImpute(Xtrain, ytrain, verbose = FALSE)[, 2 : (ncol(Xtrain) + 1)]
-			
-		}
+		#impute both training and test data with MissForest
+		Xtrain_MF_imputed = missForest(cbind(ytrain, Xtrain))$ximp[, -1]
+		
 		bart_mod = build_bart_machine(Xtrain, ytrain, run_in_sample = FALSE, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, verbose = FALSE)
-		bart_mod_rf_imp = build_bart_machine(Xtrain_rf_impute, ytrain, run_in_sample = FALSE, verbose = FALSE)
-		rf_mod = randomForest(x = Xtrain_rf_impute, y = ytrain)
+		bart_mod_rf_imp = build_bart_machine(Xtrain_MF_imputed, ytrain, run_in_sample = FALSE, verbose = FALSE)
+		rf_mod = randomForest(x = Xtrain_MF_imputed, y = ytrain)
 		
 		#impute to create an Xtest without missingness for rf --- give it everything but ytest
 		imputed = missForest(rbind(Xtest, Xtrain), verbose = FALSE)$ximp				
@@ -88,7 +85,11 @@ for (nsim in 1 : Nsim){
 		
 		results_bart_mar[g, nsim] = bart_predict_for_test_data(bart_mod, Xtest, ytest)$rmse
 		results_bart_w_rfi_and_mf_mar[g, nsim] = bart_predict_for_test_data(bart_mod_rf_imp, Xtest_miss_rf, ytest)$rmse
-		results_rf_mar[g, nsim] = sqrt((sum(ytest - predict(rf_mod, Xtest_miss_rf))^2) / n_test)
+		y_hat_rf = predict(rf_mod, Xtest_miss_rf)
+		results_rf_mar[g, nsim] = sqrt(sum((ytest - y_hat_rf)^2) / n_test)
+		
+		destroy_bart_machine(bart_mod)
+		destroy_bart_machine(bart_mod_rf_imp)
 		
 		cat("bart oosrmse:", results_bart_mar[g, nsim], "rf oosrmse:", results_rf_mar[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_mar[g, nsim], "\n")
 		
@@ -104,10 +105,21 @@ for (nsim in 1 : Nsim){
 		sd_mar_rf = apply(results_rf_mar, 1, sd, na.rm = TRUE)
 		rel_mar_avgs_rf = avgs_mar_rf / avgs_mar_bart[1]
 		
-		plot(approx_prop_missing, rel_mar_avgs_bart, col = "green", type = "o", ylim = c(min(rel_mar_avgs_bart, rel_mar_avgs_bart_w_rfi_and_mf, rel_mar_avgs_rf, na.rm = TRUE), max(rel_mar_avgs_bart, rel_mar_avgs_bart_w_rfi_and_mf, rel_mar_avgs_rf, na.rm = TRUE)))
+		par(mar = c(4.2,4,0.2,0.2))
+		plot(approx_prop_missing, 
+				rel_mar_avgs_bart, 
+				col = "green", 
+				type = "o", 
+				xlab = "Approx. Prop. Missing",
+				ylab = "Multiple of Baseline Error",
+				ylim = c(1, 1.75)) 
+				
 		points(approx_prop_missing, rel_mar_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
 		points(approx_prop_missing, rel_mar_avgs_rf, col = "red", type = "o")
+		
+		
 	}
+	
+	save.image("sec_5_mar_MF_only.RData")
 }
 
-save.image("sec_5_mar")

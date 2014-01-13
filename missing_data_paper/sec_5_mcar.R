@@ -65,15 +65,13 @@ for (nsim in 1 : Nsim){
 		ytest = y[test_indices]	
 		
 		#now start training models and predicting on them
-		if (nrow(na.omit(Xtrain)) == nrow(Xtrain)){
-			Xtrain_rf_impute = Xtrain		
-		} else {
-			Xtrain_rf_impute = rfImpute(Xtrain, ytrain, verbose = FALSE)[, 2 : (ncol(Xtrain) + 1)]
-
-		}
+				
+		#impute both training and test data with MissForest
+		Xtrain_MF_imputed = missForest(cbind(ytrain, Xtrain))$ximp[, -1]
+		
 		bart_mod = build_bart_machine(Xtrain, ytrain, run_in_sample = FALSE, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, verbose = FALSE)
-		bart_mod_rf_imp = build_bart_machine(Xtrain_rf_impute, ytrain, run_in_sample = FALSE, verbose = FALSE)
-		rf_mod = randomForest(x = Xtrain_rf_impute, y = ytrain)
+		bart_mod_rf_imp = build_bart_machine(Xtrain_MF_imputed, ytrain, run_in_sample = FALSE, verbose = FALSE)
+		rf_mod = randomForest(x = Xtrain_MF_imputed, y = ytrain)
 		
 		#impute to create an Xtest without missingness for rf --- give it everything but ytest
 		imputed = missForest(rbind(Xtest, Xtrain), verbose = FALSE)$ximp				
@@ -81,7 +79,11 @@ for (nsim in 1 : Nsim){
 		
 		results_bart_mcar[g, nsim] = bart_predict_for_test_data(bart_mod, Xtest, ytest)$rmse
 		results_bart_w_rfi_and_mf_mcar[g, nsim] = bart_predict_for_test_data(bart_mod_rf_imp, Xtest_miss_rf, ytest)$rmse
-		results_rf_mcar[g, nsim] = sqrt((sum(ytest - predict(rf_mod, Xtest_miss_rf))^2) / n_test)
+		y_hat_rf = predict(rf_mod, Xtest_miss_rf)
+		results_rf_mcar[g, nsim] = sqrt(sum((ytest - y_hat_rf)^2) / n_test)
+		
+		destroy_bart_machine(bart_mod)
+		destroy_bart_machine(bart_mod_rf_imp)
 		
 		cat("bart oosrmse:", results_bart_mcar[g, nsim], "rf oosrmse:", results_rf_mcar[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_mcar[g, nsim], "\n")
 		
@@ -99,13 +101,22 @@ for (nsim in 1 : Nsim){
 		sd_mcar_rf = apply(results_rf_mcar, 1, sd, na.rm = TRUE)
 		rel_mcar_avgs_rf = avgs_mcar_rf / avgs_mcar_bart[1]
 		
-		plot(approx_prop_missing, rel_mcar_avgs_bart, col = "green", type = "o", ylim = c(min(rel_mcar_avgs_bart, rel_mcar_avgs_bart_w_rfi_and_mf, rel_mcar_avgs_rf, na.rm = TRUE), max(rel_mcar_avgs_bart, rel_mcar_avgs_bart_w_rfi_and_mf, rel_mcar_avgs_rf, na.rm = TRUE)))
+		par(mar = c(4.2,4,0.2,0.2))
+		plot(approx_prop_missing, 
+				rel_mcar_avgs_bart, 
+				col = "green", 
+				type = "o", 
+				xlab = "Approx. Prop. Missing",
+				ylab = "Multiple of Baseline Error",
+				ylim = c(min(rel_mcar_avgs_bart, rel_mcar_avgs_bart_w_rfi_and_mf, rel_mcar_avgs_rf, na.rm = TRUE), max(rel_mcar_avgs_bart, rel_mcar_avgs_bart_w_rfi_and_mf, rel_mcar_avgs_rf, na.rm = TRUE)))
 		points(approx_prop_missing, rel_mcar_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
 		points(approx_prop_missing, rel_mcar_avgs_rf, col = "red", type = "o")
 	}	
+	
+	save.image("sec_5_mcar_MF_only.RData")
 }
 
-save.image("sec_5_mcar")
+
 
 
 
