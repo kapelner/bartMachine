@@ -38,14 +38,15 @@ create_mar_with_bumpup_model_of_bhd = function(X, y, beta_0, beta){
 			X$crim[i] = NA
 		}
 		
-		#bump down
-		if (is.na(X$crim[i])){
-			y[i] = y[i] - rnorm(1, BUMP, BUMP / 4)
-		}
 		#bump up
 		if (is.na(X$rm[i])){
 			y[i] = y[i] + rnorm(1, BUMP, BUMP / 4)
 		}
+		#bump down
+		if (is.na(X$crim[i])){
+			y[i] = y[i] - rnorm(1, BUMP, BUMP / 4)
+		}
+
 	}
 	X
 	list(X = X, y = y)

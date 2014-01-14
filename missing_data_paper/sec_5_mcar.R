@@ -35,7 +35,7 @@ create_mcar_model_of_bhd = function(X, gamma){
 	X
 }
 
-approx_prop_missing = seq(from = 0, to = 0.8, by = 0.1)
+approx_prop_missing = seq(from = 0, to = 0.7, by = 0.1)
 gammas = 1 - (1 - approx_prop_missing)^(1 / 5) #our mcar procedure is mcar on five variables independently
 
 #test to see if gammas are appropriate

@@ -111,14 +111,22 @@ for (nsim in 1 : Nsim){
 	
 	
 	approx_prop_missing = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7) #this was figured out during simulation to be approximately accurate (the plots don't change that much anyway)
-	par(mar = c(4.2,4,0.3,0.2))
+#	par(mar = c(4.2,4,0.3,0.2))
+#	plot(approx_prop_missing, 
+#			rel_mar_avgs_all_all, 
+#			col = "blue", 
+#			type = "o", 
+#			ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)),
+#			xlab = "Approx. Prop. Missing",
+#			ylab = "Multiple of Baseline Error")
+	par(mar = c(4.2,2,0.3,0.2))
 	plot(approx_prop_missing, 
 			rel_mar_avgs_all_all, 
 			col = "blue", 
 			type = "o", 
 			ylim = c(1, max(rel_mar_avgs_all_all, rel_mar_avgs_all_cc, rel_mar_avgs_cc_all, rel_mar_avgs_cc_cc, na.rm = TRUE)),
 			xlab = "Approx. Prop. Missing",
-			ylab = "Multiple of Baseline Error")
+			ylab = "")
 	points(approx_prop_missing, rel_mar_avgs_all_cc, col = "blue", type = "o", lty = 3)
 	points(approx_prop_missing, rel_mar_avgs_cc_all, col = "red", type = "o")
 	points(approx_prop_missing, rel_mar_avgs_cc_cc, col = "red", type = "o", lty = 3)
