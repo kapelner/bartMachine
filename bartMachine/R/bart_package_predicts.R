@@ -127,7 +127,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 	ci_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = ##get samples
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)
@@ -141,7 +141,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 ##compute prediction intervals
-calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
 
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
@@ -149,9 +149,13 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, nor
     if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
   	}
-	if (bart_machine$use_heteroskedastic_linear_model){
-		warning("Prediction intervals cannot be generated for non-training data")
+	if (!bart_machine$use_heteroskedastic_linear_model && !is.null(Z_new_data)){
+		stop("You cannot specify Z_new_data for homoskedastic models")
 	}
+	if (is.null(Z_new_data)){ #default the Z's to the same data
+		Z_new_data = new_data
+	}
+	
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
@@ -161,18 +165,33 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, nor
 	pi_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = 
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
+	if (bart_machine$use_heteroskedastic_linear_model){
+		ggs = get_gammas_hetero(bart_machine)
+		#sigsqs are now the sigsqs multiples that modify the gamma linear model
+	}
 	
 	#for each row in new_data we have to get a B x n_G matrix of draws from the normal
 	
 	all_prediction_samples = array(NA, c(n_test, bart_machine$num_iterations_after_burn_in, normal_samples_per_gibbs_sample))
 	for (i in 1 : n_test){		
+#		cat("i", i, "")
 		for (n_g in 1 : bart_machine$num_iterations_after_burn_in){
 			y_hat_draw = y_hat_posterior_samples[i, n_g] 
 			sigsq_draw = sigsqs[n_g]
-			all_prediction_samples[i, n_g, ] = rnorm(n = normal_samples_per_gibbs_sample, mean = y_hat_draw, sd = sqrt(sigsq_draw))			
+			
+			if (bart_machine$use_heteroskedastic_linear_model){
+				ggs_draw = as.numeric(ggs[n_g, ])
+				z_i = as.numeric(Z_new_data[i, ])
+				sigsq_multiple_draw = sigsq_draw
+				sigsq_draw = sigsq_multiple_draw * exp(sum(z_i * ggs_draw)) #the multiple is modified by the linear model
+#				if (n_g == 1){
+#					cat("gammas", ggs_draw, "times", "Z", Z_new_data[i, ], "sigsq_multiple_draw", sigsq_multiple_draw, "exp(sum(z_i * ggs_draw))", exp(sum(z_i * ggs_draw)), "sigsq_draw", sigsq_draw, "\n")
+#				}				
+			}
+			all_prediction_samples[i, n_g, ] = rnorm(n = normal_samples_per_gibbs_sample, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
 		}
 	}
 	

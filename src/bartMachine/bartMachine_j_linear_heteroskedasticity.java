@@ -294,17 +294,15 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		//now get the scale factor
 		
 		//hetero
-		double sigsq = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
+		double sigsq_multiple = drawSigsqFromPosteriorForHeterogeneous(sample_num, es_untransformed, d_is);
 
-		//homo
-//		double sigsq = un_transform_sigsq(drawSigsqFromPosterior(sample_num, es));
 		
 		
 //		System.out.println("sigsq: " + sigsq);
 		
 		
 		//now we need to draw a gamma
-		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_untransformed_sq, sample_num, d_is, sigsq);
+		Matrix gamma_draw = sampleGammaVecViaMH(gamma, es_untransformed_sq, sample_num, d_is, sigsq_multiple);
 //		System.out.println("gamma_draw: ");
 //		gamma_draw.print(3, 5);
 		
@@ -319,12 +317,10 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		
 		//hetero
 		for (int i = 0; i < n; i++){
-			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq * d_is[i]); //make sure we re-transform them
+			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq_multiple * d_is[i]); //make sure we re-transform them
 		}
-//		gibbs_samples_of_sigsq_i[sample_num] = transform_sigsq(TRUE_SIGSQS);
-		
-//		//homo
-//		gibbs_samples_of_sigsq[sample_num] = sigsq;
+		//keep the multiples here, this is where the "average" sigsq will be and the exp(z*gamma) will modify it up or down
+		gibbs_samples_of_sigsq[sample_num] = transform_sigsq(sigsq_multiple);
 		
 //		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
 		
@@ -341,13 +337,13 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		return StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (weighted_sse + hyper_nu * hyper_lambda)); //JB
 	}
 
-	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] untransformed_es_sq, int sample_num, double[] d_is_current, double untransformed_sigsq) {
+	private Matrix sampleGammaVecViaMH(Matrix gamma, double[] untransformed_es_sq, int sample_num, double[] d_is_current, double untransformed_sigsq_multiple) {
 //		System.out.println("===========sampleGammaVecViaMH begin");
 		//generate the w vector from the old d_i's		
 		Matrix w_gamma = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			double d_i = d_is_current[i];
-			w_gamma.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq * d_i) - 1);
+			w_gamma.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq_multiple * d_i) - 1);
 		}
 		
 //		System.out.println("Sigmainv_times_gamma_0: " + Sigmainv_times_gamma_0.getRowDimension() + " x " + Sigmainv_times_gamma_0.getColumnDimension());
@@ -384,7 +380,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		Matrix w_gamma_star = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			double d_i = d_is_star[i];
-			w_gamma_star.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq * d_i) - 1);
+			w_gamma_star.set(i, 0, Math.log(d_i) + untransformed_es_sq[i] / (untransformed_sigsq_multiple * d_i) - 1);
 		}
 		
 		Matrix a_gamma_star = Bmat.times(Sigmainv_times_gamma_0.plus(half_times_Z_mc_t.times(w_gamma_star)));		
@@ -413,7 +409,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 			bottom_c += 1 / hyper_sigma_weights[j] * (gamma_j_sq - gamma_j_star_sq + 2 * hyper_gamma_0_j * (gamma_star_j - gamma_j));
 		}
 		
-		double log_mh_ratio = 0.5 * (top_term + bottom_a + 1 / untransformed_sigsq * bottom_b + bottom_c);
+		double log_mh_ratio = 0.5 * (top_term + bottom_a + 1 / untransformed_sigsq_multiple * bottom_b + bottom_c);
 		
 		
 //		System.out.println("log_mh_ratio: " + log_mh_ratio);

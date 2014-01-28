@@ -266,18 +266,25 @@ hbart_machine = build_bart_machine(X, y,
 		Z_heteroskedastic_model = Z)
 hbart_machine
 
-ggs = get_gammas_hetero(hbart_machine)
 
 plot(X[, 1], bart_machine$y_hat, col = "red", ylim = c(-160, 120))
 points(X[, 1], y, pch = "+")
 points(X[, 1], hbart_machine$y_hat, col = "blue")
-cred_ints = calc_credible_intervals(bart_machine, X)
+cred_ints = calc_credible_intervals(bart_machine, X, ci_conf = 0.90)
 lines(X[, 1], cred_ints[, 1], col = "red", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "red", lty = 2)
+pred_ints = calc_prediction_intervals(bart_machine, X, pi_conf = 0.90)
+lines(X[, 1], pred_ints[, 1], col = "gold", lty = 3)
+lines(X[, 1], pred_ints[, 2], col = "gold", lty = 3)
 
-cred_ints = calc_credible_intervals(hbart_machine, X)
+cred_ints = calc_credible_intervals(hbart_machine, X, ci_conf = 0.90)
 lines(X[, 1], cred_ints[, 1], col = "blue", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "blue", lty = 2)
+
+pred_ints = calc_prediction_intervals(hbart_machine, X, Z_new_data = Z, pi_conf = 0.90)
+lines(X[, 1], pred_ints[, 1], col = "forestgreen", lty = 3)
+lines(X[, 1], pred_ints[, 2], col = "forestgreen", lty = 3)
+
 
 
 hbart_oosrmse = k_fold_cv(X, y, k_folds = Inf, verbose = F, use_heteroskedastic_linear_model = TRUE, Z = Z)$rmse
