@@ -253,16 +253,17 @@ data(motor)
 y = motor$accel
 X = as.data.frame(motor$times)
 
-#MAX_POLY = 1
-#mod = lm(y ~ poly(motor$time, MAX_POLY))
-#Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+MAX_POLY = 3
+mod = lm(y ~ poly(motor$time, MAX_POLY))
+Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
 
 bart_machine = build_bart_machine(X, y, num_burn_in = 1500)
 bart_machine
 
 hbart_machine = build_bart_machine(X, y, 
-		use_heteroskedastic_linear_model = TRUE)
+		use_heteroskedastic_linear_model = TRUE,
+		Z_heteroskedastic_model = Z)
 hbart_machine
 
 
