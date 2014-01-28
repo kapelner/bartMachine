@@ -155,7 +155,7 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 	if (is.null(Z_new_data)){ #default the Z's to the same data
 		Z_new_data = new_data
 	}
-	
+	Z_new_data = as.matrix(Z_new_data) #need to make sure we can call rows and cols on it
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
