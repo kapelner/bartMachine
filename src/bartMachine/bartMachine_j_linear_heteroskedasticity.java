@@ -319,8 +319,6 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		for (int i = 0; i < n; i++){
 			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq_multiple * d_is[i]); //make sure we re-transform them
 		}
-		//keep the multiples here, this is where the "average" sigsq will be and the exp(z*gamma) will modify it up or down
-		gibbs_samples_of_sigsq[sample_num] = transform_sigsq(sigsq_multiple);
 		
 //		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
 		
@@ -387,7 +385,7 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		
 		//now we calculate the log MH ratio
 		Matrix diff_term_left_transpose = gamma.minus(gamma_star).plus(a_gamma).minus(a_gamma_star).transpose();
-		Matrix diff_term_right = gamma.plus(gamma_star).minus(a_gamma).minus(a_gamma_star);
+		Matrix diff_term_right = gamma.minus(gamma_star).plus(a_gamma).minus(a_gamma_star);
 		double top_term = diff_term_left_transpose.times(Bmat_inverse).times(diff_term_right).get(0, 0);
 		
 		double bottom_a = 0;

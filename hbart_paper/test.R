@@ -11,7 +11,7 @@ max(y) - min(y)
 
 #write.csv(cbind(X, y), "r_hbart.csv")
 
-library(bartMachine)
+library(bartMachine, lib.loc = "C:/Program Files/R/R-3.0.2/library/")
 graphics.off()
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
@@ -250,10 +250,12 @@ k_fold_cv(X, y, k_folds = Inf, verbose = F)$rmse
 library(bartMachine)
 library(boot)
 data(motor)
+library(tgp)
+library(dynaTree)
 y = motor$accel
 X = as.data.frame(motor$times)
 
-MAX_POLY = 3
+MAX_POLY = 2
 mod = lm(y ~ poly(motor$time, MAX_POLY))
 Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
@@ -266,7 +268,15 @@ hbart_machine = build_bart_machine(X, y,
 		Z_heteroskedastic_model = Z)
 hbart_machine
 
+moto.btgpllm <- btgpllm(X=X, Z=y, bprior="b0", verb=0)
+moto.btgpllm.p <- predict(moto.btgpllm) 
+moto.btgpllm.p$Zp.q1
+moto.btgpllm.p$Zp.q2
 
+dtree = dynaTree(X,y)
+dpreds = predict(dtree,X)
+
+plot(moto.btgpllm, main='treed GP LLM,', layout='surf', ylim = c(-200,100))
 plot(X[, 1], bart_machine$y_hat, col = "red", ylim = c(-160, 120))
 points(X[, 1], y, pch = "+")
 points(X[, 1], hbart_machine$y_hat, col = "blue")
@@ -274,17 +284,20 @@ cred_ints = calc_credible_intervals(bart_machine, X, ci_conf = 0.90)
 lines(X[, 1], cred_ints[, 1], col = "red", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "red", lty = 2)
 pred_ints = calc_prediction_intervals(bart_machine, X, pi_conf = 0.90)
-lines(X[, 1], pred_ints[, 1], col = "gold", lty = 3)
-lines(X[, 1], pred_ints[, 2], col = "gold", lty = 3)
+lines(X[, 1], pred_ints[, 1], col = "gold", lty = 1, lwd = 1)
+lines(X[, 1], pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
 
 cred_ints = calc_credible_intervals(hbart_machine, X, ci_conf = 0.90)
 lines(X[, 1], cred_ints[, 1], col = "blue", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "blue", lty = 2)
 
 pred_ints = calc_prediction_intervals(hbart_machine, X, Z_new_data = Z, pi_conf = 0.90)
-lines(X[, 1], pred_ints[, 1], col = "forestgreen", lty = 3)
-lines(X[, 1], pred_ints[, 2], col = "forestgreen", lty = 3)
+lines(X[, 1], pred_ints[, 1], col = "forestgreen", lty = 1)
+lines(X[, 1], pred_ints[, 2], col = "forestgreen", lty = 1)
 
+
+lines(X[, 1], dpreds$q1, col = "purple", lty = 1)
+lines(X[, 1], dpreds$q2, col = "purple", lty = 1)
 
 
 hbart_oosrmse = k_fold_cv(X, y, k_folds = Inf, verbose = F, use_heteroskedastic_linear_model = TRUE, Z = Z)$rmse
@@ -296,3 +309,98 @@ bart_oosrmse
 hbart_oosrmse
 #how much better does it do?
 (bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
+
+
+
+library(SemiPar)
+data(lidar)
+MAX_POLY = 3
+mod = lm(lidar$logratio ~ poly(lidar$range, MAX_POLY))
+Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+
+
+bart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, num_burn_in = 1500)
+bart_machine
+
+hbart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, 
+                                   use_heteroskedastic_linear_model = TRUE,
+                                   Z_heteroskedastic_model = Z)
+hbart_machine
+
+
+plot(lidar$range, bart_machine$y_hat, col = "red", ylim = c(-1,.2))
+points(lidar$range, lidar$logratio, pch = "+")
+points(lidar$range, hbart_machine$y_hat, col = "blue")
+
+pred_ints = calc_prediction_intervals(bart_machine, data.frame(lidar$range), pi_conf = 0.90)
+lines(lidar$range, pred_ints[, 1], col = "gold", lty = 1, lwd = 1)
+lines(lidar$range, pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
+ 
+pred_ints_h = calc_prediction_intervals(hbart_machine, data.frame(lidar$range), Z_new_data = Z, pi_conf = 0.90)
+lines(lidar$range, pred_ints_h[, 1], col = "forestgreen", lty = 1)
+lines(lidar$range, pred_ints_h[, 2], col = "forestgreen", lty = 1)
+
+
+##Goldberg et al.
+x = seq(0,1, length.out=100)
+y = 2*sin(2*pi*x) + rnorm(100, 0, seq(.5,1.5,length.out=100))
+
+bart_machine = build_bart_machine(Xy = cbind(x, y))
+bart_machine
+
+hbart_machine = build_bart_machine(Xy = cbind(x, y), use_heteroskedastic_linear_model = TRUE)
+hbart_machine
+
+plot(x, bart_machine$y_hat, col = "red", ylim = c(-5,5))
+points(x, y, pch = "+")
+points(x, hbart_machine$y_hat, col = "blue")
+
+pred_ints = calc_prediction_intervals(bart_machine, data.frame(x), pi_conf = 0.90)
+lines(x, pred_ints[, 1], col = "gold", lty = 1, lwd = 1)
+lines(x, pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
+
+pred_ints_h = calc_prediction_intervals(hbart_machine, data.frame(x), Z_new_data = as.matrix(x), pi_conf = 0.90)
+lines(x, pred_ints_h[, 1], col = "forestgreen", lty = 1)
+lines(x, pred_ints_h[, 2], col = "forestgreen", lty = 1)
+
+rs = numeric(100)
+for(i in 1:100){
+  x_test = data.frame(seq(0,1, length.out=100))
+  colnames(x_test) = "x"
+  y_test = 2*sin(2*pi*x_test) + rnorm(100, 0, seq(.5,1.5,length.out=100))
+  bart_oosrmse = bart_predict_for_test_data(bart_machine, x_test, y_test)$rmse
+  hbart_oosrmse = bart_predict_for_test_data(hbart_machine, x_test, y_test)$rmse
+  rs[i]=(bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100  
+  if(i%%10 ==0) print(i)
+}
+mean(rs)
+
+
+library(SemiPar)
+data(fossil)
+MAX_POLY = 3
+mod = lm(lidar$logratio ~ poly(lidar$range, MAX_POLY))
+Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+
+
+bart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, num_burn_in = 1500)
+bart_machine
+
+hbart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, 
+                                   use_heteroskedastic_linear_model = TRUE,
+                                   Z_heteroskedastic_model = Z)
+hbart_machine
+
+
+plot(lidar$range, bart_machine$y_hat, col = "red", ylim = c(-1,.2))
+points(lidar$range, lidar$logratio, pch = "+")
+points(lidar$range, hbart_machine$y_hat, col = "blue")
+
+pred_ints = calc_prediction_intervals(bart_machine, data.frame(lidar$range), pi_conf = 0.90)
+lines(lidar$range, pred_ints[, 1], col = "gold", lty = 1, lwd = 1)
+lines(lidar$range, pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
+
+pred_ints_h = calc_prediction_intervals(hbart_machine, data.frame(lidar$range), Z_new_data = Z, pi_conf = 0.90)
+lines(lidar$range, pred_ints_h[, 1], col = "forestgreen", lty = 1)
+lines(lidar$range, pred_ints_h[, 2], col = "forestgreen", lty = 1)
+
