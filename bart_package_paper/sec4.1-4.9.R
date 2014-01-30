@@ -12,7 +12,7 @@ X = automobile; X$price = NULL
 ###### section 4.1
 
 set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
+set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
 
 ###### section 4.2
 

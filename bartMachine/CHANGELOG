@@ -1,9 +1,16 @@
 version 1.0.2
 
-* Upon initialization of the JVM there is now a message indicating how much maximum memory is available and an error thrown if the user attempts to reinitialize the RAM amount.
+* worked around a rJava 0.9.5 issue that surfaces when setting RAM on some new MACs
+* Upon initialization of the JVM there is now a message indicating how much maximum memory is available and a warning is thrown if the user attempts to reinitialize the RAM amount.
 * Default JVM memory is now 1.1GB which is the maximum found to initialize on 32-bit Windows machines
 * Automobile data manual update
 * Removed unnecessary verbosity during model construction
+* Added a convenience alias method for setting memory
+* Bugs fixed in k_fold_cv function
+* Bug fixed in handling of missing data in the absence of missing data
+* Prediction intervals now technically correct
+* During covariance importance test, covariates are all permuted as a block unit to preserve collinearity structure
+* Automatic cov_importance_prior construction by downweighting factors by their number of levels
 
 version 1.0.1
 
