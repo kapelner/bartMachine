@@ -195,7 +195,7 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 				#cat("k", k, "y_hat_draw", y_hat_draw, "a_draw", sigsq_draw, "gammas_draw", gammas_draw, "e^zg", exp(sum(z_i_centered * gammas_draw)))
 				#the sigsq_draw is the multiple in the expression below
 				sigsq_draw = sigsq_draw * exp(sum(z_i_centered * gammas_draw)) #the multiple is modified by the linear model
-				cat(" sigsq_draw", sigsq_draw, "\n")
+				#cat(" sigsq_draw", sigsq_draw, "\n")
 			}
 			all_prediction_samples[i, k] = rnorm(1, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
 		}
