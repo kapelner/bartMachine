@@ -150,12 +150,14 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
+		#first check if these covariates are even in the matrix to begin with
 		for (cov in covariates_to_permute){
 			if (!(cov %in% colnames(model_matrix_training_data)) && class(cov) == "character"){
 				stop("Covariate \"", cov, "\" not found in design matrix.")
 			}
-			model_matrix_training_data[, cov] = sample(model_matrix_training_data[, cov])
 		}
+		permuted_order = sample(1 : nrow(model_matrix_training_data), nrow(model_matrix_training_data))
+		model_matrix_training_data[, covariates_to_permute] = model_matrix_training_data[permuted_order, covariates_to_permute]
 	}
 	
 	#now set whether we want the program to log to a file
