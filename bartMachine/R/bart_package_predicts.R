@@ -175,7 +175,7 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 	
 	all_prediction_samples = matrix(NA, nrow = n_test, ncol = num_samples_per_data_point)
 	for (i in 1 : n_test){
-		cat("i =", i, "\n")
+		
 		#get all the y_hats in the posterior for this datapoint
 		y_hats = y_hat_posterior_samples[i, ]
 		if (bart_machine$use_heteroskedastic_linear_model){
@@ -192,7 +192,7 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 			if (bart_machine$use_heteroskedastic_linear_model){
 				gammas_draw = as.numeric(gammas_all_gibbs[n_gs[k], ])
 				
-				cat("k", k, "y_hat_draw", y_hat_draw, "a_draw", sigsq_draw, "gammas_draw", gammas_draw, "e^zg", exp(sum(z_i_centered * gammas_draw)))
+				#cat("k", k, "y_hat_draw", y_hat_draw, "a_draw", sigsq_draw, "gammas_draw", gammas_draw, "e^zg", exp(sum(z_i_centered * gammas_draw)))
 				#the sigsq_draw is the multiple in the expression below
 				sigsq_draw = sigsq_draw * exp(sum(z_i_centered * gammas_draw)) #the multiple is modified by the linear model
 				cat(" sigsq_draw", sigsq_draw, "\n")
