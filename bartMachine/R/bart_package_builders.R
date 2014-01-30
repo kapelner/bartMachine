@@ -274,6 +274,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			for (i in 1 : nrow(model_matrix_training_data)){
 				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(model_matrix_training_data[i, ]))
 			}
+			Z_col_means = colMeans(model_matrix_training_data)
 		} else {
 			#the user specified covariates
 			if (nrow(Z_heteroskedastic_model) != nrow(X)){
@@ -291,6 +292,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			for (i in 1 : nrow(Z_heteroskedastic_model)){
 				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(Z_heteroskedastic_model[i, ]))
 			}
+			Z_col_means = colMeans(Z_heteroskedastic_model)
 		}
 		
 	}
@@ -361,7 +363,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			debug_log = debug_log,
 			num_rand_samps_in_library = num_rand_samps_in_library,
 			use_heteroskedastic_linear_model = use_heteroskedastic_linear_model,
-			hyper_sigma_weights = hyper_sigma_weights
+			hyper_sigma_weights = hyper_sigma_weights,
+			Z_col_means = Z_col_means
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants

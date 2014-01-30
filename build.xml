@@ -13,6 +13,7 @@
     <target name="compile" description="compile the source code">
       <mkdir dir="class_files"/>
       <javac srcdir="src" destdir="class_files" includeantruntime="false" >
+      	<exclude name="**/package-info.java"/>
       	<classpath refid="master-classpath" />	
       </javac>
     </target>	

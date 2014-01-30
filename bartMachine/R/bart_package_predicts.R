@@ -141,7 +141,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 ##compute prediction intervals
-calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, pi_conf = 0.95, num_samples_per_data_point = 1000){
 
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
@@ -165,39 +165,43 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 	pi_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = 
-		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs") #sigsqs are the sigsqs multiples that modify the gamma linear model in the hBART case
 	
 	if (bart_machine$use_heteroskedastic_linear_model){
 		ggs = get_gammas_hetero(bart_machine)
-		#sigsqs are now the sigsqs multiples that modify the gamma linear model
+		Z_col_means = bart_machine$Z_col_means
 	}
 	
-	#for each row in new_data we have to get a B x n_G matrix of draws from the normal
 	
-	all_prediction_samples = array(NA, c(n_test, bart_machine$num_iterations_after_burn_in, normal_samples_per_gibbs_sample))
-	for (i in 1 : n_test){		
-#		cat("i", i, "")
-		for (n_g in 1 : bart_machine$num_iterations_after_burn_in){
-			y_hat_draw = y_hat_posterior_samples[i, n_g] 
-			sigsq_draw = sigsqs[n_g]
+	
+	all_prediction_samples = matrix(NA, nrow = n_test, ncol = num_samples_per_data_point)
+	for (i in 1 : n_test){	
+		#get all the y_hats in the posterior for this datapoint
+		y_hats = y_hat_posterior_samples[i, ]
+		if (bart_machine$use_heteroskedastic_linear_model){
+			z_i_centered = as.numeric(Z_new_data[i, ]) - Z_col_means
+		}
+		
+		n_gs = sample(1 : bart_machine$num_iterations_after_burn_in, num_samples_per_data_point)
+		#now make num_samples_per_data_point draws from y_hat
+		for (k in 1 : num_samples_per_data_point){
+			#draw a gibbs sample
+			y_hat_draw = y_hats[n_gs[k]]
+			sigsq_draw = sigsqs[n_gs[k]]
 			
 			if (bart_machine$use_heteroskedastic_linear_model){
-				ggs_draw = as.numeric(ggs[n_g, ])
-				z_i = as.numeric(Z_new_data[i, ])
-				sigsq_multiple_draw = sigsq_draw
-				sigsq_draw = sigsq_multiple_draw * exp(sum(z_i * ggs_draw)) #the multiple is modified by the linear model
-#				if (n_g == 1){
-#					cat("gammas", ggs_draw, "times", "Z", Z_new_data[i, ], "sigsq_multiple_draw", sigsq_multiple_draw, "exp(sum(z_i * ggs_draw))", exp(sum(z_i * ggs_draw)), "sigsq_draw", sigsq_draw, "\n")
-#				}				
+				ggs_draw = as.numeric(ggs[n_gs[k], ])
+				#the sigsq_draw is the multiple in the expression below
+				sigsq_draw = sigsq_draw * exp(sum(z_i_centered * ggs_draw)) #the multiple is modified by the linear model
 			}
-			all_prediction_samples[i, n_g, ] = rnorm(n = normal_samples_per_gibbs_sample, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
+			all_prediction_samples[i, k] = rnorm(1, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
 		}
 	}
 	
-	for (i in 1 : n_test){		
-		pi_lower_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
-		pi_upper_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 + pi_conf) / 2)
+	for (i in 1 : n_test){
+		pi_lower_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
+		pi_upper_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 + pi_conf) / 2)
 	}
 	#put them together and return
 	cbind(pi_lower_bd, pi_upper_bd)
