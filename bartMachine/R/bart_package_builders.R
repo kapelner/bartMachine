@@ -293,8 +293,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(Z_heteroskedastic_model[i, ]))
 			}
 			Z_col_means = colMeans(Z_heteroskedastic_model)
-		}
-		
+		}		
+	} else {
+		Z_col_means = NULL
 	}
 	
 

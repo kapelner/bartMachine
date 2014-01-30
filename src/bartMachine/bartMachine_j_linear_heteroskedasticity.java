@@ -316,12 +316,11 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 //		System.out.println("new d_is: " + Tools.StringJoin(d_is));
 		
 		//hetero
+		gibbs_samples_of_sigsq[sample_num] = transform_sigsq(sigsq_multiple); //gibbs_samples_of_sigsq is OVERLOADED to take the sigsq_multiple. This is a convenient hack that's used for prediction intervals
 		for (int i = 0; i < n; i++){
 			gibbs_samples_of_sigsq_i[sample_num][i] = transform_sigsq(sigsq_multiple * d_is[i]); //make sure we re-transform them
 		}
-		
 //		System.out.println("gibbs_samples_of_sigsq's at sample_num " + sample_num + " ====== " + Tools.StringJoin(un_transform_sigsq(gibbs_samples_of_sigsq_i[sample_num])));
-		
 	}
 	
 	private double drawSigsqFromPosteriorForHeterogeneous(int sample_num, double[] es_untransformed, double[] d_is) {

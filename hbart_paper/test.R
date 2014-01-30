@@ -267,6 +267,7 @@ hbart_machine = build_bart_machine(X, y,
 		use_heteroskedastic_linear_model = TRUE,
 		Z_heteroskedastic_model = Z)
 hbart_machine
+pred_ints = calc_prediction_intervals(hbart_machine, X, Z_new_data = Z, pi_conf = 0.90)
 
 moto.btgpllm <- btgpllm(X=X, Z=y, bprior="b0", verb=0)
 moto.btgpllm.p <- predict(moto.btgpllm) 
@@ -277,6 +278,8 @@ dtree = dynaTree(X,y)
 dpreds = predict(dtree,X)
 
 plot(moto.btgpllm, main='treed GP LLM,', layout='surf', ylim = c(-200,100))
+
+
 plot(X[, 1], bart_machine$y_hat, col = "red", ylim = c(-160, 120))
 points(X[, 1], y, pch = "+")
 points(X[, 1], hbart_machine$y_hat, col = "blue")

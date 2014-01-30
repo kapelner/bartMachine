@@ -167,23 +167,22 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 	y_hat_posterior_samples = 
 		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs") #sigsqs are the sigsqs multiples that modify the gamma linear model in the hBART case
-	
+
 	if (bart_machine$use_heteroskedastic_linear_model){
-		ggs = get_gammas_hetero(bart_machine)
+		gammas_all_gibbs = get_gammas_hetero(bart_machine)
 		Z_col_means = bart_machine$Z_col_means
 	}
 	
-	
-	
 	all_prediction_samples = matrix(NA, nrow = n_test, ncol = num_samples_per_data_point)
-	for (i in 1 : n_test){	
+	for (i in 1 : n_test){
+		cat("i =", i, "\n")
 		#get all the y_hats in the posterior for this datapoint
 		y_hats = y_hat_posterior_samples[i, ]
 		if (bart_machine$use_heteroskedastic_linear_model){
 			z_i_centered = as.numeric(Z_new_data[i, ]) - Z_col_means
 		}
 		
-		n_gs = sample(1 : bart_machine$num_iterations_after_burn_in, num_samples_per_data_point)
+		n_gs = sample(1 : bart_machine$num_iterations_after_burn_in, num_samples_per_data_point, replace = TRUE)
 		#now make num_samples_per_data_point draws from y_hat
 		for (k in 1 : num_samples_per_data_point){
 			#draw a gibbs sample
@@ -191,9 +190,12 @@ calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, 
 			sigsq_draw = sigsqs[n_gs[k]]
 			
 			if (bart_machine$use_heteroskedastic_linear_model){
-				ggs_draw = as.numeric(ggs[n_gs[k], ])
+				gammas_draw = as.numeric(gammas_all_gibbs[n_gs[k], ])
+				
+				cat("k", k, "y_hat_draw", y_hat_draw, "a_draw", sigsq_draw, "gammas_draw", gammas_draw, "e^zg", exp(sum(z_i_centered * gammas_draw)))
 				#the sigsq_draw is the multiple in the expression below
-				sigsq_draw = sigsq_draw * exp(sum(z_i_centered * ggs_draw)) #the multiple is modified by the linear model
+				sigsq_draw = sigsq_draw * exp(sum(z_i_centered * gammas_draw)) #the multiple is modified by the linear model
+				cat(" sigsq_draw", sigsq_draw, "\n")
 			}
 			all_prediction_samples[i, k] = rnorm(1, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
 		}
