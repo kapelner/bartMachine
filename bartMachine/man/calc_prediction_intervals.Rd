@@ -22,9 +22,8 @@ A data frame containing observations at which prediction intervals for \eqn{\hat
   \item{pi_conf}{
 Confidence level for the prediction intervals. The default is 95\%.
 }
-  \item{normal_samples_per_gibbs_sample}{
-The number of samples taken from the putative error distribution for each Gibbs sample after burn-in (see details).
-The default is 100. 
+  \item{num_samples_per_data_point}{
+The number of samples taken from the predictive distribution. The default is 1000. 
 }
 }
 \details{

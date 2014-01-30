@@ -141,7 +141,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 ##compute prediction intervals
-calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num_samples_per_data_point = 1000){
 
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
@@ -164,18 +164,23 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, nor
 	
 	#for each row in new_data we have to get a B x n_G matrix of draws from the normal
 	
-	all_prediction_samples = array(NA, c(n_test, bart_machine$num_iterations_after_burn_in, normal_samples_per_gibbs_sample))
+	all_prediction_samples = matrix(NA, nrow = n_test, ncol = num_samples_per_data_point)
 	for (i in 1 : n_test){		
-		for (n_g in 1 : bart_machine$num_iterations_after_burn_in){
-			y_hat_draw = y_hat_posterior_samples[i, n_g] 
-			sigsq_draw = sigsqs[n_g]
-			all_prediction_samples[i, n_g, ] = rnorm(n = normal_samples_per_gibbs_sample, mean = y_hat_draw, sd = sqrt(sigsq_draw))			
+		#get all the y_hats in the posterior for this datapoint
+		y_hats = y_hat_posterior_samples[i, ]
+		#make a sample of gibbs samples to pull from
+		n_gs = sample(1 : bart_machine$num_iterations_after_burn_in, num_samples_per_data_point, replace = TRUE)
+		#now make num_samples_per_data_point draws from y_hat
+		for (k in 1 : num_samples_per_data_point){
+			y_hat_draw = y_hats[n_gs[k]]
+			sigsq_draw = sigsqs[n_gs[k]]
+			all_prediction_samples[i, k] = rnorm(1, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
 		}
 	}
 	
 	for (i in 1 : n_test){		
-		pi_lower_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
-		pi_upper_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 + pi_conf) / 2)
+		pi_lower_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
+		pi_upper_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 + pi_conf) / 2)
 	}
 	#put them together and return
 	cbind(pi_lower_bd, pi_upper_bd)
