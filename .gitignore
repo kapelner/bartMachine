@@ -70,7 +70,6 @@ r_log/*.txt
 *.log
 *.out
 *.dvi
-*.RData
 *.Rhistory
 bin/*
 randsamps/chisq*

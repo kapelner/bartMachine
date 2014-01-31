@@ -1,19 +1,13 @@
-
-library(BayesTree)
 library(bartMachine)
+library(BayesTree)
 library(randomForest)
-library(mlbench)
 
-#load up data and supporting objects
-data(BostonHousing); boston = BostonHousing; boston = as.data.frame(cbind(boston[,14],boston[,1:13])); names(boston)[1] = "medv"
-wine.white = read.csv("datasets/r_wine_white.csv", header = TRUE)
-wine.red = read.csv("datasets/r_wine_red.csv", header = TRUE)     
-ozone =  read.csv("datasets/r_ozone.csv", header = TRUE)
-pole =  read.csv("datasets/r_pole.csv", header = TRUE)
-triazine =  read.csv("datasets/r_triazine.csv", header = TRUE)
-ankara = read.csv("datasets/r_ankara.csv", header = TRUE)            
-baseball = read.csv("datasets/r_baseballsalary.csv", header = TRUE)
-compactiv =  read.csv("datasets/r_compactiv.csv", header = TRUE)
+#set bartMachine computing parameters
+set_bart_machine_num_cores(4)
+set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
+
+#load up data
+data(benchmark_datasets)
 datalist_names = c("boston", "triazine", "ozone", "baseball", "wine.red", "ankara", "wine.white", "pole", "compactiv")
 
 		
