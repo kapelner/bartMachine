@@ -20,7 +20,7 @@ bart_machine = build_bart_machine(X, y)
 #Figure 2
 bart_machine
 
-oos_stats = k_fold_cv(X, y, k_folds = 10)
+oos_stats = k_fold_cv(X, y, k_folds = 10, verbose = FALSE)
 oos_stats
 
 #Figure 3
@@ -64,12 +64,9 @@ investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
 #Figure 8a
 cov_importance_test(bart_machine_cv, covariates = c("width"))
-windows()
 #Figure 8b
-windows()
 cov_importance_test(bart_machine_cv, covariates = c("body_style"))
 #Figure 8c
-windows()
 cov_importance_test(bart_machine_cv, covariates = c("width",
 	"curb_weight",
 	"city_mpg",
@@ -81,14 +78,12 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 	"peak_rpm", 
 	"normalized_losses"))
 #Figure 8d
-windows()
 cov_importance_test(bart_machine_cv)
 
 ##### section 4.8
 
 #Figure 9a
 pd_plot(bart_machine_cv, j = "horsepower")
-windows()
 #Figure 9b
 pd_plot(bart_machine_cv, j = "stroke")
 

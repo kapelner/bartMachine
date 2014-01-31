@@ -15,7 +15,7 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 	}
 	
 	n = nrow(X)
-	Xpreprocess = pre_process_training_data(X)
+	Xpreprocess = pre_process_training_data(X)$data
 	
 	p = ncol(Xpreprocess)
 	

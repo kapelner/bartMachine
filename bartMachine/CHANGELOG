@@ -11,6 +11,7 @@ version 1.0.2
 * Prediction intervals now technically correct
 * During covariance importance test, covariates are all permuted as a block unit to preserve collinearity structure
 * Automatic cov_importance_prior construction by downweighting factors by their number of levels
+* Added benchmark datasets
 
 version 1.0.1
 

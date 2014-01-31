@@ -93,7 +93,7 @@ time_mat[8 : 9, ] = time_mat[8 : 9, ] * 60
 time_mat[7, c(1,2,3,5,7)] = time_mat[7, c(1,2,3,5,7)] * 60
 time_mat[6, 1] = time_mat[6, 1] * 60
 
-#Figure 1
+#Figure 1a
 COLORS = c("red", "darkblue", "darkblue", "darkviolet", "darkviolet", "darkgreen", "darkorange")
 LTYS = c(1, 1, 2, 1, 2, 1, 1) 
 NAMES = c("BayesTree", "bartMachine (1 core,\n memcache)", "bartMachine (1 core)", "bartMachine (4 cores,\n memcache)", "bartMachine (4 cores)", "bartMachine (4 cores,\n no in-sample)", "randomForest")
@@ -103,8 +103,7 @@ for (j in 2 : 7){
 }
 legend(x = -2, y = 13, NAMES, COLORS, lty = LTYS)
 
-#zoomed in plot
-windows()
+#Figure 1b
 plot(nlist, time_mat[, 1], type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size", ylab = "Seconds", ylim = c(0, 27), xlim = c(100, 2000))
 for (j in 2 : 7){
 	lines(nlist, time_mat[, j], type = "o", col = COLORS[j], lty = LTYS[j], lwd = 3)

@@ -146,7 +146,22 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}	
 
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing), y_remaining)
+	pre_process_obj = pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing)
+	model_matrix_training_data = cbind(pre_process_obj$data, y_remaining)
+	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
+	factor_lengths = pre_process_obj$factor_lengths
+	
+	#now create a default cov_prior_vec that factors in the levels of the factors
+	if (is.null(cov_prior_vec) && length(factor_lengths) > 0){
+		#begin with the uniform
+		cov_prior_vec = rep(1, p)
+		j_factor_begin = p - sum(factor_lengths) + 1
+		for (l in 1 : length(factor_lengths)){
+			factor_length = factor_lengths[l]
+			cov_prior_vec[j_factor_begin : (j_factor_begin + factor_length - 1)] = 1 / factor_length
+			j_factor_begin = j_factor_begin + factor_length
+		}
+	}
 
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
@@ -275,7 +290,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
+	
 	bart_machine = list(java_bart_machine = java_bart_machine,
 			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data && use_missing_data_dummies_as_covars, (p / 2), p)],
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features

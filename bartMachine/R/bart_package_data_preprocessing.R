@@ -1,6 +1,6 @@
 
 dummify_data = function(data){
-	as.data.frame(pre_process_training_data(data))
+	as.data.frame(pre_process_training_data(data)$data)
 }
 
 ##private function that handles all pre-processing (dummification, missing data, etc.)
@@ -14,11 +14,18 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 	
 	factors = names(which(sapply(data, class) == "factor"))
 	
+	factor_lengths = c()
 	for (fac in factors){
+		#first create the dummies to be appended for this factor
 		dummied = do.call(cbind, lapply(levels(data[, fac]), function(lev){as.numeric(data[, fac] == lev)}))
-		colnames(dummied) = paste(fac, levels(data[, fac]), sep = "_")		
+		#ensure they're named appropriately
+		colnames(dummied) = paste(fac, levels(data[, fac]), sep = "_")
+		#append them to the data
 		data = cbind(data, dummied)
+		#delete the factor covariate from the design matrix
 		data[, fac] = NULL
+		#record the length of this factor
+		factor_lengths = c(factor_lengths, ncol(dummied))
 	}
 
 	if (use_missing_data_dummies_as_covars){		
@@ -47,8 +54,8 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 	} else if (!is.null(imputations)){ #now we may want to add imputations
 		data = cbind(data, imputations) 
 	}
-	#make sure to cast it as a data matrix
-	data.matrix(data)
+	#make sure to cast it as a data matrix and return it along with the factor_lengths
+	list(data = data.matrix(data), factor_lengths = factor_lengths)
 }
 
 is.missing = function(x){
@@ -75,8 +82,7 @@ pre_process_new_data = function(new_data, bart_machine){
 		new_data_and_training_data[, predictor] = factor(new_data_and_training_data[, predictor])
 	}
 	
-	
-	new_data = pre_process_training_data(new_data_and_training_data, bart_machine$use_missing_data_dummies_as_covars, imputations)
+	new_data = pre_process_training_data(new_data_and_training_data, bart_machine$use_missing_data_dummies_as_covars, imputations)$data
 		
 	if (bart_machine$use_missing_data){
 		training_data_features = bart_machine$training_data_features_with_missing_features

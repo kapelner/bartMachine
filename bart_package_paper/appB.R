@@ -37,10 +37,8 @@ rownames(oos_rmse_results) = datalist_names
 colnames(oos_rmse_results) = c("bartMachine", "BayesTree", "RF")
 
 
-k_fold_cv_bayes_tree = function(X, y, k_folds = 5, ...){
-	
-	n = nrow(X)
-	
+k_fold_cv_bayes_tree = function(X, y, k_folds = 5, ...){	
+	n = nrow(X)	
 	p = ncol(X)
 	
 	if (k_folds <= 1 || k_folds > n){
@@ -81,10 +79,8 @@ k_fold_cv_bayes_tree = function(X, y, k_folds = 5, ...){
 	list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2))	
 }
 
-k_fold_cv_rf = function(X, y, k_folds = 5, ...){
-	
-	n = nrow(X)
-	
+k_fold_cv_rf = function(X, y, k_folds = 5, ...){	
+	n = nrow(X)	
 	p = ncol(X)
 	
 	if (k_folds <= 1 || k_folds > n){
@@ -166,27 +162,3 @@ t.test(oos_rmse_results[8, 1 ,], oos_rmse_results[8, 2 ,])$p.value < alpha_bonfe
 t.test(oos_rmse_results[9, 1 ,], oos_rmse_results[9, 2 ,])$p.value < alpha_bonferroni
 
 #add the TRUE's to the table as *'s (in the appropriate column)
-
-
-#=======================================================================================
-
-
-
-#more fancy regressions (not included in paper)
-#is bartMachine and BayesTree different? Assume a linear shift and construct an ANOVA
-X = data.frame(rbind(
-				cbind(c(oos_rmse_results[, 1, ]), rownames(oos_rmse_results), 1),
-				cbind(c(oos_rmse_results[, 2, ]), rownames(oos_rmse_results), 0)
-		))
-colnames(X) = c("rmse", "dataset", "bartMachine")
-#X = X[X$dataset != "compactiv", ]
-
-X$rmse = as.numeric(as.character(X$rmse))
-X$bartMachine = as.numeric(X$bartMachine)
-mod = lm(rmse ~ dataset, X)
-summary(mod)
-mod_interactions = lm(rmse ~ bartMachine * dataset - bartMachine, X)
-summary(mod_interactions)
-
-anova(mod_interactions, mod)
-
