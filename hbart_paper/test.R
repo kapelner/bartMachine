@@ -25,7 +25,7 @@ bart_machine
 
 #check_bart_error_assumptions(bart_machine)
 
-hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE)
+hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
 hbart_machine
 windows()
 plot(X, bart_machine$y_hat, col = "red")
@@ -125,7 +125,7 @@ bart_machine
 
 #check_bart_error_assumptions(bart_machine)
 
-hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE)
+hbart_machine = build_bart_machine(Xy = cbind(X, y), use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
 hbart_machine
 
 #leave one out
@@ -294,9 +294,9 @@ cred_ints = calc_credible_intervals(hbart_machine, X, ci_conf = 0.90)
 lines(X[, 1], cred_ints[, 1], col = "blue", lty = 2)
 lines(X[, 1], cred_ints[, 2], col = "blue", lty = 2)
 
-pred_ints = calc_prediction_intervals(hbart_machine, X, Z_new_data = Z, pi_conf = 0.90)
-lines(X[, 1], pred_ints[, 1], col = "forestgreen", lty = 1)
-lines(X[, 1], pred_ints[, 2], col = "forestgreen", lty = 1)
+h_pred_ints = calc_prediction_intervals(hbart_machine, X, Z_new_data = Z, pi_conf = 0.90)
+lines(X[, 1], h_pred_ints[, 1], col = "forestgreen", lty = 1)
+lines(X[, 1], h_pred_ints[, 2], col = "forestgreen", lty = 1)
 
 
 lines(X[, 1], dpreds$q1, col = "purple", lty = 1)
@@ -336,12 +336,12 @@ points(lidar$range, lidar$logratio, pch = "+")
 points(lidar$range, hbart_machine$y_hat, col = "blue")
 
 pred_ints = calc_prediction_intervals(bart_machine, data.frame(lidar$range), pi_conf = 0.90)
-lines(lidar$range, pred_ints[, 1], col = "gold", lty = 1, lwd = 1)
-lines(lidar$range, pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
+lines(lidar$range, pred_ints[, 1], col = "red", lty = 1, lwd = 1)
+lines(lidar$range, pred_ints[, 2], col = "red", lty = 1,lwd = 1)
  
 pred_ints_h = calc_prediction_intervals(hbart_machine, data.frame(lidar$range), Z_new_data = Z, pi_conf = 0.90)
-lines(lidar$range, pred_ints_h[, 1], col = "forestgreen", lty = 1)
-lines(lidar$range, pred_ints_h[, 2], col = "forestgreen", lty = 1)
+lines(lidar$range, pred_ints_h[, 1], col = "blue", lty = 1)
+lines(lidar$range, pred_ints_h[, 2], col = "blue", lty = 1)
 
 
 ##Goldberg et al.
@@ -406,4 +406,47 @@ lines(lidar$range, pred_ints[, 2], col = "gold", lty = 1,lwd = 1)
 pred_ints_h = calc_prediction_intervals(hbart_machine, data.frame(lidar$range), Z_new_data = Z, pi_conf = 0.90)
 lines(lidar$range, pred_ints_h[, 1], col = "forestgreen", lty = 1)
 lines(lidar$range, pred_ints_h[, 2], col = "forestgreen", lty = 1)
+
+
+##alr3
+library(alr3)
+data(sniffer)
+dim(sniffer)
+nsim = 20
+
+rmse_res = numeric(nsim)
+for(i in 1:nsim){
+  train_idx = sample(1:nrow(sniffer), round(.8*nrow(sniffer)), F)
+  test_idx = setdiff(1 : nrow(sniffer), train_idx)
+  train_X = sniffer[train_idx, 1:4]
+  train_y = sniffer[train_idx, 5]
+  Xtest = sniffer[test_idx, 1:4]
+  ytest = sniffer[test_idx, 5]
+  #Z = as.matrix(train_X)
+  MAX_POLY = 2
+  mod = lm(train_y ~ poly(train_X[,2], MAX_POLY))
+  Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+  
+  bart_machine = build_bart_machine(train_X, train_y, num_burn_in = 1500)
+  bart_machine
+  
+  hbart_machine = build_bart_machine(train_X, train_y, 
+                                     use_heteroskedastic_linear_model = TRUE,
+                                     Z_heteroskedastic_model = Z)
+  hbart_machine
+  bart_oosrmse = bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
+  hbart_oosrmse = bart_predict_for_test_data(hbart_machine, Xtest, ytest)$rmse
+  #bart_oosrmse
+  #hbart_oosrmse
+  destroy_bart_machine(bart_machine)
+  destroy_bart_machine(hbart_machine)
+  
+  #how much better does it do?
+  rmse_res[i] = (bart_oosrmse - hbart_oosrmse) / bart_oosrmse * 100
+  if(i %% 10 == 0 ) print(i)
+}
+mean(rmse_res)
+
+
+
 
