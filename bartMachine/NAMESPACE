@@ -3,6 +3,7 @@ import(car)
 import(randomForest)
 import(missForest)
 
+export(bartMachine)
 export(build_bart_machine)
 export(destroy_bart_machine)
 
