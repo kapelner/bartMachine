@@ -61,7 +61,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 3*X[ ,1] + 2*X[ ,2] +X[ ,3] + rnorm(n)
 
 ##build BART regression model
-bart_machine = build_bart_machine(X, y)
+bart_machine = bartMachine(X, y)
 
 ##generate plot
 plot_y_vs_yhat(bart_machine)

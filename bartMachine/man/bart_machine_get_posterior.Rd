@@ -52,7 +52,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
 ##build BART regression model
-bart_machine = build_bart_machine(X, y)
+bart_machine = bartMachine(X, y)
 
 #get posterior distribution
 posterior = bart_machine_get_posterior(bart_machine, X)
@@ -70,7 +70,7 @@ iris2 = iris[51:150,]
 iris2$Species = factor(iris2$Species)
 
 #build BART classification model
-bart_machine = build_bart_machine(iris2[ ,1 : 4], iris2$Species)
+bart_machine = bartMachine(iris2[ ,1 : 4], iris2$Species)
 
 #get posterior distribution
 posterior = bart_machine_get_posterior(bart_machine, iris2[ ,1 : 4])

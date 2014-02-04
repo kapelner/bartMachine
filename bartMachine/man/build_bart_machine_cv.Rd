@@ -1,6 +1,7 @@
-\name{build_bart_machine_cv}
+\name{bartMachineCV}
+\alias{bartMachineCV}
 \alias{build_bart_machine_cv}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
 Build BART-CV
 }
@@ -8,6 +9,10 @@ Build BART-CV
 Builds a BART-CV model by cross-validating over a grid of hyperparameter choices.
 }
 \usage{
+bartMachineCV(X = NULL, y = NULL, Xy = NULL, 
+num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
+nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
+
 build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, 
 num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
 nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
@@ -52,13 +57,13 @@ Adam Kapelner and Justin Bleich
 }
 \note{
 This function may require significant run-time.
-This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}} via calling \code{\link{build_bart_machine}}.
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}} via calling \code{\link{bartMachine}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{build_bart_machine}}
+\code{\link{bartMachine}}
 }
 \examples{
 \dontrun{
@@ -70,7 +75,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
 ##build BART regression model
-bart_machine_cv = build_bart_machine_cv(X, y)
+bart_machine_cv = bartMachineCV(X, y)
 
 #information about cross-validated model
 summary(bart_machine_cv)

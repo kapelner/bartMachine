@@ -52,7 +52,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{build_bart_machine}}
+\code{\link{bartMachine}}
 }
 \examples{
 \dontrun{

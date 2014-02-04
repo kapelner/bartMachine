@@ -45,7 +45,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
 ##build BART regression model
-bart_machine = build_bart_machine(X, y)
+bart_machine = bartMachine(X, y)
 
 #check error diagnostics
 check_bart_error_assumptions(bart_machine)

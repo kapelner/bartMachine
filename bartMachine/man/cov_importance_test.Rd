@@ -52,7 +52,7 @@ on the original training data set.}
 }
 }
 \references{
-A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning, arXiv preprints, 2013
+A Kapelner and J Bleich. bartMachine: Machine Learning with Bayesian Additive Regression Trees, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich
@@ -76,7 +76,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
 ##build BART regression model
-bart_machine = build_bart_machine(X, y)
+bart_machine = bartMachine(X, y)
 
 ##now test if X[, 1] affects Y nonparametrically under the BART model assumptions
 cov_importance_test(bart_machine, covariates = c(1))

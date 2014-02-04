@@ -63,7 +63,7 @@ train_y = y[1 : 200]
 test_y = y[201 : 250]
 
 ##build BART regression model
-bart_machine = build_bart_machine(train_X, train_y)
+bart_machine = bartMachine(train_X, train_y)
 
 #explore performance on test data
 oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)

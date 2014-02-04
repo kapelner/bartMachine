@@ -11,7 +11,7 @@
   with a few of the predictors dropped.
 }
 \usage{
-automobile
+data(automobile)
 }
 \source{
 K Bache and M Lichman. UCI machine learning repository, 2013. 

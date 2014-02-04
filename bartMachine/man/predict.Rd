@@ -61,7 +61,7 @@ X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
 ##build BART regression model
-bart_machine = build_bart_machine(X, y)
+bart_machine = bartMachine(X, y)
 
 ##make predictions on the training data
 y_hat = predict(bart_machine, X)
@@ -73,7 +73,7 @@ destroy_bart_machine(bart_machine)
 data(iris)
 iris2 = iris[51 : 150, ] #do not include the third type of flower for this example
 iris2$Species = factor(iris2$Species)  
-bart_machine = build_bart_machine(iris2[ ,1:4], iris2$Species)
+bart_machine = bartMachine(iris2[ ,1:4], iris2$Species)
 
 ##make probability predictions on the training data
 p_hat = predict(bart_machine, X)

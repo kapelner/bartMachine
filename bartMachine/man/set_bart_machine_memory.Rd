@@ -1,5 +1,5 @@
 \name{set_bart_machine_memory}
-\alias{init_java_for_bart_machine_with_mem_in_mb}
+\alias{set_bart_machine_memory}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Initialize a JVM with a pre-specified heap size
@@ -8,7 +8,7 @@ Initialize a JVM with a pre-specified heap size
 Initialize a Java virtual Machine (JVM) with a pre-specified heap size in MB.  
 }
 \usage{
-init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
+set_bart_machine_memory(bart_max_mem)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,7 +34,7 @@ Adam Kapelner and Justin Bleich
 \dontrun{
 ##initialize a Java Virtual Machine with heap size of 3000MB
 ##this should be run before any BART models are built 
-init_java_for_bart_machine_with_mem_in_mb(3000) 
+set_bart_machine_memory(3000) 
 }
 
 }
