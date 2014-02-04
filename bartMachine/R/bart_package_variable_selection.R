@@ -1,7 +1,7 @@
 ##variable selection procedures from Bleich et al. (2013)
 var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
 	if (is_bart_destroyed(bart_machine)){
-		stop("This BART machine has been destroyed. Please recreate.")
+		stop("This bartMachine model has been destroyed. Please recreate.")
 	}	
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
@@ -148,7 +148,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 ##var selection -- choose best method via CV
 var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
   	if (is_bart_destroyed(bart_machine)){
-    	stop("This BART machine has been destroyed. Please recreate.")
+    	stop("This bartMachine model has been destroyed. Please recreate.")
   	}
   
 	if (k_folds <= 1 || k_folds > bart_machine$n){

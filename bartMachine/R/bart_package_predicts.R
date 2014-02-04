@@ -1,7 +1,7 @@
 #S3 predict method
 predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, ...){
 	if (is_bart_destroyed(object)){
-		stop("This BART machine has been destroyed. Please recreate.")
+		stop("This bartMachine model has been destroyed. Please recreate.")
 	}
 	if(!(type %in% c("prob", "class"))){
 		stop("For classification, type must be either \"prob\" or \"class\". ")
@@ -28,7 +28,7 @@ labels_to_y_levels = function(bart_machine, labels){
 ##utility function for predicting when test outcomes are known
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 	if (is_bart_destroyed(bart_machine)){
-		stop("This BART machine has been destroyed. Please recreate.")
+		stop("This bartMachine model has been destroyed. Please recreate.")
 	}
 	
 	
@@ -63,7 +63,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 ##get full set of samples from posterior distribution of f(x)
 bart_machine_get_posterior = function(bart_machine, new_data){
 	if (is_bart_destroyed(bart_machine)){
-		stop("This BART machine has been destroyed. Please recreate.")
+		stop("This bartMachine model has been destroyed. Please recreate.")
 	}	
 	if (class(new_data) != "data.frame"){		
 		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
@@ -100,7 +100,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 			}
 		}
 		if (sum(M) > 0){
-			warning("missing data found in test data and BART was not built with missing data feature!\n")
+			warning("missing data found in test data and bartMachine was not built with missing data feature!\n")
 		}		
 	}
 	
@@ -116,7 +116,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 ##compute credible intervals
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
   	if (is_bart_destroyed(bart_machine)){
-    	stop("This BART machine has been destroyed. Please recreate.")
+    	stop("This bartMachine model has been destroyed. Please recreate.")
     }
   
 	#first convert the rows to the correct dummies etc
@@ -147,7 +147,7 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num
 		stop("Prediction intervals are not possible for classification.")
 	}
     if (is_bart_destroyed(bart_machine)){
-    	stop("This BART machine has been destroyed. Please recreate.")
+    	stop("This bartMachine model has been destroyed. Please recreate.")
   	}
   
 	#first convert the rows to the correct dummies etc

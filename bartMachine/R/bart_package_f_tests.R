@@ -5,16 +5,16 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 	all_covariates = bart_machine$training_data_features_with_missing_features
 	
 	if (is.null(covariates)){
-		title = "BART omnibus test for covariate importance\n"
+		title = "bartMachine omnibus test for covariate importance\n"
 	} else if (length(covariates) <= 3){
 		if (class(covariates[1]) == "numeric"){
 			cov_names = paste(all_covariates[covariates], collapse = ", ")
 		} else {
 			cov_names = paste(covariates, collapse = ", ")
 		}
-		title = paste("BART test for importance of covariate(s):", cov_names, "\n")
+		title = paste("bartMachine test for importance of covariate(s):", cov_names, "\n")
 	} else {
-		title = paste("BART test for importance of", length(covariates), "covariates", "\n")
+		title = paste("bartMachine test for importance of", length(covariates), "covariates", "\n")
 	}
 	cat(title)
 	observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)

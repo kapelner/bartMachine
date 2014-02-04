@@ -1,9 +1,9 @@
 ##give summary info about bart
 summary.bartMachine = function(object, ...){
 	if (is_bart_destroyed(object)){
-		stop("This BART machine has been destroyed. Please recreate.")
+		stop("This bartMachine model has been destroyed. Please recreate.")
 	}	
-	cat(paste("Bart Machine v", VERSION, ifelse(object$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
+	cat(paste("bartMachine v", VERSION, ifelse(object$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
 	if (object$use_missing_data){
 		cat("Missing data feature ON\n")
 	}

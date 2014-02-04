@@ -13,6 +13,7 @@ version 1.0.2
 * During covariance importance test, covariates are all permuted as a block unit to preserve collinearity structure
 * Automatic cov_importance_prior construction by downweighting factors by their number of levels
 * Added benchmark datasets
+* Various improvements to printed messages during runtime
 
 version 1.0.1
 

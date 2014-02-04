@@ -29,7 +29,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		verbose = TRUE){
 	
 	if (verbose){
-		cat("BART initializing with", num_trees, "trees...\n")	
+		cat("bartMachine initializing with", num_trees, "trees...\n")	
 	}	
 	t0 = Sys.time()
 	
@@ -43,7 +43,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
-		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		y = Xy[, ncol(Xy)]
 		for (cov in 1 : (ncol(Xy) - 1)){
@@ -71,7 +71,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		y_remaining = y
 		pred_type = "regression"
 		if (class(y) == "integer"){
-			cat("Warning: The response y is integer, BART will run regression.\n")
+			cat("Warning: The response y is integer, bartMachine will run regression.\n")
 		}
 	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
 		java_bart_machine = .jnew("bartMachine.bartMachineClassificationMultThread")
@@ -189,7 +189,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#set the std deviation of y to use
 	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
 		if (verbose){
-			cat("warning: cannot use MSE of linear model for s_sq_y if p > n. BART will use sample var(y) instead.\n")
+			cat("warning: cannot use MSE of linear model for s_sq_y if p > n. bartMachine will use sample var(y) instead.\n")
 		}
 		s_sq_y = "var"
 		
@@ -387,7 +387,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 ##private function that creates a duplicate of an existing bartMachine object.
 bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){
   if (is_bart_destroyed(bart_machine)){
-    stop("This BART machine has been destroyed. Please recreate.")
+    stop("This bartMachine model has been destroyed. Please recreate.")
 	}	
 	if (is.null(X)){
 		X = bart_machine$X
@@ -455,7 +455,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
-		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		y = Xy$y
 		Xy$y = NULL
@@ -473,9 +473,9 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
 				if (pred_type == "regression"){
-					cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
+					cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
 				} else {
-					cat(paste("  BART CV try: k:", k, "m:", num_trees, "\n"))
+					cat(paste("  bartMachine CV try: k:", k, "m:", num_trees, "\n"))
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
@@ -500,9 +500,9 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}
 	if (pred_type == "regression"){
-		cat(paste("  BART CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
+		cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
 	} else {
-		cat(paste("  BART CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
+		cat(paste("  bartMachine CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
 	}
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	build_bart_machine(X, y,
