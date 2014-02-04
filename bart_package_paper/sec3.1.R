@@ -34,7 +34,7 @@ for (n in nlist){
 	  
 	set_bart_machine_num_cores(1) ## 1 core
 	t3 = Sys.time()
-	bart_machine = build_bart_machine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
+	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t4 = Sys.time()
 	destroy_bart_machine(bart_machine)
 	our_time_1_m = t4 - t3
@@ -43,7 +43,7 @@ for (n in nlist){
 	  
 	set_bart_machine_num_cores(1) ## 1 core
 	t5 = Sys.time()
-	bart_machine = build_bart_machine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
+	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t6 = Sys.time()
 	destroy_bart_machine(bart_machine)
 	our_time_1 = t6 - t5
@@ -52,7 +52,7 @@ for (n in nlist){
 	  
 	set_bart_machine_num_cores(4) ## 4 core
 	t7 = Sys.time()
-	bart_machine = build_bart_machine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
+	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t8 = Sys.time()
 	destroy_bart_machine(bart_machine)
 	our_time_4_m = t8 - t7
@@ -61,7 +61,7 @@ for (n in nlist){
 	  
 	set_bart_machine_num_cores(4) ## 4 core
 	t9 = Sys.time()
-	bart_machine = build_bart_machine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
+	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t10 = Sys.time()
 	destroy_bart_machine(bart_machine)
 	our_time_4 = t10 - t9
@@ -70,7 +70,7 @@ for (n in nlist){
 	  
 	set_bart_machine_num_cores(4) ## 4 core
 	t11 = Sys.time()
-	bart_machine = build_bart_machine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE, run_in_sample = FALSE)
+	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE, run_in_sample = FALSE)
 	t12 = Sys.time()
 	destroy_bart_machine(bart_machine)
 	our_time_4_no_run = t12 - t11

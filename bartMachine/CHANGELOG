@@ -6,6 +6,7 @@ version 1.0.2
 * Automobile data manual update
 * Removed unnecessary verbosity during model construction
 * Added a convenience alias method for setting memory
+* Added a convenience alias method for building bart machines and building cross-validated bart machines
 * Bugs fixed in k_fold_cv function
 * Bug fixed in handling of missing data in the absence of missing data
 * Prediction intervals now technically correct
