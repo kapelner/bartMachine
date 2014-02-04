@@ -1,0 +1,174 @@
+\begin{thebibliography}{27}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Albert and Chib(1993)}]{Albert1993}
+Albert J, Chib S (1993).
+\newblock \enquote{{Bayesian Analysis of Binary and Polychotomous Response
+  Data}.}
+\newblock \emph{Journal of the American Statistical Association},
+  \textbf{88}(422), 669--679.
+
+\bibitem[{Bache and Lichman(2013)}]{Bache2013}
+Bache K, Lichman M (2013).
+\newblock \enquote{{UCI} Machine Learning Repository.}
+\newblock \urlprefix\url{http://archive.ics.uci.edu/ml}.
+
+\bibitem[{Blattenberger and Fowles(2014)}]{Blattenberger2014}
+Blattenberger G, Fowles R (2014).
+\newblock \enquote{Avalanche Forecasting: Using Bayesian Additive Regression
+  Trees ({BART}).}
+\newblock In \emph{Demand for Communications Services--Insights and
+  Perspectives}, pp. 211--227. Springer-Verlag.
+
+\bibitem[{Bleich \emph{et~al.}(2013)Bleich, Kapelner, Jensen, and
+  George}]{Bleich2013}
+Bleich J, Kapelner A, Jensen S, George E (2013).
+\newblock \enquote{Variable Selection Inference for Bayesian Additive
+  Regression Trees.}
+\newblock \emph{ArXiv e-prints}.
+
+\bibitem[{Breiman(2001)}]{Breiman2001}
+Breiman L (2001).
+\newblock \enquote{{Statistical Modeling: The Two Cultures}.}
+\newblock \emph{Statistical Science}, \textbf{16}(3), 199--231.
+
+\bibitem[{Chipman \emph{et~al.}(2010)Chipman, George, and
+  McCulloch}]{Chipman2010}
+Chipman H, George E, McCulloch R (2010).
+\newblock \enquote{{BART: Bayesian Additive Regressive Trees}.}
+\newblock \emph{The Annals of Applied Statistics}, \textbf{4}(1), 266--298.
+
+\bibitem[{Chipman and McCulloch(2010)}]{BayesTree}
+Chipman H, McCulloch R (2010).
+\newblock \emph{BayesTree: Bayesian Methods for Tree Based Models}.
+\newblock R package version 0.3-1.1,
+  \urlprefix\url{http://CRAN.R-project.org/package=BayesTree}.
+
+\bibitem[{Damien \emph{et~al.}(2013)Damien, Dellaportas, Polson, and
+  Stephens}]{Damien2013}
+Damien P, Dellaportas P, Polson N, Stephens D (2013).
+\newblock \emph{Bayesian Theory and Applications}, pp. 455--464.
+\newblock First edition. Oxford University Press.
+
+\bibitem[{Ding and Simonoff(2010)}]{Ding2010}
+Ding Y, Simonoff J (2010).
+\newblock \enquote{{An Investigation of Missing Data Methods for Classification
+  Trees Applied to Binary Response Data}.}
+\newblock \emph{The Journal of Machine Learning Research}, \textbf{11},
+  131--170.
+
+\bibitem[{Eliashberg(2010)}]{Eliashberg2010}
+Eliashberg J (2010).
+\newblock \emph{Green-lighting Movie Scripts: Revenue Forecasting and Risk
+  Management}.
+\newblock Ph.D. thesis, University of Pennsylvania.
+
+\bibitem[{Friedman(1991)}]{Friedman1991}
+Friedman J (1991).
+\newblock \enquote{{Multivariate Adaptive Regression Splines}.}
+\newblock \emph{The annals of statistics}, \textbf{19}, 1--67.
+
+\bibitem[{Friedman(2001)}]{Friedman2001}
+Friedman J (2001).
+\newblock \enquote{{Greedy Function Approximation: A Gradient Boosting
+  Machine}.}
+\newblock \emph{The Annals of Statistics}, \textbf{29}(5), 1189--1232.
+
+\bibitem[{Friedman(2002)}]{Friedman2002}
+Friedman J (2002).
+\newblock \enquote{{Stochastic Gradient Boosting}.}
+\newblock \emph{Computational Statistics \& Data Analysis}, \textbf{38}(4),
+  367--378.
+
+\bibitem[{Gelman \emph{et~al.}(2004)Gelman, Carlin, Stern, and
+  Rubin}]{Gelman2004}
+Gelman A, Carlin J, Stern H, Rubin D (2004).
+\newblock \emph{Bayesian Data Analysis}.
+\newblock Second edition. Chapman \& Hall / CRC.
+
+\bibitem[{Geman and Geman(1984)}]{Geman1984}
+Geman S, Geman D (1984).
+\newblock \enquote{Stochastic Relaxation, {G}ibbs Distributions, and the
+  {B}ayesian Restoration of Images.}
+\newblock \emph{IEEE Transaction on Pattern Analysis and Machine Intelligence},
+  \textbf{6}, 721--741.
+
+\bibitem[{Hastie and Tibshirani(2000)}]{Hastie2000}
+Hastie T, Tibshirani R (2000).
+\newblock \enquote{{Bayesian Backfitting}.}
+\newblock \emph{Statistical Science}, \textbf{15}(3), 196--213.
+
+\bibitem[{Hastings(1970)}]{Hastings1970}
+Hastings W (1970).
+\newblock \enquote{{Monte Carlo Sampling Methods using Markov Chains and their
+  Applications}.}
+\newblock \emph{Biometrika}, \textbf{57}(1), 97--109.
+
+\bibitem[{Kapelner and Bleich(2013)}]{Kapelner2013}
+Kapelner A, Bleich J (2013).
+\newblock \enquote{Prediction with Missing Data via Bayesian Additive
+  Regression Trees.}
+\newblock \emph{ArXiv e-prints}.
+
+\bibitem[{Kibler \emph{et~al.}(1989)Kibler, Aha, and Albert}]{Kibler1989}
+Kibler D, Aha D, Albert M (1989).
+\newblock \enquote{Instance Based Prediction of Real Valued Attributes.}
+\newblock \emph{Computational Intelligence}, \textbf{5}, 51.
+
+\bibitem[{Kindo \emph{et~al.}(2013)Kindo, Wang, and Pe}]{Kindo2013}
+Kindo B, Wang H, Pe E (2013).
+\newblock \enquote{{MBACT - Multiclass Bayesian Additive Classification
+  Trees}.}
+\newblock pp. 1--29.
+\newblock \eprint{arXiv:1309.7821v1}.
+
+\bibitem[{Liaw and Wiener(2002)}]{Liaw2002}
+Liaw A, Wiener M (2002).
+\newblock \enquote{Classification and Regression by randomForest.}
+\newblock \emph{R News}, \textbf{2}(3), 18--22.
+
+\bibitem[{Pratola \emph{et~al.}(2013)Pratola, Chipman, Higdon, McCulloch, and
+  Rust}]{Pratola2013}
+Pratola M, Chipman H, Higdon D, McCulloch R, Rust W (2013).
+\newblock \enquote{Parallel Bayesian Additive Regression Trees.}
+\newblock \emph{Technical report}, University of Chicago.
+
+\bibitem[{{R Core Team}(2014)}]{Rlang}
+{R Core Team} (2014).
+\newblock \emph{R: A Language and Environment for Statistical Computing}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+\newblock \urlprefix\url{http://www.R-project.org/}.
+
+\bibitem[{Taddy \emph{et~al.}(2011)Taddy, Gramacy, and Polson}]{Taddy2011}
+Taddy M, Gramacy R, Polson N (2011).
+\newblock \enquote{{Dynamic Trees for Learning and Design}.}
+\newblock \emph{Journal of the American Statistical Association},
+  \textbf{106}(493), 109--123.
+
+\bibitem[{Twala \emph{et~al.}(2008)Twala, Jones, and Hand}]{Twala2008}
+Twala B, Jones M, Hand D (2008).
+\newblock \enquote{{Good Methods for Coping with Missing Data in Decision
+  Trees}.}
+\newblock \emph{Pattern Recognition Letters}, \textbf{29}(7), 950--956.
+
+\bibitem[{Urbanek(2013)}]{rJava}
+Urbanek S (2013).
+\newblock \emph{rJava: Low-level R to Java interface}.
+\newblock R package version 0.9-6,
+  \urlprefix\url{http://CRAN.R-project.org/package=rJava}.
+
+\bibitem[{Zhou and Liu(2008)}]{Zhou2008}
+Zhou Q, Liu JS (2008).
+\newblock \enquote{Extracting Sequence Features to Predict Protein--{DNA}
+  Interactions: a Comparative Study.}
+\newblock \emph{Nucleic acids research}, \textbf{36}(12), 4137--4148.
+
+\end{thebibliography}
