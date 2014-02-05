@@ -8,7 +8,7 @@ Estimate Out-of-sample Error with K-fold Cross validation
 Builds a BART model using a specified set of arguments to \code{build_bart_machine} and estimates the out-of-sample performance by using k-fold cross validation.
 }
 \usage{
-k_fold_cv(X, y, k_folds = 5, ...)
+k_fold_cv(X, y, k_folds = 5, verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,9 @@ Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a 
 }
   \item{k_folds}{
 Number of folds to cross-validate over.
+}
+  \item{verbose}{
+Prints information about progress of the algorithm to the screen. 
 }
   \item{\dots}{
 Additional arguments to be passed to \code{build_bart_machine}.

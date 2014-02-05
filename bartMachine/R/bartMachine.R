@@ -59,7 +59,7 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
    num_tree_cvs = c(50, 200),
    k_cvs = c(2, 3, 5),
    nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
-   k_folds = 5, ...){
+   k_folds = 5, verbose = FALSE, ...){
   
   build_bart_machine_cv(X, y, Xy, 
    num_tree_cvs,

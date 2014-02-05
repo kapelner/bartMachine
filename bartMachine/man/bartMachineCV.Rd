@@ -11,11 +11,11 @@ Builds a BART-CV model by cross-validating over a grid of hyperparameter choices
 \usage{
 bartMachineCV(X = NULL, y = NULL, Xy = NULL, 
 num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
-nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
+nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, verbose = FALSE, ...)
 
 build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, 
 num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
-nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
+nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,6 +39,9 @@ List of vectors containing (\code{nu}, \code{q}) ordered pair choices to cross-v
 }
   \item{k_folds}{
 Number of folds for cross-validation
+}
+  \item{verbose}{
+Prints information about progress of the algorithm to the screen. 
 }
   \item{\dots}{
 Additional arguments to be passed to \code{bartMachine}.
