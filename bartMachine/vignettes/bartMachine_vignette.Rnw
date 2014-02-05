@@ -2,7 +2,7 @@
 % \VignetteKeywords{bartMachine}
 % \VignettePackage{bartMachine}
 
-\documentclass[article]{jss}
+\documentclass[article,nojss]{jss}
 
 \usepackage{graphicx}
 \usepackage{amsmath}
