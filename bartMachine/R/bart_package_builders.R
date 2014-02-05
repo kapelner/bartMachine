@@ -45,6 +45,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		#first ensure it's a dataframe
+		if (class(Xy) != "data.frame"){
+			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
+		}
 		y = Xy[, ncol(Xy)]
 		for (cov in 1 : (ncol(Xy) - 1)){
 			if (colnames(Xy)[cov] == ""){
@@ -440,13 +444,28 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
-		k_folds = 5, ...){
+		k_folds = 5, 
+		verbose = FALSE,
+		...){
+	
+	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		if (class(Xy) != "data.frame"){
+			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
+		}
+		y = Xy$y
+		Xy$y = NULL
+		X = Xy
+	}
 	
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
 		pred_type = "regression"
 	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
 		pred_type = "classification"
+	} else { #otherwise throw an error
+		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
 	}
 	
 	if (pred_type == "classification"){
@@ -454,13 +473,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	
-	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
-		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
-	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
-		y = Xy$y
-		Xy$y = NULL
-		X = Xy
-	}
+
 	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
@@ -483,7 +496,9 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 						num_trees = num_trees,
 						k = k,
 						nu = nu_q[1],
-						q = nu_q[2], ...)
+						q = nu_q[2], 
+						verbose = verbose,
+						...)
 				
 				if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
 					min_oos_rmse = k_fold_results$rmse					

@@ -26,10 +26,10 @@ oos_stats
 #Figure 3
 rmse_by_num_trees(bart_machine, num_replicates = 20)
 
-bart_machine_cv = bartMachineCV(X, y, verbose = FALSE)
+bart_machine_cv = bartMachineCV(X, y)
 bart_machine_cv
 
-oos_stats_cv = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200)
+oos_stats_cv = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200, verbose = FALSE)
 oos_stats_cv
 
 predict(bart_machine_cv, X[1 : 14, ])
