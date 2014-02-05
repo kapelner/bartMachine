@@ -1,7 +1,6 @@
 % \VignetteIndexEntry{bartMachine Vignette}
 % \VignetteKeywords{bartMachine}
 % \VignettePackage{bartMachine}
-
 \documentclass[article,nojss]{jss}
 
 \usepackage{graphicx}
@@ -218,10 +217,10 @@ The Gibbs sampler,
 \vdots &&  \\\nonumber
 2m -1: && \treet{m} ~|~ \R_{-m}, \sigsq \\\nonumber
 2m: && \leaf_m ~|~ \treet{m}, \R_{-m}, \sigsq \\ \nonumber
-2m + 1: && ~\,\sigsq ~|~ \treet{1}, \leaf_1, \ldots, \treet{m}, \leaf_m, \E, \nonumber
+2m + 1: && ~\,\sigsq ~|~ \treet{1}, \leaf_1, \ldots, \treet{m}, \leaf_m, \berrorrv, \nonumber
 \eneqn
 
-\noindent proceeds by first proposing a change to the first tree's structure $\treet{}$ which are accepted or rejected via a Metropolis-Hastings step \citep{Hastings1970}. Note that sampling from the posterior of the tree structure does not depend on the leaf parameters, as they can be analytically margined out of the computation (see Appendix ~\ref{subapp:grow_step}). Given the tree structure, samples from the posterior of the $b$ leaf parameters $\leaf_1 := \braces{\mu_1, \ldots, \mu_b}$  are then drawn. This procedure proceeeds iteratively for each tree, using the updated set of partial residuals $\R_j$. Finally, conditional on the updated set of tree structures and leaf parameters, a draw from the posterior of $\sigsq$ is made based on the full model residuals $\E := \y - \sum_{t = 1}^m \treeleaft{t}(\X)$.
+\noindent proceeds by first proposing a change to the first tree's structure $\treet{}$ which are accepted or rejected via a Metropolis-Hastings step \citep{Hastings1970}. Note that sampling from the posterior of the tree structure does not depend on the leaf parameters, as they can be analytically margined out of the computation (see Appendix ~\ref{subapp:grow_step}). Given the tree structure, samples from the posterior of the $b$ leaf parameters $\leaf_1 := \braces{\mu_1, \ldots, \mu_b}$  are then drawn. This procedure proceeeds iteratively for each tree, using the updated set of partial residuals $\R_j$. Finally, conditional on the updated set of tree structures and leaf parameters, a draw from the posterior of $\sigsq$ is made based on the full model residuals $\berrorrv := \y - \sum_{t = 1}^m \treeleaft{t}(\X)$.
 
 Within a given terminal node, since both the prior and likelihood are normally distributed, the posterior of each of the leaf parameters in $\leaf$ is conjugate normal with its mean being a weighted combination of the likelihood and prior parameters (lines $2,~4, \ldots, 2m$ in Equation set \ref{eq:gibbs_sampler}). Due to the normal-inverse-gamma conjugacy, the posterior of $\sigsq$ is inverse gamma as well (line $2m+1$ in Equation set \ref{eq:gibbs_sampler}). The complete expressions for these posteriors can be found in \citet{Gelman2004}. 
 
@@ -245,7 +244,7 @@ For the binary classification problem (coded with outcomes ``0'' and ``1''), we 
 
 In the classification setting, the prior on $\sigsq$ is not needed as the model assumes $\sigsq=1$. The prior on the tree structure remains the same as in the regression setting and a few minor modifications are required for the prior on the leaf parameters. 
 
-Sampling from the posterior distribution is again obtained via Gibbs sampling with a Metropolis-Hastings step outlined in Section~\ref{subsec:posterior}. Following the data augmentation approach of \citep{Albert1993} an additional vector of latent variables $\Z$ is introduced into the Gibbs sampler. Then, a new step is created in the Gibbs sampler where draws of $\Z\,|\,\y$ are obtained by conditioning on the sum-of-trees model:
+Sampling from the posterior distribution is again obtained via Gibbs sampling with a Metropolis-Hastings step outlined in Section~\ref{subsec:posterior}. Following the data augmentation approach of \citet{Albert1993}, an additional vector of latent variables $\Z$ is introduced into the Gibbs sampler. Then, a new step is created in the Gibbs sampler where draws of $\Z\,|\,\y$ are obtained by conditioning on the sum-of-trees model:
 
 \beqn
 Z_i~|~y_i=1 &\sim& \max{N\parens{\sum_t \treeleaft{t}\parens{\X},1}, \,0} \mathand \\
@@ -271,7 +270,7 @@ First, \pkg{bartMachine} is fully parallelized (with the number of cores customi
 Additionally, we take advantage of a number of additional computational shortcuts:
 
 \begin{enumerate}[1.]
-\item Computing the unfitted responses for each tree (Equation~\ref{eq:response_unfitted}) can be accomplished by keeping a running vector and making entry-wise updates as the Gibbs sampler (Equation~\ref{eq:gibbs_sampler}) progresses from step 1 to $2m$. Additionally, during the $\sigsq$ step $2m + 1$, the residuals do not have to be computed by dropping the data down all the trees.
+\item Computing the unfitted responses for each tree (Equation~\ref{eq:response_unfitted}) can be accomplished by keeping a running vector and making entry-wise updates as the Gibbs sampler (Equation~\ref{eq:gibbs_sampler}) progresses from step 1 to $2m$. Additionally, during the $\sigsq$ sampling (step $2m + 1$), the residuals do not have to be computed by dropping the data down all the trees.
 \item Each node caches its acceptable variables for split rules and the acceptable unique split values so they do not need to be calculated at each tree sampling step. This speed enhancement, which we call \textit{memcache} comes at the expense of memory and may cause issues for large data sets. We include a toggle in our implementation defaulted to ``on.''
 \item Careful calculations in Appendix~\ref{app:implementation} eliminate many unnecessary computations. For instance, the likelihood ratios are only functions of the squared sum of responses and no longer require computing the sum of the responses squared.
 \end{enumerate}
@@ -306,7 +305,7 @@ Figure~\ref{fig:time_plots_small_sample} displays results for smaller sample siz
 
 There are a number of ways to incorporate missingness into tree-based methods (see \citealp{Ding2010} for a review). The method implemented here is known as \qu{Missing Incorporated in Attributes} \citep[MIA, ][section 2]{Twala2008} which natively incorporates missingness by augmenting the nodes' splitting rules to (a) also handle sorting the missing data to the left or right and (b) use missingness \textit{itself} as a variable to be considered in a splitting rule. Algorithm \ref{alg:mia} summarizes these new splitting rules as they are implemented within the package.
 
-Implementing MIA into the BART procedure is straightforward. These new splitting rules are sampled uniformly during the GROW or CHANGE steps. For example, a splitting rule might be \qu{$\x_j < c$ or $\x_j$ is missing.} To account for splitting on missingness itself, we create dummy vectors of length $n$ for each of the $p$ attributes, denoted $\M_1, \ldots, \M_p$, which assume the value 1 when the entry is missing and 0 when the entry is present. The original training matrix is then augmented with these dummies, giving the opportunity to select missingness \textit{itself} when choosing a new splitting rule during the grow or change steps. Note that this can increase the number of predictors by up to a factor of 2. We illustrate the building a \pkg{bartMachine} model with missing data in Section~\ref{subsec:incorporating_missing_data}. As described in \citet[][Section 6]{Chipman2010}, BART's runtime increases negligibly in the number of covariates and this has been our experience using the augmented training matrix.
+Implementing MIA into the BART procedure is straightforward. These new splitting rules are sampled uniformly during the GROW or CHANGE steps. For example, a splitting rule might be \qu{$\x_j < c$ or $\x_j$ is missing.} To account for splitting on missingness itself, we create dummy vectors of length $n$ for each of the $p$ attributes, denoted $\M_1, \ldots, \M_p$, which assume the value 1 when the entry is missing and 0 when the entry is present. The original training matrix is then augmented with these dummies, giving the opportunity to select missingness \textit{itself} when choosing a new splitting rule during the grow or change steps. Note that this can increase the number of predictors by up to a factor of 2. We illustrate building a \pkg{bartMachine} model with missing data in Section~\ref{subsec:incorporating_missing_data}. As described in \citet[][Section 6]{Chipman2010}, BART's runtime increases negligibly in the number of covariates and this has been our experience using the augmented training matrix.
 
 \begin{algorithm}[htp]
 \caption{The MIA choices for all attributes $j \in \braces{1, \ldots, p}$ and all split points $x^*_{ij}$ where $i \in \braces{1,\ldots,n}$ during a GROW or CHANGE step in \pkg{bartMachine}.}
@@ -357,7 +356,7 @@ The following Sections~\ref{subsec:model_building} -- \ref{subsec:variable_selec
 
 \subsection{Model building}\label{subsec:model_building}
 
-We are now are ready to construct a \pkg{bartMachine} model. The default hyperparameters generally follow the recommendations of \citet{Chipman2010} and provide a ready-to-use algorithm for many data problems. Our hyperparameter settings are $m = 50$,\footnote{In contrast to \citet{Chipman2010}, we recommend this default as a good starting point rather than $m=200$ due to our experience experimenting with the \qu{RMSE by number of trees} feature found in later in this section. Performance is often similar and computational time and memory requirements are dramatically reduced.} $\alpha = 0.95$, $\beta = 2$, $k = 2$, $q = 0.9$, $\nu = 3$, probabilities of the GROW / PRUNE / CHANGE steps is 39\% / 39\% /44\%. We set the number of burn-in Gibbs samples to 250 and number of post-burn-in samples to 1,000. We default the missing data feature to be off. We default the covariates to be equally important \textit{a priori}. Other parameters and their defaults can be found in the package's online manual. Below is a default \pkg{bartMachine} model. Here, $\X$ denotes automobile attributes and $\y$ denotes the log price of the automobile.
+We are now are ready to construct a \pkg{bartMachine} model. The default hyperparameters generally follow the recommendations of \citet{Chipman2010} and provide a ready-to-use algorithm for many data problems. Our hyperparameter settings are $m = 50$,\footnote{In contrast to \citet{Chipman2010}, we recommend this default as a good starting point rather than $m=200$ due to our experience experimenting with the \qu{RMSE by number of trees} feature found in later in this section. Performance is often similar and computational time and memory requirements are dramatically reduced.} $\alpha = 0.95$, $\beta = 2$, $k = 2$, $q = 0.9$, $\nu = 3$, and probabilities of the GROW / PRUNE / CHANGE steps is 39\% / 39\% /44\%. We set the number of burn-in Gibbs samples to 250 and number of post-burn-in samples to 1,000. We default the missing data feature to be off. We default the covariates to be equally important \textit{a priori}. Other parameters and their defaults can be found in the package's online manual. Below is a default \pkg{bartMachine} model. Here, $\X$ denotes automobile attributes and $\y$ denotes the log price of the automobile.
 
 \begin{Code}
 R> bart_machine = bartMachine(X, y)
@@ -396,11 +395,11 @@ We can also obtain out-of-sample statistics to assess level of overfitting by us
 
 \begin{Code}
 R> k_fold_cv(X, y, k_folds = 10)
-$L1_err	  $L2_err           $rmse            $PseudoRsq
+$L1_err    $L2_err           $rmse            $PseudoRsq
 [1] 22.63155     [1] 5.202831      [1] 0.1803266    [1] 0.831917
 \end{Code}
 
-The Pseudo-$R^2$ being lower out-of-sample versus in-sample suggests evidence that \pkg{bartMachine} is slightly overfitting (note that the training sample during cross-validation is 10\% smaller).
+The Pseudo-$R^2$ being lower out-of-sample versus in-sample suggests evidence that \pkg{bartMachine} is slightly overfitting (note also that the training sample during cross-validation is 10\% smaller).
 
 It may also be of interest how the number of trees $m$ affects performance. One can examine how out-of-sample predictions vary by the number of trees via 
 
@@ -549,9 +548,9 @@ Actual selection of variables \textit{significantly} affecting the response is a
 
 It is also natural to ask: does $\x_j$ affect the response, controlling for other variables in the model? This is roughly analogous to the $t$-test in ordinary least squares regression of no linear effect of $\x_j$ on $\y$ while controlling for $\x_{-j}$. The null hypothesis here is the same but the linearity constraint is relaxed. To test this, we employ a permutation approach where we record the observed Pseudo-$R^2$ from the \pkg{bartMachine} model built with the original data. Then we permute the $\x_j$th column, thereby destroying any relationship between $\x_j$ and $\y$, construct a new duplicate \pkg{bartMachine} model from this permuted design matrix and record a ``null'' Pseudo-$R^2$. We then repeat this  process to obtain a null distribution of Pseudo-$R^2$'s. Since the alternative hypothesis is that $\x_j$ has an effect on $\y$ in terms of predictive power, our $p$ value is the proportion of null Pseudo-$R^2$'s greater than the observed Pseudo-$R^2$, making our procedure a natural one-sided test. Note, however, that this test is conditional on the BART model and its selected priors being true, similar to the assumptions of the linear model. 
 
-If we wish to test if a set of covariates $A \subset \braces{\x_{1}, \ldots, \x_{p}}$ affect the response after controlling for other variables, we repeat the procedure outlined in the above paragraph by permuting the columns of $A$ in every null sample. This is roughly analogous to the partial $F$-test in ordinary least squares regression. 
+If we wish to test if a set of covariates $A \subset \braces{\x_{1}, \ldots, \x_{p}}$ affect the response after controlling for other variables, we repeat the procedure outlined in the above paragraph by permuting the columns of $A$ in every null sample. We do not permute each column separately, but instead permute as a unit in order to perserve collinearity structure. This is roughly analogous to the partial $F$-test in ordinary least squares regression. 
 
-If we wish to test if \textit{any} of the covariates matter in predicting $\y$, roughly analogous to the omnibus $F$-test in ordinary least squares regression, we simply permute $\y$ during the null sampling. This procedure breaks the relationship between the response and the predictors but does not alter the existing associations between predictors.
+If we wish to test if \textit{any} of the covariates matter in predicting $\y$, we simply permute $\y$ during the null sampling. This procedure breaks the relationship between the response and the predictors but does not alter the existing associations between predictors. This is roughly analogous to the omnibus $F$-test in ordinary least squares regression.
 
 At $\alpha = 0.05$, Figure~\ref{fig:cov_test_width} demonstrates an insignificant effect of the variable \texttt{width} of car on price. Even though \texttt{width} is putatively the \qu{most important} variable as measured by proportions of splits in the posterior sum-of-trees model (Figure~\ref{fig:var_imp_automobile_cc}), note that this is largely an easy prediction problem with many collinear predictors. Figure~\ref{fig:cov_test_body_style} shows the results of a test of the putatively most important categorical variable, \texttt{body style} (which involves permuting the categories, then dummifying the levels to preserve the structure of the variable). We find a marginally significant effect ($p = 0.0495$). A test of the top ten most important variables is convincingly significant (Figure~\ref{fig:cov_test_top_10}). For the omnibus test, Figure~\ref{fig:cov_test_omnibus} illustrates an extremely statistically significant result, as would be expected. The code to run these tests is shown below (output suppressed).
 
@@ -850,7 +849,7 @@ R> predict(bart_machine_cv, X[1 : 2, ], type = "class")
 [1] "Yes" "No" 
 \end{Code}
 
-When using the covariate tests of Section~\ref{subsec:variable_effects},total misclassification error becomes the statistic of interest instead of Pseudo-$R^2$. The $p$ value is calculated now as the proportion of null samples with \textit{higher} misclassification error. Figure~\ref{fig:covariate_test_age} illustrates the test showing that predictor \texttt{age} seems to matter in the prediction of \texttt{Diabetes}, controlling for other predictors.
+When using the covariate tests of Section~\ref{subsec:variable_effects},total misclassification error becomes the statistic of interest instead of Pseudo-$R^2$. The $p$ value is calculated now as the proportion of null samples with \textit{lower} misclassification error. Figure~\ref{fig:covariate_test_age} illustrates the test showing that predictor \texttt{age} seems to matter in the prediction of \texttt{Diabetes}, controlling for other predictors.
 
 \begin{figure}[htp]
 \centering
