@@ -33,6 +33,7 @@ export(calc_credible_intervals)
 export(calc_prediction_intervals)
 
 export(build_bart_machine_cv)
+export(bartMachineCV)
 export(k_fold_cv)
 
 export(var_selection_by_permute_response_three_methods)
