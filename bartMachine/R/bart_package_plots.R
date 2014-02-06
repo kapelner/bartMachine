@@ -160,7 +160,7 @@ get_mh_acceptance_reject = function(bart_machine){
 }
 
 #plot y vs yhat for training or test data
-plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
+plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95, print_main = TRUE){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
@@ -198,8 +198,8 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(ytest, y_hat, 
-			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Cred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
-			xlab = paste("Actual Values", sep = ""), 
+     main = ifelse(print_main == T, paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), ""), 
+     xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
 			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
 			ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
@@ -220,7 +220,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(ytest, y_hat, 
-				main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
+				main = ifelse(print_main == T, paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), ""), 
 				xlab = paste("Actual Values", sep = ""), 
 				ylab = "Fitted Values", 
 				xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
