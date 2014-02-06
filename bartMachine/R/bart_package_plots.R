@@ -198,7 +198,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(ytest, y_hat, 
-     main = ifelse(print_main == T, paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), ""), 
+     main = ifelse(print_main == T, paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Cred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), ""), 
      xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
 			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
@@ -213,10 +213,10 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
 		}		
 	} else if (prediction_intervals){
-		credible_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
-		ci_a = credible_intervals[, 1]
-		ci_b = credible_intervals[, 2]
-		y_in_ppi = ytest >= ci_a & ytest <= ci_b
+		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
+		pi_a = prediction_intervals[, 1]
+		pi_b = prediction_intervals[, 2]
+		y_in_ppi = ytest >= pi_a & ytest <= pi_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(ytest, y_hat, 
@@ -228,7 +228,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 				cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "grey", lwd = 0.1)	
+			segments(ytest[i], pi_a[i], ytest[i], pi_b[i], col = "grey", lwd = 0.1)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
