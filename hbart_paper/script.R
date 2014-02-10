@@ -339,7 +339,7 @@ graphics.off()
 ###
 library(SemiPar)
 data(lidar)
-MAX_POLY = 3
+MAX_POLY = 2
 mod = lm(lidar$logratio ~ poly(lidar$range, MAX_POLY))
 Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
@@ -375,7 +375,7 @@ graphics.off()
 
 
 ###
-#sniffe rdata
+#sniffer data
 ###
 
 library(alr3)
