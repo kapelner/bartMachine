@@ -265,7 +265,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
 			return(TRUE)
 		}
-		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
+		.jcall(java_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
 	}
 	
 	#now load the training data into BART

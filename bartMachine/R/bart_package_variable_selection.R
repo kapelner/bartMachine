@@ -196,6 +196,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 			cat(".")
 			#pull out the appropriate vars
 			vars_selected_by_method = bart_variables_select_obj_k[[method]]
+  
 			if (length(vars_selected_by_method) == 0){
 				#we just predict ybar
 				ybar_est = mean(training_y_k)
@@ -203,13 +204,21 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				L2_err_mat[k, method] = sum((test_y_k - ybar_est)^2)
 			} else {
 				#now build the bart machine based on reduced model
-				bart_machine_temp = bart_machine_duplicate(bart_machine, X = data.frame(training_X_k[, vars_selected_by_method]), y = training_y_k,
+			  training_X_k_red_by_vars_picked_by_method = data.frame(training_X_k[, vars_selected_by_method])
+			  colnames(training_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column - maybe drop  = F?
+        
+        ##need to account for cov_prior_vec update
+        
+				bart_machine_temp = bart_machine_duplicate(bart_machine, X = training_X_k_red_by_vars_picked_by_method, y = training_y_k,
 						num_trees = num_trees_pred_cv,
 						run_in_sample = FALSE,
+            cov_prior_vec = rep(1, times = ncol(training_X_k_red_by_vars_picked_by_method)),   ##do not want old vec -- standard here                                   
 						verbose = FALSE)
 				#and calculate oos-L2 and cleanup
 				test_X_k_red_by_vars_picked_by_method = data.frame(test_X_k[, vars_selected_by_method])
-				predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
+        colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
+
+        predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
 				destroy_bart_machine(bart_machine_temp)
 				#now record it
 				L2_err_mat[k, method] = predict_obj$L2_err
