@@ -1,9 +1,9 @@
-
+library(bartMachine)
 library(bartMachine, lib.loc = "C:/Program Files/R/R-3.0.2/library/")
 setwd("C:/Users/jbleich/Dropbox/BART_hetero/working_paper")
 ##Univariate Simulation 1
 
-n =250
+n = 250
 gamma = 7
 beta = 100
 
@@ -22,6 +22,8 @@ init_java_for_bart_machine_with_mem_in_mb(5000)
 plot(X, y)
 bart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in=1000)
 bart_machine
+
+heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
 
 hbart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in=500, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
 hbart_machine
@@ -118,7 +120,8 @@ sigmas = sqrt(sigsqs)
 
 y = X %*% beta_vec + rnorm(n, mean = 0, sd = sigmas)
 
-bart_machine = build_bart_machine(Xy = data.frame(X[, -1], y), run_in_sample = F)
+bart_machine = build_bart_machine(Xy = data.frame(X[, -1], y))
+heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
 
 hbart_machine = build_bart_machine(Xy = data.frame(X[, -1], y), run_in_sample = F,
                                    use_heteroskedastic_linear_model = TRUE, 
@@ -294,6 +297,8 @@ Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
 bart_machine = build_bart_machine(X, y, num_burn_in = 1500)
 bart_machine
+heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
+
 pred_ints = calc_prediction_intervals(bart_machine, X, pi_conf = 0.90)
 
 hbart_machine = build_bart_machine(X, y, 
@@ -346,6 +351,8 @@ Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
 
 bart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, num_burn_in = 1500)
 bart_machine
+heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
+
 pred_ints = calc_prediction_intervals(bart_machine, data.frame(lidar$range), pi_conf = 0.90)
 
 hbart_machine = build_bart_machine(data.frame(lidar$range), lidar$logratio, 
@@ -377,7 +384,39 @@ graphics.off()
 ###
 #sniffer data
 ###
-
+library(bartMachine)
 library(alr3)
 data(sniffer)
 
+bart_machine = build_bart_machine(Xy = sniffer, num_burn_in = 1500)
+bart_machine
+plot_y_vs_yhat(bart_machine, credible_intervals = TRUE)
+heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
+
+#now build a model with the log squared residuals and see if there's any marginal linear patterns
+log_sq_resid_bart_machine = build_bart_machine(X = sniffer[, 1 : 4], y = log(bart_machine$residuals^2), num_burn_in = 1500)
+plot(sniffer[, 1], log(bart_machine$residuals^2))
+plot(sniffer[, 2], log(bart_machine$residuals^2))
+plot(sniffer[, 3], log(bart_machine$residuals^2))
+plot(sniffer[, 4], log(bart_machine$residuals^2))
+pd_plot(log_sq_resid_bart_machine, j = "TankTemp")
+windows()
+pd_plot(log_sq_resid_bart_machine, j = "GasTemp")
+windows()
+pd_plot(log_sq_resid_bart_machine, j = "TankPres")
+windows()
+pd_plot(log_sq_resid_bart_machine, j = "GasPres")
+
+#we note that none of the PDP's show any significant pattern (assuming the BART model is correct) except GasTemp where it appears to go up and come down
+#let's try a polynomial model of order 2 on it
+MAX_POLY = 2
+mod = lm(sniffer[,5] ~ poly(sniffer$GasTemp, MAX_POLY))
+Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+
+hbart_machine = build_bart_machine(Xy = sniffer, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model = Z)
+hbart_machine
+
+k_fold_cv(sniffer[, 1 : 4], sniffer[, 5])
+#$rmse
+#[1] 3.989569
+k_fold_cv(sniffer[, 1 : 4], sniffer[, 5], use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model = Z)

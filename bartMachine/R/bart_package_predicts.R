@@ -141,7 +141,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 ##compute prediction intervals
-calc_prediction_intervals = function(bart_machine, new_data, Z_new_data = NULL, pi_conf = 0.95, num_samples_per_data_point = 1000){
+calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, Z_new_data = NULL, num_samples_per_data_point = 1000){
 
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
