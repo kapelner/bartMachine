@@ -250,6 +250,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 	}
 	
+	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
+	
 	if (use_heteroskedastic_linear_model){
 		if (verbose){
 			cat("Heteroskedastic Linear Model Feature ON.\n")
@@ -272,7 +274,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 				cat("Heteroskedastic model covariates not specified. Using X as default.\n")
 			}
 			for (i in 1 : nrow(model_matrix_training_data)){
-				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(model_matrix_training_data[i, ]))
+				.jcall(java_bart_machine, "V", "addTrainingDataRowHeteroModel", as.numeric(model_matrix_training_data[i, 1 : p]))
 			}
 			Z_col_means = colMeans(model_matrix_training_data)
 		} else {
@@ -326,7 +328,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
+	
 	bart_machine = list(java_bart_machine = java_bart_machine,
 			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data && use_missing_data_dummies_as_covars, (p / 2), p)],
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features

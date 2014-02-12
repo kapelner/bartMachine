@@ -420,3 +420,79 @@ k_fold_cv(sniffer[, 1 : 4], sniffer[, 5])
 #$rmse
 #[1] 3.989569
 k_fold_cv(sniffer[, 1 : 4], sniffer[, 5], use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model = Z)
+
+
+###other datasets
+library(bartMachine)
+data(cement)
+
+bart_machine = build_bart_machine(Xy = cement, num_burn_in = 1500)
+hbart_machine = build_bart_machine(Xy = cement, use_heteroskedastic_linear_model = TRUE)
+hbart_machine
+
+plot_y_vs_yhat(bart_machine, credible_intervals = TRUE)
+heteroskedasticity_test(bart_machine = bart_machine)
+
+log_sq_resid_bart_machine = build_bart_machine(X = cement[, 1 : 8], y = log(bart_machine$residuals^2), num_burn_in = 1500)
+windows()
+par(mfrow = c(4, 2))
+for (j in 1 : (ncol(cement) - 1)){
+	y = log(bart_machine$residuals^2)
+	x = cement[, j]
+	plot(x, y, ylab = "", xlab = colnames(cement)[j])
+	mod = lm(y ~ x)
+	coef(mod)
+	print(colnames(cement)[j])
+	print(coef(summary(mod))[2, ])
+	abline(mod$coefficients)
+}
+
+
+#windows()
+#pd_plot(log_sq_resid_bart_machine, j = "blast")
+#windows()
+#pd_plot(log_sq_resid_bart_machine, j = "plasticizer")
+#windows()
+#pd_plot(log_sq_resid_bart_machine, j = "age")
+#
+#MAX_POLY = 2
+#mod = lm(cement[, 9] ~ poly(cement[, 2], MAX_POLY))
+#Z = as.matrix(mod$model)[, 2 : (MAX_POLY + 1)]
+
+k_fold_cv(cement[, 1 : 8], cement[, 9], k_folds = 2, verbose = FALSE)
+#$rmse
+#[1] 13.65251
+k_fold_cv(cement[, 1 : 8], cement[, 9], use_heteroskedastic_linear_model = TRUE, k_folds = 2, verbose = FALSE, Z_heteroskedastic_model = cement[, c("age", "ash"), drop = FALSE])
+#$rmse
+#[1] 12.12567
+#> (13.65251-12.12567)/13.65251*100
+#[1] 11.18358
+
+k_fold_cv(cement[, 1 : 8], cement[, 9], k_folds = 5, verbose = FALSE)
+#$rmse
+#[1] 10.58382
+k_fold_cv(cement[, 1 : 8], cement[, 9], use_heteroskedastic_linear_model = TRUE, k_folds = 5, verbose = FALSE)
+#$rmse
+#[1] 9.607356
+#> (10.58-9.61) / 10.58 * 100
+#[1] 9.168242
+
+k_fold_cv(cement[, 1 : 8], cement[, 9], k_folds = 10, verbose = FALSE)
+#$rmse
+#[1] 7.250917
+k_fold_cv(cement[, 1 : 8], cement[, 9], use_heteroskedastic_linear_model = TRUE, k_folds = 10, verbose = FALSE)
+#$rmse
+#[1] 7.246413
+
+k_fold_cv(cement[, 1 : 8], cement[, 9], k_folds = 40, verbose = FALSE)
+#$rmse
+#[1] 5.896788
+k_fold_cv(cement[, 1 : 8], cement[, 9], use_heteroskedastic_linear_model = TRUE, k_folds = 40, verbose = FALSE)
+#$rmse
+#[1] 5.551158
+#> (5.896788-5.551158)/5.896788*100
+#[1] 5.861327
+
+
+
+
