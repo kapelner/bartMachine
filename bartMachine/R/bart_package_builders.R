@@ -479,6 +479,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
+    #hyper_sigma_weights = c(.01, .1, 1, 10, 100, 1000)
 		k_folds = 5, ...){
 	
 	y_levels = levels(y)
