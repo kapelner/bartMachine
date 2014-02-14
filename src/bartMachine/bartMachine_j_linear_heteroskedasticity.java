@@ -42,18 +42,25 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 		if (use_linear_heteroskedastic_model){
 			//wasteful to run once for each thread... but conveninent since it's only O(1)
 			cacheInformationForGibbsSamplingAndSetupHyperparameters();
-			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p_Z: " + p_Z);
+			if (verbose){
+				System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p_Z: " + p_Z);
+			}
+
 		}
 		super.Build();
 		if (use_linear_heteroskedastic_model){			
 //			for (int j = 0; j < p_Z; j++){
 				double prop_accepted_tot = m_h_num_accept_over_gibbs_samples  / (double) num_gibbs_total_iterations;
-				System.out.println("prop gibbs accepted tot: " + prop_accepted_tot);
+				if (verbose){
+					System.out.println("prop gibbs accepted tot: " + prop_accepted_tot);
+				}
 //			}
 			System.out.println("\n\n");
 //			for (int j = 0; j < p_Z; j++){
 				double prop_accepted_after_burn_in = m_h_num_accept_over_gibbs_samples_after_burn_in  / (double) (num_gibbs_total_iterations - num_gibbs_burn_in);
-				System.out.println("prop gibbs accepted after burn in: " + prop_accepted_after_burn_in);
+				if (verbose){
+					System.out.println("prop gibbs accepted after burn in: " + prop_accepted_after_burn_in);
+				}
 //			}
 			System.out.println("\n\n");
 			
@@ -68,8 +75,11 @@ public class bartMachine_j_linear_heteroskedasticity extends bartMachine_i_prior
 					gamma_j_avg = StatToolbox.sample_average(gibbs_samples_gamma_j);
 					gamma_j_sd = StatToolbox.sample_standard_deviation(gibbs_samples_gamma_j);
 				}
-				System.out.println("gamma_" + (j + 1) + " = " + TreeIllustration.two_digit_format.format(gamma_j_avg) + " +- " + TreeIllustration.two_digit_format.format(gamma_j_sd) +
-						((gamma_j_avg - 2 * gamma_j_sd < 0 && gamma_j_avg + 2 * gamma_j_sd > 0) ? " => plausibly 0" : " => *NOT* plausibly 0"));
+				if(verbose){
+					System.out.println("gamma_" + (j + 1) + " = " + TreeIllustration.two_digit_format.format(gamma_j_avg) + " +- " + TreeIllustration.two_digit_format.format(gamma_j_sd) +
+							((gamma_j_avg - 2 * gamma_j_sd < 0 && gamma_j_avg + 2 * gamma_j_sd > 0) ? " => plausibly 0" : " => *NOT* plausibly 0"));
+				}
+
 			}
 		}
 	}

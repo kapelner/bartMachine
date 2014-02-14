@@ -1,5 +1,6 @@
 ##performs out-of-sample error estimation for a BART model
 k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
+  
 	if (class(X) != "data.frame"){
 		stop("X must be a data frame.")
 	}
@@ -51,7 +52,7 @@ k_fold_cv = function(X, y, k_folds = 5, Z_heteroskedastic_model = NULL, ...){
 		
 		Z_heteroskedastic_model_k = NULL
 		if (!is.null(Z_heteroskedastic_model)){
-			Z_heteroskedastic_model_k = Z_heteroskedastic_model[-c(holdout_index_i : holdout_index_f), , drop = FALSE]
+			Z_heteroskedastic_model_k = Z_heteroskedastic_model[-c(holdout_index_i : holdout_index_f), ,drop = FALSE]
 		}
 		
    		#build bart object

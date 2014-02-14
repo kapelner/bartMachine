@@ -25,8 +25,12 @@ bart_machine
 
 heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
 
-hbart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in=500, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
+hbart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in = 500, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
 hbart_machine
+
+hbart_machine_cv = build_bart_machine_cv(X = data.frame(X), y = y, num_burn_in = 500, num_tree_cvs=50, k_cvs=2, nu_q_cvs=c(3,.90), use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
+hbart_machine_cv
+
 windows()
 par(mgp=c(1.8, .5, 0), mar=c(3.5, 3.5 ,.4, 1))
 
@@ -121,11 +125,11 @@ sigmas = sqrt(sigsqs)
 y = X %*% beta_vec + rnorm(n, mean = 0, sd = sigmas)
 
 bart_machine = build_bart_machine(Xy = data.frame(X[, -1], y))
-heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
+#heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
 
 hbart_machine = build_bart_machine(Xy = data.frame(X[, -1], y), run_in_sample = F,
                                    use_heteroskedastic_linear_model = TRUE, 
-                                   Z_heteroskedastic_model=as.matrix(X[,-1]))
+                                   Z_heteroskedastic_model=as.matrix(X[,-1]), hyper_sigma_weights = rep(.01, times =3))
 hbart_machine
 
 #CIs
