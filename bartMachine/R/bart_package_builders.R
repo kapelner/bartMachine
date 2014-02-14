@@ -472,19 +472,21 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		nu_q_cvs = list(c(3, 0.9)) #ensure we only do this once, the 3 and the 0.9 don't actually matter, they just need to be valid numbers for the hyperparameters
 	}
 	
-	
-
-	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
 	min_rmse_nu_q = NULL
 	min_oos_rmse = Inf
 	min_oos_misclassification_error = Inf
 	
-  #cross-validate
+	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs), ncol = 6)
+	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "oos_error", "% diff with lowest")
+	
+    #cross-validate
+	run_counter = 1
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
+				
 				if (pred_type == "regression"){
 					cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
 				} else {
@@ -492,13 +494,13 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
-						k_folds = k_folds,
-						num_trees = num_trees,
-						k = k,
-						nu = nu_q[1],
-						q = nu_q[2], 
-						verbose = verbose,
-						...)
+					k_folds = k_folds,
+					num_trees = num_trees,
+					k = k,
+					nu = nu_q[1],
+					q = nu_q[2], 
+					verbose = verbose,
+					...)
 				
 				if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
 					min_oos_rmse = k_fold_results$rmse					
@@ -510,7 +512,11 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 					min_rmse_k = k
 					min_rmse_nu_q = nu_q
 					min_rmse_num_tree = num_trees					
-				}			
+				}
+				
+				cv_stats[run_counter, 1 : 5] = c(k, nu_q[1], nu_q[2], num_trees, 
+					ifelse(pred_type == "regression", k_fold_results$rmse, k_fold_results$misclassification_error))
+				run_counter = run_counter + 1
 			}
 		}
 	}
@@ -520,11 +526,17 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		cat(paste("  bartMachine CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
 	}
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
-	build_bart_machine(X, y,
+	bart_machine_cv = build_bart_machine(X, y,
 			num_trees = min_rmse_num_tree,
 			k = min_rmse_k,
 			nu = min_rmse_nu_q[1],
 			q = min_rmse_nu_q[2], ...)
+	
+	#give the user some cv_stats ordered by the best (ie lowest) oosrmse
+	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
+	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
+	bart_machine_cv$cv_stats = cv_stats
+	bart_machine_cv
 }
 
 destroy_bart_machine = function(bart_machine){
