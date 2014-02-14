@@ -1,13 +1,13 @@
 library(bartMachine)
-library(bartMachine, lib.loc = "C:/Program Files/R/R-3.0.2/library/")
-setwd("C:/Users/jbleich/Dropbox/BART_hetero/working_paper")
+#library(bartMachine, lib.loc = "C:/Program Files/R/R-3.0.2/library/")
+#setwd("C:/Users/jbleich/Dropbox/BART_hetero/working_paper")
 ##Univariate Simulation 1
 
 n = 250
 gamma = 7
 beta = 100
 
-X = seq(0, 1, length.out = n)
+X = sample(seq(0, 1, length.out = n))
 sigsqs = exp(X * gamma)
 sigmas = sqrt(sigsqs)
 y = beta * X + rnorm(n, 0, sigmas)
@@ -20,16 +20,17 @@ graphics.off()
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
 plot(X, y)
-bart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in=1000)
-bart_machine
+#bart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in=1000)
+#bart_machine
+#
+#heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
 
-heteroskedasticity_test(bart_machine = bart_machine) #pval = 0
+#hbart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in = 500, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
+#hbart_machine
 
-hbart_machine = build_bart_machine(Xy = cbind(X, y), num_burn_in = 500, use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
-hbart_machine
-
-hbart_machine_cv = build_bart_machine_cv(X = data.frame(X), y = y, num_burn_in = 500, num_tree_cvs=50, k_cvs=2, nu_q_cvs=c(3,.90), use_heteroskedastic_linear_model = TRUE, Z_heteroskedastic_model=as.matrix(X))
+hbart_machine_cv = build_bart_machine_cv(X = data.frame(X), y = y, num_burn_in = 500, num_tree_cvs = 50, k_cvs = 2, nu_q_cvs = list(c(3, .90)))
 hbart_machine_cv
+hbart_machine_cv$cv_stats
 
 windows()
 par(mgp=c(1.8, .5, 0), mar=c(3.5, 3.5 ,.4, 1))

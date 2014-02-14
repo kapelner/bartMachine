@@ -481,21 +481,23 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 
 #build a BART-cv model
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
-    use_heteroskedastic_linear_model = T,
-    Z_heteroskedastic_model = NULL,
-		num_tree_cvs = c(50, 200),
-		k_cvs = c(2, 3, 5),
-		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
-    hyper_sigma_weights = 10^seq(-3,3),
-		k_folds = 5, ...){
+    use_heteroskedastic_linear_model = TRUE,
+    Z_heteroskedastic_model = NULL, #the default is to use X
+	num_tree_cvs = c(50, 200),
+	k_cvs = c(2, 3, 5),
+	nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
+    hyper_sigma_weights = 10^seq(-3,3), #the default range of shrinkage for the hetero model
+	k_folds = 5, 
+	verbose = FALSE,
+	...){
   
-  if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
-    stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
-  } else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
-    y = Xy$y
-    Xy$y = NULL
-    X = Xy
-  }
+   if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+     stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+   } else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+     y = Xy$y
+     Xy$y = NULL
+     X = Xy
+   }
 	
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -508,12 +510,13 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		nu_q_cvs = list(c(3, 0.9)) #ensure we only do this once, the 3 and the 0.9 don't actually matter, they just need to be valid numbers for the hyperparameters
 	}
 	
-  if(!use_heteroskedastic_linear_model){
-    hyper_sigma_weights = c(0)
-  } 
-  
-	if(is.null(Z_heteroskedastic_model)){
-	  Z_heteroskedastic_model = as.matrix(X)
+	if (!use_heteroskedastic_linear_model){
+		hyper_sigma_weights = c(0)
+	} 
+    
+	#the default is to use X
+	if (is.null(Z_heteroskedastic_model)){
+		Z_heteroskedastic_model = as.matrix(X)
 	}
 	
 	min_rmse_num_tree = NULL
@@ -522,40 +525,49 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	min_oos_rmse = Inf
 	min_oos_misclassification_error = Inf
 	
-  #cross-validate
+	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs) * length(hyper_sigma_weights), ncol = 7)
+	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "hyper_sigma_weight", "oos_error", "% diff with lowest")
+	
+    #cross-validate
+	run_counter = 1
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-        for(hyper_sigma_weight in hyper_sigma_weights){
-    			if (pred_type == "regression"){
-    				cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "hyper_sigma_weight:", hyper_sigma_weight, "\n"))	
-    			} else {
-    				cat(paste("  BART CV try: k:", k, "m:", num_trees, "\n"))
-    			}
-          
-    			k_fold_results = k_fold_cv(X, y, 
-    					k_folds = k_folds,
-    					num_trees = num_trees,
-    					k = k,
-    					nu = nu_q[1],
-    					q = nu_q[2], 
-    			    use_heteroskedastic_linear_model= use_heteroskedastic_linear_model,
-              Z_heteroskedastic_model = Z_heteroskedastic_model,
-              hyper_sigma_weights = rep(hyper_sigma_weight, ncol(Z_heteroskedastic_model)),                       
-                                     ...)
-    			
-    			if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
-    				min_oos_rmse = k_fold_results$rmse					
-    				min_rmse_k = k
-    				min_rmse_nu_q = nu_q
-    				min_rmse_num_tree = num_trees
-            min_hyper_sigma_weight = hyper_sigma_weight
-    			} else if (pred_type == "classification" && k_fold_results$misclassification_error < min_oos_misclassification_error){
-    				min_oos_misclassification_error = k_fold_results$misclassification_error					
-    				min_rmse_k = k
-    				min_rmse_nu_q = nu_q
-    				min_rmse_num_tree = num_trees					
-    			}
+        		for (hyper_sigma_weight in hyper_sigma_weights){
+	    			if (pred_type == "regression"){
+	    				cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "hyper_sigma_weight:", hyper_sigma_weight, "\n"))	
+	    			} else {
+	    				cat(paste("  BART CV try: k:", k, "m:", num_trees, "\n"))
+	    			}
+	          
+	    			k_fold_results = k_fold_cv(X, y, 
+	    					k_folds = k_folds,
+	    					num_trees = num_trees,
+	    					k = k,
+	    					nu = nu_q[1],
+	    					q = nu_q[2], 
+		    			    use_heteroskedastic_linear_model= use_heteroskedastic_linear_model,
+			            	Z_heteroskedastic_model = Z_heteroskedastic_model,
+			            	hyper_sigma_weights = rep(hyper_sigma_weight, ncol(Z_heteroskedastic_model)), 
+							verbose = verbose,
+							...)
+	    			
+	    			if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
+	    				min_oos_rmse = k_fold_results$rmse					
+	    				min_rmse_k = k
+	    				min_rmse_nu_q = nu_q
+	    				min_rmse_num_tree = num_trees
+	            		min_hyper_sigma_weight = hyper_sigma_weight
+	    			} else if (pred_type == "classification" && k_fold_results$misclassification_error < min_oos_misclassification_error){
+	    				min_oos_misclassification_error = k_fold_results$misclassification_error					
+	    				min_rmse_k = k
+	    				min_rmse_nu_q = nu_q
+	    				min_rmse_num_tree = num_trees					
+	    			}
+					
+					cv_stats[run_counter, 1 : 6] = c(k, nu_q[1], nu_q[2], num_trees, hyper_sigma_weight,
+							ifelse(pred_type == "regression", k_fold_results$rmse, k_fold_results$misclassification_error))
+					run_counter = run_counter + 1
 				}			
 			}
 		}
@@ -567,17 +579,20 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	bart_machine_cv = build_bart_machine(X, y,
-			num_trees = min_rmse_num_tree,
-			k = min_rmse_k,
-			nu = min_rmse_nu_q[1],
-			q = min_rmse_nu_q[2], 
-      use_heteroskedastic_linear_model= use_heteroskedastic_linear_model,
-      Z_heteroskedastic_model = Z_heteroskedastic_model,
-      hyper_sigma_weights =  rep(min_hyper_sigma_weight, ncol(Z_heteroskedastic_model)),              
-                     ...)
+		num_trees = min_rmse_num_tree,
+		k = min_rmse_k,
+		nu = min_rmse_nu_q[1],
+		q = min_rmse_nu_q[2], 
+        use_heteroskedastic_linear_model= use_heteroskedastic_linear_model,
+        Z_heteroskedastic_model = Z_heteroskedastic_model,
+        hyper_sigma_weights =  rep(min_hyper_sigma_weight, ncol(Z_heteroskedastic_model)),              
+        ...)
   
-  bart_machine_cv$min_rmse = min_oos_rmse
-  bart_machine_cv
+	#give the user some cv_stats ordered by the best (ie lowest) oosrmse
+	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
+	cv_stats[, "% diff with lowest"] = (cv_stats[, "oos_error"] - cv_stats[1, "oos_error"]) / cv_stats[1, "oos_error"] * 100
+	bart_machine_cv$cv_stats = cv_stats
+	bart_machine_cv
 }
 
 destroy_bart_machine = function(bart_machine){
