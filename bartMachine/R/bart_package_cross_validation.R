@@ -59,7 +59,12 @@ k_fold_cv = function(X, y, k_folds = 5, verbose = FALSE, ...){
 			L1_err = L1_err + predict_obj$L1_err
 			L2_err = L2_err + predict_obj$L2_err
 		} else {
-			confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + table(test_data_k$y, predict_obj$y_hat)
+			tab = table(factor(test_data_k$y, levels = y_levels), factor(predict_obj$y_hat, levels = y_levels))
+#			tab = table(c(test_data_k$y, y_levels[1], y_levels[2]), c(predict_obj$y_hat, y_levels[1], y_levels[2]))
+#			tab = tab + diag(2)
+#			tab = tab - diag(2)
+		print(tab)
+			confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + tab
 		}
 	}
 	cat("\n")

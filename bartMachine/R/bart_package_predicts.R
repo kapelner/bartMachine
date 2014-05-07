@@ -31,7 +31,6 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 		stop("This bartMachine model has been destroyed. Please recreate.")
 	}
 	
-	
 	if (bart_machine$pred_type == "regression"){ #regression list
 	  ytest_hat = predict(bart_machine, Xtest)
 		n = nrow(Xtest)
@@ -45,7 +44,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 				e = ytest - ytest_hat
 		)
 	} else { ##classification list
-	  ytest_hat = predict(bart_machine, Xtest, type = "class")
+	    ytest_hat = predict(bart_machine, Xtest, type = "class")
 		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
 		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
 		colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), "model errors")		

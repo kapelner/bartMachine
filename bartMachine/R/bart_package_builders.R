@@ -44,6 +44,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
+		stop("You cannot specify both X,y and Xy simultaneously.")		
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		#first ensure it's a dataframe
 		if (class(Xy) != "data.frame"){
@@ -450,6 +452,8 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
+		stop("You cannot specify both X,y and Xy simultaneously.")	
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		if (class(Xy) != "data.frame"){
 			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	

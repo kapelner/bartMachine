@@ -1,3 +1,7 @@
+version 1.0.4
+
+* fixed bug in confusion table creation in the pathological case when only one class is observed and predicted
+
 version 1.0.3
 
 * fixed bug in variable selection via cv where it used to crash if one variable was selected
