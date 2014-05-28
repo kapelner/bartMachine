@@ -100,6 +100,7 @@ for (nsim in 1 : Nsim){
 	sd_mcar_cc_cc = apply(results_bart_cc_cc_mcar, 1, sd, na.rm = TRUE)
 	rel_mcar_avgs_cc_cc = avgs_mcar_cc_cc / avgs_mcar_all_all[1]
 	
+	#Figure 2a
 	par(mar = c(4.2,4,0.2,0.2))
 	plot(approx_prop_missing, 
 			rel_mcar_avgs_all_all, 

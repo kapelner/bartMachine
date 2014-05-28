@@ -71,15 +71,16 @@ par(mar = c(2,4,0.4,1))
 ya = Xya[, 4]
 yb = Xyb[, 4]
 
-hist(ya, br = 50, col = rgb(0,0,1,0.3), xlim = c(min(ya), max(ya, yb)), xlab = "y", main = NULL)
-hist(yb, br = 30, add = TRUE, col = rgb(1,0,0,0.3))
+#Figure 1a
+#hist(ya, br = 50, col = rgb(0,0,1,0.3), xlim = c(min(ya), max(ya, yb)), xlab = "y", main = NULL)
+#hist(yb, br = 30, add = TRUE, col = rgb(1,0,0,0.3))
 
 bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, num_burn_in = 1000, run_in_sample = FALSE)
 bart_machine
 
+#Figure 1b
 windows()
 par(mar = c(2,4,0.4,0))
-###make sure it works...
 new_data = as.data.frame(t(as.matrix(c(0, 0, 0))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
 pred = bart_machine_get_posterior(bart_machine, new_data)
@@ -87,6 +88,7 @@ expe = 0
 plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
 #yhat = 0.28 se(yhat) = 0.729
 
+#Figure 1c
 windows()
 par(mar = c(2,4,0.4,0))
 new_data = as.data.frame(t(as.matrix(c(0, NA, 0))))
@@ -96,6 +98,7 @@ expe = sqrt(2 / pi) + 1
 plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
 #yhat = 2.08 se(yhat) = 0.903
 
+#Figure 1d
 windows()
 par(mar = c(2,4,0.4,0))
 new_data = as.data.frame(t(as.matrix(c(0, 0, NA))))
@@ -105,6 +108,7 @@ expe = 0.4 * sqrt(2 / pi) + mu_b
 plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
 #yhat = 10.09 se(yhat) = 1.001
 
+#Figure 1e
 windows()
 par(mar = c(2,4,0.4,0))
 new_data = as.data.frame(t(as.matrix(c(0, NA, NA))))
@@ -114,3 +118,36 @@ expe = sqrt(2 / pi) + 0.4 * sqrt(2 / pi) + 1 + mu_b
 plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
 #yhat = 10.54 se(yhat) = 1.144
 
+###additional images not included in main text of paper
+
+windows()
+par(mar = c(2,4,0.4,0))
+new_data = as.data.frame(t(as.matrix(c(1, NA, NA))))
+colnames(new_data) = colnames(Xy[, 1 : 3])
+pred = bart_machine_get_posterior(bart_machine, new_data)
+expe = sqrt(2 / pi) + 0.4 * sqrt(2 / pi) + 1 + mu_b
+plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
+
+windows()
+par(mar = c(2,4,0.4,0))
+new_data = as.data.frame(t(as.matrix(c(1, 1, NA))))
+colnames(new_data) = colnames(Xy[, 1 : 3])
+pred = bart_machine_get_posterior(bart_machine, new_data)
+expe = 3 + 0.4 * sqrt(2 / pi) + mu_b
+plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
+
+windows()
+par(mar = c(2,4,0.4,0))
+new_data = as.data.frame(t(as.matrix(c(1, -1, NA))))
+colnames(new_data) = colnames(Xy[, 1 : 3])
+pred = bart_machine_get_posterior(bart_machine, new_data)
+expe = -1 + 0.4 * sqrt(2 / pi) + mu_b
+plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
+
+windows()
+par(mar = c(2,4,0.4,0))
+new_data = as.data.frame(t(as.matrix(c(1, NA, 1))))
+colnames(new_data) = colnames(Xy[, 1 : 3])
+pred = bart_machine_get_posterior(bart_machine, new_data)
+expe = 2 + sqrt(2 / pi) + 1
+plot_hist_of_posterior(pred, expe, calc_credible_intervals(bart_machine, new_data))
