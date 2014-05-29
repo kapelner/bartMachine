@@ -93,29 +93,46 @@ for (nsim in 1 : Nsim){
 		
 		cat("bart oosrmse:", results_bart_mar[g, nsim], "rf oosrmse:", results_rf_mar[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_mar[g, nsim], "\n")
 		
-		avgs_mar_bart = apply(results_bart_mar, 1, mean, na.rm = TRUE)
-		sd_mar_bart = apply(results_bart_mar, 1, sd, na.rm = TRUE)
+		avgs_mar_bart = apply(results_bart_mar, 1, mean, na.rm = TRUE)		
 		rel_mar_avgs_bart = avgs_mar_bart / avgs_mar_bart[1]
+		sd_mar_bart = apply(results_bart_mar / avgs_mar_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_mar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar, 1, mean, na.rm = TRUE)
-		sd_mar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar, 1, sd, na.rm = TRUE)
+		avgs_mar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar, 1, mean, na.rm = TRUE)		
 		rel_mar_avgs_bart_w_rfi_and_mf = avgs_mar_bart_w_rfi_and_mf / avgs_mar_bart[1]
+		sd_mar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar / avgs_mar_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_mar_rf = apply(results_rf_mar, 1, mean, na.rm = TRUE)
-		sd_mar_rf = apply(results_rf_mar, 1, sd, na.rm = TRUE)
+		avgs_mar_rf = apply(results_rf_mar, 1, mean, na.rm = TRUE)		
 		rel_mar_avgs_rf = avgs_mar_rf / avgs_mar_bart[1]
+		sd_mar_rf = apply(results_rf_mar / avgs_mar_bart[1], 1, sd, na.rm = TRUE)
 		
 		par(mar = c(4.2,4,0.2,0.2))
 		plot(approx_prop_missing, 
 				rel_mar_avgs_bart, 
 				col = "green", 
 				type = "o", 
-				xlab = "Approx. Prop. Missing",
+				xlab = "Proportion Missing",
 				ylab = "Multiple of Baseline Error",
 				ylim = c(1, 1.75)) 
-				
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_avgs_bart[i]
+			moe = 1.96 * sd_mar_bart[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "green")
+		}		
 		points(approx_prop_missing, rel_mar_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_avgs_bart_w_rfi_and_mf[i]
+			moe = 1.96 * sd_mar_bart_w_rfi_and_mf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "blue")
+		}
 		points(approx_prop_missing, rel_mar_avgs_rf, col = "red", type = "o")
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_avgs_rf[i]
+			moe = 1.96 * sd_mar_rf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "red")
+		}
 		
 		
 	}

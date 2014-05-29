@@ -93,28 +93,46 @@ for (nsim in 1 : Nsim){
 		
 		cat("bart oosrmse:", results_bart_nmar[g, nsim], "rf oosrmse:", results_rf_nmar[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_nmar[g, nsim], "\n")
 		
-		avgs_nmar_bart = apply(results_bart_nmar, 1, mean, na.rm = TRUE)
-		sd_nmar_bart = apply(results_bart_nmar, 1, sd, na.rm = TRUE)
+		avgs_nmar_bart = apply(results_bart_nmar, 1, mean, na.rm = TRUE)		
 		rel_nmar_avgs_bart = avgs_nmar_bart / avgs_nmar_bart[1]
+		sd_nmar_bart = apply(results_bart_nmar / avgs_nmar_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_nmar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_nmar, 1, mean, na.rm = TRUE)
-		sd_nmar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_nmar, 1, sd, na.rm = TRUE)
+		avgs_nmar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_nmar, 1, mean, na.rm = TRUE)		
 		rel_nmar_avgs_bart_w_rfi_and_mf = avgs_nmar_bart_w_rfi_and_mf / avgs_nmar_bart[1]
+		sd_nmar_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_nmar / avgs_nmar_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_nmar_rf = apply(results_rf_nmar, 1, mean, na.rm = TRUE)
-		sd_nmar_rf = apply(results_rf_nmar, 1, sd, na.rm = TRUE)
+		avgs_nmar_rf = apply(results_rf_nmar, 1, mean, na.rm = TRUE)		
 		rel_nmar_avgs_rf = avgs_nmar_rf / avgs_nmar_bart[1]
+		sd_nmar_rf = apply(results_rf_nmar / avgs_nmar_bart[1], 1, sd, na.rm = TRUE)
 		
 		par(mar = c(4.2,4,0.2,0.2))
 		plot(approx_prop_missing, 
 				rel_nmar_avgs_bart, 
 				col = "green", 
 				type = "o", 
-				xlab = "Approx. Prop. Missing",
+				xlab = "Proportion Missing",
 				ylab = "Multiple of Baseline Error",
 				ylim = c(min(rel_nmar_avgs_bart, rel_nmar_avgs_bart_w_rfi_and_mf, rel_nmar_avgs_rf, na.rm = TRUE), max(rel_nmar_avgs_bart, rel_nmar_avgs_bart_w_rfi_and_mf, rel_nmar_avgs_rf, na.rm = TRUE)))
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_nmar_avgs_bart[i]
+			moe = 1.96 * sd_nmar_bart[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "green")
+		}
 		points(approx_prop_missing, rel_nmar_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_nmar_avgs_bart_w_rfi_and_mf[i]
+			moe = 1.96 * sd_nmar_bart_w_rfi_and_mf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "blue")
+		}
 		points(approx_prop_missing, rel_nmar_avgs_rf, col = "red", type = "o")
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_nmar_avgs_rf[i]
+			moe = 1.96 * sd_nmar_rf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "red")
+		}
 	}
 	
 	save.image("sec_5_nmar_MF_only.RData")

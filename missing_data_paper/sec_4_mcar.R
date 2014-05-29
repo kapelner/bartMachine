@@ -84,21 +84,21 @@ for (nsim in 1 : Nsim){
 		}
 	}	
 	
-	avgs_mcar_all_all = apply(results_bart_all_all_mcar, 1, mean, na.rm = TRUE)
-	sd_mcar_all_all = apply(results_bart_all_all_mcar, 1, sd, na.rm = TRUE)
-	rel_mcar_avgs_all_all = avgs_mcar_all_all / avgs_mcar_all_all[1]
+	avgs_mcar_all_all = apply(results_bart_all_all_mcar, 1, mean, na.rm = TRUE)	
+	rel_mcar_avgs_all_all = avgs_mcar_all_all / avgs_mcar_all_all[1]	
+	sd_mcar_all_all = apply(results_bart_all_all_mcar / avgs_mcar_all_all[1], 1, sd, na.rm = TRUE)
 	
-	avgs_mcar_all_cc = apply(results_bart_all_cc_mcar, 1, mean, na.rm = TRUE)
-	sd_mcar_all_cc = apply(results_bart_all_cc_mcar, 1, sd, na.rm = TRUE)
+	avgs_mcar_all_cc = apply(results_bart_all_cc_mcar, 1, mean, na.rm = TRUE)	
 	rel_mcar_avgs_all_cc = avgs_mcar_all_cc / avgs_mcar_all_all[1]
+	sd_mcar_all_cc = apply(results_bart_all_cc_mcar / avgs_mcar_all_all[1], 1, sd, na.rm = TRUE)
 	
 	avgs_mcar_cc_all = apply(results_bart_cc_all_mcar, 1, mean, na.rm = TRUE)
-	sd_mcar_cc_all = apply(results_bart_cc_all_mcar, 1, sd, na.rm = TRUE)
 	rel_mcar_avgs_cc_all = avgs_mcar_cc_all / avgs_mcar_all_all[1]
+	sd_mcar_cc_all = apply(results_bart_cc_all_mcar / avgs_mcar_all_all[1], 1, sd, na.rm = TRUE)
 	
 	avgs_mcar_cc_cc = apply(results_bart_cc_cc_mcar, 1, mean, na.rm = TRUE)
-	sd_mcar_cc_cc = apply(results_bart_cc_cc_mcar, 1, sd, na.rm = TRUE)
 	rel_mcar_avgs_cc_cc = avgs_mcar_cc_cc / avgs_mcar_all_all[1]
+	sd_mcar_cc_cc = apply(results_bart_cc_cc_mcar / avgs_mcar_all_all[1], 1, sd, na.rm = TRUE)
 	
 	#Figure 2a
 	par(mar = c(4.2,4,0.2,0.2))
@@ -107,11 +107,36 @@ for (nsim in 1 : Nsim){
 			col = "blue", 
 			type = "o", 
 			ylim = c(1, max(rel_mcar_avgs_all_all, rel_mcar_avgs_all_cc, rel_mcar_avgs_cc_all, rel_mcar_avgs_cc_cc, na.rm = TRUE)),
-			xlab = "Approx. Prop. Missing",
+			xlab = "Proportion Missing",
 			ylab = "Multiple of Baseline Error")
+	for (i in 2 : length(approx_prop_missing)){
+		x = approx_prop_missing[i]
+		y = rel_mcar_avgs_all_all[i]
+		moe = 1.96 * sd_mcar_all_all[i] / sqrt(nsim)
+		segments(x, y - moe, x, y + moe, col = "blue")
+	}
 	points(approx_prop_missing, rel_mcar_avgs_all_cc, col = "blue", type = "o", lty = 3)
+	for (i in 2 : length(approx_prop_missing)){
+		x = approx_prop_missing[i]
+		y = rel_mcar_avgs_all_cc[i]
+		moe = 1.96 * sd_mcar_all_cc[i] / sqrt(nsim)
+		segments(x, y - moe, x, y + moe, col = "blue")
+	}
 	points(approx_prop_missing, rel_mcar_avgs_cc_all, col = "red", type = "o")
+	for (i in 2 : length(approx_prop_missing)){
+		x = approx_prop_missing[i]
+		y = rel_mcar_avgs_cc_all[i]
+		moe = 1.96 * sd_mcar_cc_all[i] / sqrt(nsim)
+		segments(x, y - moe, x, y + moe, col = "red")
+	}
 	points(approx_prop_missing, rel_mcar_avgs_cc_cc, col = "red", type = "o", lty = 3)
+	for (i in 2 : length(approx_prop_missing)){
+		x = approx_prop_missing[i]
+		y = rel_mcar_avgs_cc_cc[i]
+		moe = 1.96 * sd_mcar_cc_cc[i] / sqrt(nsim)
+		segments(x, y - moe, x, y + moe, col = "red")
+	}
+	
 	
 	save.image("sec_4.2_mcar.RData")
 }

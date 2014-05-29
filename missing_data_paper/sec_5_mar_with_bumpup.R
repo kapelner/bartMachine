@@ -107,29 +107,46 @@ for (nsim in 1 : Nsim){
 		
 		#rolling updates!!
 		
-		avgs_mar_with_bumpup_bart = apply(results_bart_mar_with_bumpup, 1, mean, na.rm = TRUE)
-		sd_mar_with_bumpup_bart = apply(results_bart_mar_with_bumpup, 1, sd, na.rm = TRUE)
+		avgs_mar_with_bumpup_bart = apply(results_bart_mar_with_bumpup, 1, mean, na.rm = TRUE)		
 		rel_mar_with_bumpup_avgs_bart = avgs_mar_with_bumpup_bart / avgs_mar_with_bumpup_bart[1]
+		sd_mar_with_bumpup_bart = apply(results_bart_mar_with_bumpup / avgs_mar_with_bumpup_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_mar_with_bumpup_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar_with_bumpup, 1, mean, na.rm = TRUE)
-		sd_mar_with_bumpup_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar_with_bumpup, 1, sd, na.rm = TRUE)
+		avgs_mar_with_bumpup_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar_with_bumpup, 1, mean, na.rm = TRUE)		
 		rel_mar_with_bumpup_avgs_bart_w_rfi_and_mf = avgs_mar_with_bumpup_bart_w_rfi_and_mf / avgs_mar_with_bumpup_bart[1]
+		sd_mar_with_bumpup_bart_w_rfi_and_mf = apply(results_bart_w_rfi_and_mf_mar_with_bumpup / avgs_mar_with_bumpup_bart[1], 1, sd, na.rm = TRUE)
 		
-		avgs_mar_with_bumpup_rf = apply(results_rf_mar_with_bumpup, 1, mean, na.rm = TRUE)
-		sd_mar_with_bumpup_rf = apply(results_rf_mar_with_bumpup, 1, sd, na.rm = TRUE)
+		avgs_mar_with_bumpup_rf = apply(results_rf_mar_with_bumpup, 1, mean, na.rm = TRUE)		
 		rel_mar_with_bumpup_avgs_rf = avgs_mar_with_bumpup_rf / avgs_mar_with_bumpup_bart[1]
+		sd_mar_with_bumpup_rf = apply(results_rf_mar_with_bumpup / avgs_mar_with_bumpup_bart[1], 1, sd, na.rm = TRUE)
 		
 		par(mar = c(4.2,4,0.2,0.2))
 		plot(approx_prop_missing, 
 				rel_mar_with_bumpup_avgs_bart, 
 				col = "green", 
 				type = "o", 
-				xlab = "Approx. Prop. Missing",
+				xlab = "Proportion Missing",
 				ylab = "Multiple of Baseline Error",
 				ylim = c(1, 1.75))
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_with_bumpup_avgs_bart[i]
+			moe = 1.96 * sd_mar_with_bumpup_bart[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "green")
+		}
 		points(approx_prop_missing, rel_mar_with_bumpup_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_with_bumpup_avgs_bart_w_rfi_and_mf[i]
+			moe = 1.96 * sd_mar_with_bumpup_bart_w_rfi_and_mf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "blue")
+		}
 		points(approx_prop_missing, rel_mar_with_bumpup_avgs_rf, col = "red", type = "o")
-		
+		for (i in 1 : length(approx_prop_missing)){
+			x = approx_prop_missing[i]
+			y = rel_mar_with_bumpup_avgs_rf[i]
+			moe = 1.96 * sd_mar_with_bumpup_rf[i] / sqrt(nsim)
+			segments(x, y - moe, x, y + moe, col = "red")
+		}
 	}	
 	save.image("sec_5_mar_with_big_bumpup_MF_only.RData")
 }
