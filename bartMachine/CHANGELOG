@@ -1,6 +1,8 @@
 version 1.0.4
 
 * fixed bug in confusion table creation in the pathological case when only one class is observed and predicted
+* fixed small bug off-by-one bug in get_sigsqs function (thanks to Jeff Moser)
+* Added Java source files to R package build. Declared authors of JARs which this library depends upon.
 
 version 1.0.3
 
