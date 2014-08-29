@@ -4,18 +4,15 @@ The following open source Java libraries are included in this package:
   Version 4.10, January 2004, 
   http://http://junit.org/, 
   Copyright 2002-2014 JUnit
-  Source code: https://github.com/junit-team/junit/archive/master.zip
 
 - Commons Math: The Apache Commons Mathematics Library under the Apache License 2.0, 
   Version 2.1, March 2010,
   http://commons.apache.org/proper/commons-math/, 
   Copyright 2003-2014 The Apache Software Foundation
-  Source code: http://archive.apache.org/dist/commons/math/source/commons-math-2.1-src.tar.gz
 
 - Trove under Lesser GNU Public License (LGPL) 2.1,
   Version 3.0.3, February 2012, 
-  http://trove.starlight-systems.com/,
-  Source code: https://bitbucket.org/robeden/trove/downloads/trove-3.0.3.tar.gz
+  http://trove.starlight-systems.com/
 
 License
 =======

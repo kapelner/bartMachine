@@ -1,0 +1,10 @@
+Code for bartMachine is located in this folder. Code for dependencies can be found below:
+
+- JUnit Version 4.10, January 2004, 
+  https://github.com/junit-team/junit/archive/master.zip
+
+- Commons Math: The Apache Commons Mathematics Library Version 2.1, March 2010,
+  http://archive.apache.org/dist/commons/math/source/commons-math-2.1-src.tar.gz
+
+- Trove Version 3.0.3, February 2012,
+  https://bitbucket.org/robeden/trove/downloads/trove-3.0.3.tar.gz
