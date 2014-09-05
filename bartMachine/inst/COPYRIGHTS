@@ -2,7 +2,7 @@ The following open source Java libraries are included in this package:
 
 - JUnit under the Eclipse Public License 1.0, 
   Version 4.10, January 2004, 
-  http://http://junit.org/, 
+  http://junit.org/, 
   Copyright 2002-2014 JUnit
 
 - Commons Math: The Apache Commons Mathematics Library under the Apache License 2.0, 
