@@ -84,4 +84,3 @@ datasets/c_crime_big.csv
 r_scripts/examples/sample_code.R
 r_scripts/examples/working1.rdata
 bartMachine/install_instructions.txt
-bartMachine/java/**
