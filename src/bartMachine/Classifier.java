@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
@@ -19,7 +20,7 @@ import CustomLogging.*;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class Classifier {
+public abstract class Classifier implements Serializable{
 
 	/** Are we on a Windows machine (sometimes this matters) */
 	public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;

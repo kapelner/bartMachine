@@ -2,6 +2,7 @@ package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public class bartMachineRegressionMultThread extends Classifier {
+public class bartMachineRegressionMultThread extends Classifier implements Serializable {
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1;

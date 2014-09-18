@@ -1,12 +1,14 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * This portion of the code performs everything in 
  * the Gibbs sampling except for the posterior sampling itself
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init {
+public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implements Serializable{
 
 	/** Builds a BART model by unleashing the Gibbs sampler */
 	public void Build() {

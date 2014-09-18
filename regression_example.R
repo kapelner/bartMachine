@@ -1,10 +1,23 @@
 library(bartMachine)
+bart_machine = build_bart_machine(as.data.frame(1 : 100), 1 + rnorm(100))
+save.image("test_bart_machine.RData")
+#close R, open R
+library(bartMachine)
+load("test_bart_machine.RData")
+#> bart_machine$java_bart_machine
+#[1] "Java-Object<null>"
+## doesn't work
 
-x = matrix(1 : 1000, ncol = 10)
-y = 2 : 101
+library(bartMachine)
+bart_machine = build_bart_machine(as.data.frame(1 : 100), 1 + rnorm(100))
+serialized = .jserialize(bart_machine$java_bart_machine)
+save.image("test_bart_machine.RData")
+#close R, open R
+library(bartMachine)
+load("test_bart_machine.RData")
+bart_machine$java_bart_machine = .junserialize(serialized)
+bart_machine$java_bart_machine
 
-bart_machine = build_bart_machine(as.data.frame(x), y)
-plot_y_vs_yhat(bart_machine)
 
 #get some data
 library(MASS)

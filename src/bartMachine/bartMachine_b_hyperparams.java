@@ -2,6 +2,7 @@ package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.apache.commons.math.MathException;
@@ -13,7 +14,7 @@ import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_b_hyperparams extends bartMachine_a_base {
+public abstract class bartMachine_b_hyperparams extends bartMachine_a_base implements Serializable{
 
 	/** The static field that controls the bounds on the transformed y variable which is between negative and positive this value */
 	protected static final double YminAndYmaxHalfDiff = 0.5;

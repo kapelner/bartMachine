@@ -3,6 +3,7 @@ package bartMachine;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public class bartMachineTreeNode implements Cloneable {
+public class bartMachineTreeNode implements Cloneable, Serializable {
 	
 	/** Setting this to true will print out debug information at the node level during Gibbs sampling */
 	public static final boolean DEBUG_NODES = false;

@@ -1,11 +1,13 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * This portion of the code initializes the Gibbs sampler
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_d_init extends bartMachine_c_debug {
+public abstract class bartMachine_d_init extends bartMachine_c_debug implements Serializable{
 
 	/** during debugging, we may want to fix sigsq */
 	protected double fixed_sigsq;
