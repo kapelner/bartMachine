@@ -15,11 +15,12 @@ set_bart_machine_num_cores = function(num_cores){
 }
 
 ##get number of cores in use
+DEFAULT_BART_NUM_CORES = 1
 bart_machine_num_cores = function(){
 	if (exists("BART_NUM_CORES", envir = bartMachine_globals)){
 		get("BART_NUM_CORES", bartMachine_globals)
 	} else {
-		stop("Number of cores not set yet. Please use \"set_bart_machine_num_cores.\"")
+		DEFAULT_BART_NUM_CORES
 	}
 }
 

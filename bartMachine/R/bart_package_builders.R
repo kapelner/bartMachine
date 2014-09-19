@@ -66,6 +66,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
 	
+	#we are about to construct a bartMachine object. First, let R garbage collect
+	#to clean up previous bartMachine objects that are no longer in use. This is important
+	#because R's garbage collection system does not "see" the size of Java objects. Thus,
+	#you are at risk of running out of memory without this invocation. 
+	gc() #Delete at your own risk!	
+
 	#now take care of classification or regression
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
