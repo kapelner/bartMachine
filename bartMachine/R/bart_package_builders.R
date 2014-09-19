@@ -34,11 +34,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}	
 	t0 = Sys.time()
 	
-	#immediately initialize Java (if it has not already been initialized) with a custom amount of memory
-	if (!exists("JVM_INITIALIZED", envir = bartMachine_globals)){
-		init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
-	}
-	
 	if (use_missing_data_dummies_as_covars && replace_missing_data_with_x_j_bar){
 		stop("You cannot impute by averages and use missing data as dummies simultaneously.")
 	}
