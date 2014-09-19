@@ -347,8 +347,8 @@ We illustrate the package features by using both real and simulated data, focusi
 We first set some computing parameters. In this exploration, we allow up to 5GB of RAM for the Java heap (although we never used more than 1GB during this paper's exploration)\footnote{Note that the maximum amount of memory can be set only \textit{once} at the beginning of the \proglang{R} session (a limitation of \pkg{rJava} since only one Java Virtual Machine can be initiated per session), but the number of cores can be respecified at any time.} and we set the number of computing cores available for use to 4.
 
 \begin{Code}
+R> options(java.parameters = "-Xmx5000m")
 R> library("bartMachine")
-R> set_bart_machine_memory(5000)
 R> set_bart_machine_num_cores(4)
 \end{Code}
 

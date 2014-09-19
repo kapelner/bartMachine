@@ -1,10 +1,9 @@
 ##bart vs bayestree speed runs
-
+options(java.parameters = "-Xmx2500m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
 
-set_bart_machine_memory(2500)
 
 nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000)
 p = 20

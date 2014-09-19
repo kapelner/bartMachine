@@ -1,8 +1,6 @@
+options(java.parameters = "-Xmx5000m")
 library(bartMachine)
 library(MASS)
-
-set_bart_machine_num_cores(1)
-init_java_for_bart_machine_with_mem_in_mb(3000)
 
 ###constants for simulation
 Nsim = 500

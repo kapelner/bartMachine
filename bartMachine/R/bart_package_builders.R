@@ -26,6 +26,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
+		serialize = FALSE,
 		verbose = TRUE){
 	
 	if (verbose){
@@ -91,7 +92,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		pred_type = "classification"
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
-	}	
+	}
+	
+	#Let's serialize the object if the user wishes
+	if (serialize){
+		.jcache(java_bart_machine)
+	}
 	
 
 	
@@ -336,10 +342,14 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
+			serialize = serialize,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
+	#if (serialize){
+	#	bart_machine$java_bart_machine_serialized = java_bart_machine_serialized
+	#}
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
@@ -444,6 +454,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
 		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
 		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
+		serialize = bart_machine$serialize,
 		verbose = verbose)
 }
 

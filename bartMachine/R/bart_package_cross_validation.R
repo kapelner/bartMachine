@@ -49,8 +49,16 @@ k_fold_cv = function(X, y, k_folds = 5, verbose = FALSE, ...){
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 		
+		#we cannot afford the time sink of serialization during the grid search, so shut it off manually
+		args = list(...)
+		args$serialize = FALSE
+		
    		#build bart object
-		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p, drop = FALSE], training_data_k[, (p + 1)], run_in_sample = FALSE, verbose = verbose, ...)
+		bart_machine_cv = do.call(build_bart_machine, c(list(
+							x = training_data_k[, 1 : p, drop = FALSE], 
+							y = training_data_k[, (p + 1)], 
+							run_in_sample = FALSE, 
+							verbose = verbose), args))
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p, drop = FALSE], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		

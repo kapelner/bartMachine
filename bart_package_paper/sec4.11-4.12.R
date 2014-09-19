@@ -2,7 +2,7 @@
 library(bartMachine)
 
 set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(2500)
+options(java.parameters = "-Xmx2500m")
 
 gen_friedman_data = function(n, p, sigma){
   if (p < 5){

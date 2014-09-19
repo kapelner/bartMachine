@@ -1,3 +1,4 @@
+options(java.parameters = "-Xmx2500m")
 library(bartMachine)
 library(MASS)
 
@@ -6,7 +7,6 @@ X = Pima.te[, -8]
 y = Pima.te[, 8]
 
 set_bart_machine_num_cores(4)
-set_bart_machine_memory(2500)
 
 bart_machine_cv = bartMachineCV(X, y)
 bart_machine_cv

@@ -1,6 +1,5 @@
 ##package constants
-VERSION = "1.0.2"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
+VERSION = "1.1.1"
 
 ##color array 
 COLORS = array(NA, 500)
@@ -25,36 +24,7 @@ bart_machine_num_cores = function(){
 }
 
 set_bart_machine_memory = function(bart_max_mem){
-	init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
-}
-
-##initialize JVM and let the user know how much RAM is available
-init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
-	if (exists("JVM_INITIALIZED", envir = bartMachine_globals)){
-		mem_in_gb = get("JVM_INITIALIZED", bartMachine_globals)
-		warning(paste("Java can only be initialized once per R session. Currently \n  there is ", mem_in_gb, "GB available. If you would like\n  to change the amount of memory available to bartMachine, please\n  restart R and run this function again.", sep = ""))
-		return
-	}
-	
-	#Actually initialzie the Java (once per R session)
-	mem_flag_as_string = paste("-Xmx", bart_max_mem, "m", sep = "")
-	#we pass in the mem flag TWICE due to bug in MAC OS X which will be fixed in rJava 0.9.6
-	#since it works with all versions of rJava, we keep this here in case someone may happen to
-	#be running MAC OS X with rJAVA version < 0.9.6
-	.jinit(parameters = c(mem_flag_as_string, mem_flag_as_string))
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(find.package("bartMachine"), "/java/", dependency, sep = ""))
-	} 
-	
-	if (!exists("JVM_INITIALIZED", envir = bartMachine_globals)){
-		mem_in_gb = round(.jcall(.jnew("java/lang/Runtime"), "J", "maxMemory") / 1e9, 2)
-		cat("Java initialized with ", 
-				mem_in_gb, 
-			"GB maximum memory", 
-			ifelse(bart_max_mem == BART_MAX_MEM_MB_DEFAULT, " (the default)", ""), 
-			".\n", sep = "")
-		assign("JVM_INITIALIZED", mem_in_gb, bartMachine_globals)
-	}
+	cat("This method has been deprecated. Please use 'options(java.parameters = \"-Xmx", bart_max_mem, "m\")' instead.\n", sep = "")
 }
 
 ##get variable counts
