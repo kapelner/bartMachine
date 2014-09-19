@@ -1,23 +1,48 @@
 library(bartMachine)
-bart_machine = build_bart_machine(as.data.frame(1 : 100), 1 + rnorm(100))
+x = 1 : 100; y = x + rnorm(100)
+bart_machine = build_bart_machine(as.data.frame(x), y)
 save.image("test_bart_machine.RData")
 #close R, open R
 library(bartMachine)
 load("test_bart_machine.RData")
-#> bart_machine$java_bart_machine
+bart_machine$java_bart_machine
 #[1] "Java-Object<null>"
 ## doesn't work
 
 library(bartMachine)
-bart_machine = build_bart_machine(as.data.frame(1 : 100), 1 + rnorm(100))
+x = 1 : 100; y = x + rnorm(100)
+bart_machine = build_bart_machine(as.data.frame(x), y)
 serialized = .jserialize(bart_machine$java_bart_machine)
 save.image("test_bart_machine.RData")
 #close R, open R
 library(bartMachine)
 load("test_bart_machine.RData")
+.jinit()
 bart_machine$java_bart_machine = .junserialize(serialized)
-bart_machine$java_bart_machine
+#Error in .jcall("RJavaClassLoader", "Ljava/lang/Object;", "toObjectPL",  : 
+#				java.lang.ClassNotFoundException
 
+## try using jcache
+library(bartMachine)
+x = 1 : 100; y = x + rnorm(100)
+bart_machine = build_bart_machine(as.data.frame(x), y)
+.jcache(bart_machine$java_bart_machine)
+save.image("test_bart_machine.RData")
+#close R, open R
+library(bartMachine)
+load("test_bart_machine.RData")
+.jinit()
+bart_machine$java_bart_machine
+#[1] "Java-Object<null>"
+## doesn't work
+
+library(bartMachine)
+x = 1 : 100; y = x + rnorm(100)
+for (i in 1 : 10000){
+	bart_machine = build_bart_machine(as.data.frame(x), y)
+}
+
+## If it helps, this may
 
 #get some data
 library(MASS)

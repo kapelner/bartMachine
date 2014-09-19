@@ -26,7 +26,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected int num_trees = 50;
 	
 	/** the collection of <code>num_cores</code> BART models which will run separate Gibbs chains */
-	protected transient bartMachineRegression[] bart_gibbs_chain_threads;
+	protected bartMachineRegression[] bart_gibbs_chain_threads;
 	/** this is the combined gibbs samples after burn in from all of the <code>num_cores</code> chains */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
 	
