@@ -1,5 +1,6 @@
 ##variable selection procedures from Bleich et al. (2013)
 var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
@@ -19,17 +20,17 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
-  ##use local cutoff
+    ##use local cutoff
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
 	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
 	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-  ##use global max cutoff
+    ##use global max cutoff
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
 	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
 	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-  #use global se cutoff
+    #use global se cutoff
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
@@ -142,7 +143,8 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 
 ##var selection -- choose best method via CV
 var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
-  
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
 	}	

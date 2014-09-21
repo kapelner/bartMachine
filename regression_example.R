@@ -14,7 +14,7 @@ R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 load("test_bart_machine.RData")
-predict(bart_machine, as.data.frame(x[1:100]))
+predict(bart_machine, as.data.frame(x))
 
 
 ##how big is this stuff?

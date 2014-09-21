@@ -29,6 +29,7 @@ set_bart_machine_memory = function(bart_max_mem){
 
 ##get variable counts
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}
@@ -39,6 +40,7 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 
 #get variable inclusion proportions
 get_var_props_over_chain = function(bart_machine, type = "splits"){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}	
@@ -57,4 +59,10 @@ sigsq_est = function(bart_machine){
 #There's no standard R function for this.
 sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
+}
+
+check_serialization = function(bart_machine){
+	if (is.jnull(bart_machine$java_bart_machine)){
+		stop("This bartMachine object was loaded from an R image but was not serialized.\nPlease build bartMachine using the option \"serialize = TRUE\" next time.\n")
+	}
 }

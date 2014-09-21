@@ -1,5 +1,6 @@
 ##function to permute columns of X and check BART's performance
 cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	#be able to handle regular expressions to find the covariates
 	
 	all_covariates = bart_machine$training_data_features_with_missing_features
