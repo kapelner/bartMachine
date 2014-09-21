@@ -1,8 +1,5 @@
 #S3 predict method
 predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, ...){
-	if (is_bart_destroyed(object)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
 	if(!(type %in% c("prob", "class"))){
 		stop("For classification, type must be either \"prob\" or \"class\". ")
 	}
@@ -27,9 +24,6 @@ labels_to_y_levels = function(bart_machine, labels){
 
 ##utility function for predicting when test outcomes are known
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
 	
 	if (bart_machine$pred_type == "regression"){ #regression list
 	  ytest_hat = predict(bart_machine, Xtest)
@@ -60,10 +54,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 }
 
 ##get full set of samples from posterior distribution of f(x)
-bart_machine_get_posterior = function(bart_machine, new_data){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+bart_machine_get_posterior = function(bart_machine, new_data){	
 	if (class(new_data) != "data.frame"){		
 		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
 	}
@@ -114,10 +105,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 
 ##compute credible intervals
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
-  	if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-    }
-  
+	
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
@@ -145,9 +133,6 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
 	}
-    if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-  	}
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)

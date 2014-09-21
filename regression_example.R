@@ -1,4 +1,5 @@
 R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
 bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
@@ -6,6 +7,7 @@ save.image("test_bart_machine.RData")
 q("no")
 #close R, open R
 R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 load("test_bart_machine.RData")
 bart_machine$java_bart_machine
@@ -15,6 +17,7 @@ predict(bart_machine, as.data.frame(x))
 
 #####WORKS
 R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
 bart_machine = build_bart_machine(as.data.frame(x), y)
@@ -23,17 +26,18 @@ save.image("test_bart_machine.RData")
 q("no")
 #close R, open R
 R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 load("test_bart_machine.RData")
 bart_machine$java_bart_machine = .junserialize(serialized)
 bart_machine$java_bart_machine
 predict(bart_machine, as.data.frame(x))
-#Error in .jcall("RJavaClassLoader", "Ljava/lang/Object;", "toObjectPL",  : 
-#				java.lang.ClassNotFoundException
-
+q("no")
 
 
 ## try using jcache
+R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
 bart_machine = build_bart_machine(as.data.frame(x), y)
@@ -42,6 +46,7 @@ save.image("test_bart_machine.RData")
 q("no")
 #close R, open R
 R
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 load("test_bart_machine.RData")
 .jinit()
@@ -49,10 +54,10 @@ bart_machine$java_bart_machine
 #[1] "Java-Object<null>"
 ## doesn't work
 
+options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
 for (i in 1 : 10000){
-	gc()
 	bart_machine = build_bart_machine(as.data.frame(x), y)
 }
 

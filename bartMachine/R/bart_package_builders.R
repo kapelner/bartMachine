@@ -402,10 +402,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 }
 
 ##private function that creates a duplicate of an existing bartMachine object.
-bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){
-  if (is_bart_destroyed(bart_machine)){
-    stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){	
 	if (is.null(X)){
 		X = bart_machine$X
 	}
