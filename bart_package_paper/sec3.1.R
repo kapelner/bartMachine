@@ -35,7 +35,6 @@ for (n in nlist){
 	t3 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t4 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_1_m = t4 - t3
 	cat("Our 1 core memcache time =", our_time_1_m, "\n")  
 	time_mat[as.character(n), "Us1coremem"] = our_time_1_m
@@ -44,7 +43,6 @@ for (n in nlist){
 	t5 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t6 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_1 = t6 - t5
 	cat("Our 1 core time =", our_time_1, "\n") 
 	time_mat[as.character(n), "Us1core"] = our_time_1
@@ -53,7 +51,6 @@ for (n in nlist){
 	t7 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t8 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4_m = t8 - t7
 	cat("Our 4 core memcache time =", our_time_4_m, "\n")
 	time_mat[as.character(n), "Us4coremem"] = our_time_4_m
@@ -62,7 +59,6 @@ for (n in nlist){
 	t9 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t10 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4 = t10 - t9
 	cat("Our 4 core time =", our_time_4, "\n")
 	time_mat[as.character(n), "Us4core"] = our_time_4
@@ -71,7 +67,6 @@ for (n in nlist){
 	t11 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE, run_in_sample = FALSE)
 	t12 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4_no_run = t12 - t11
 	cat("Our 4 core time with no run in sample =", our_time_4_no_run, "\n")
 	time_mat[as.character(n), "Us4core_no_run"] = our_time_4_no_run  

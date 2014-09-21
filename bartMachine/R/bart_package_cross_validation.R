@@ -60,7 +60,6 @@ k_fold_cv = function(X, y, k_folds = 5, verbose = FALSE, ...){
 							run_in_sample = FALSE, 
 							verbose = verbose), args))
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p, drop = FALSE], test_data_k[, (p + 1)])
-		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors
 		if (pred_type == "regression"){

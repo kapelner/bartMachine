@@ -58,9 +58,6 @@ bart_machine = bartMachine(X, y)
 
 #get posterior sigma^2's after burn-in and plot
 sigsqs = get_sigsqs(bart_machine, plot_hist = TRUE)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

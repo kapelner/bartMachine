@@ -62,9 +62,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 
 #explore RMSE by number of trees
 rmse_by_num_trees(bart_machine)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

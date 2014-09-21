@@ -80,9 +80,6 @@ bart_machine = bartMachine(X, y)
 var_sel_cv = var_selection_by_permute_response_cv(bart_machine, k_folds = 3)
 print(var_sel_cv$best_method)
 print(var_sel_cv$important_vars_cv)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

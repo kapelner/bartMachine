@@ -44,8 +44,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 			bart_machine_samp = bart_machine_duplicate(bart_machine, X = X_samp, covariates_to_permute = covariates_left_to_permute, run_in_sample = TRUE, verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		}
 		#record permutation result
-		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)
-		destroy_bart_machine(bart_machine_samp)		
+		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)	
 	}
 	cat("\n")
   

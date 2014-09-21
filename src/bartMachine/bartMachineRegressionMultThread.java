@@ -64,8 +64,6 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
-	/** "Destroyed" means this model's Gibbs samplers' data has been released to RAM and hence cannot be operated on */
-	protected boolean destroyed;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -503,14 +501,6 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 */
 	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
 		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
-	
-	/** to save memory, delete all the data for this BART model on all Gibbs chains */
-	public void destroy(){
-		bart_gibbs_chain_threads = null;
-		gibbs_samples_of_bart_trees_after_burn_in = null;
-		cov_split_prior = null;
-		destroyed = true; 
 	}
 	
 	public void setData(ArrayList<double[]> X_y){
@@ -574,10 +564,6 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
 		this.mem_cache_for_speed = mem_cache_for_speed;
-	}
-	
-	public boolean isDestroyed(){		
-		return destroyed;
 	}
 	
 	/** Must be implemented, but does nothing */

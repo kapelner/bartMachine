@@ -345,8 +345,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 			var_props[i, ] = get_var_props_over_chain(bart_machine, type)
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck, run_in_sample = FALSE, verbose = FALSE)			
-			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)
-			destroy_bart_machine(bart_machine_dup)					
+			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)				
 		}
 		cat(".")
 	}
@@ -438,7 +437,6 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
 			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts"), .jevalArray)
-			destroy_bart_machine(bart_machine_dup)
 			cat(".")
 			if (r %% 40 == 0){
 				cat("\n")
@@ -603,7 +601,6 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest) ##predict on holdout
 				rmses[r, t] = predict_obj$rmse				
 			}
-			destroy_bart_machine(bart_machine_dup)
 			cat("..")
 			cat(tree_list[t])			
 		}

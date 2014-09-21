@@ -1,38 +1,33 @@
-library(bartMachine)
-x = 1 : 100; y = x + rnorm(100)
-bart_machine = build_bart_machine(as.data.frame(x), y)
-save.image("test_bart_machine.RData")
-#close R, open R
-library(bartMachine)
-load("test_bart_machine.RData")
-bart_machine$java_bart_machine
-#[1] "Java-Object<null>"
-## doesn't work
-
 R
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
-bart_machine = build_bart_machine(as.data.frame(x), y)
-serialized = .jserialize(bart_machine$java_bart_machine)
-serialized = .jcall("RJavaClassLoader", "[B", "toByte", .jcast(bart_machine$java_bart_machine, "java.lang.Object"))
+bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
 save.image("test_bart_machine.RData")
 q("no")
 #close R, open R
 R
 library(bartMachine)
 load("test_bart_machine.RData")
-#now we have to init Java just like bartMachine does
-mem_flag_as_string = "-Xmx1100m"
-#we pass in the mem flag TWICE due to bug in MAC OS X which will be fixed in rJava 0.9.6
-#since it works with all versions of rJava, we keep this here in case someone may happen to
-#be running MAC OS X with rJAVA version < 0.9.6
-.jinit(parameters = c(mem_flag_as_string, mem_flag_as_string))
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
-for (dependency in JAR_DEPENDENCIES){
-	.jaddClassPath(paste(find.package("bartMachine"), "/java/", dependency, sep = ""))
-}
-.jclassPath()
+bart_machine$java_bart_machine
+predict(bart_machine, as.data.frame(x))
+## doesn't work
+
+
+#####WORKS
+R
+library(bartMachine)
+x = 1 : 100; y = x + rnorm(100)
+bart_machine = build_bart_machine(as.data.frame(x), y)
+serialized = .jserialize(bart_machine$java_bart_machine)
+save.image("test_bart_machine.RData")
+q("no")
+#close R, open R
+R
+library(bartMachine)
+load("test_bart_machine.RData")
 bart_machine$java_bart_machine = .junserialize(serialized)
+bart_machine$java_bart_machine
+predict(bart_machine, as.data.frame(x))
 #Error in .jcall("RJavaClassLoader", "Ljava/lang/Object;", "toObjectPL",  : 
 #				java.lang.ClassNotFoundException
 

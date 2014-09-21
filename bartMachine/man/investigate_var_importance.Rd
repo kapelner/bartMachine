@@ -79,9 +79,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 
 #investigate variable inclusion proportions
 investigate_var_importance(bart_machine)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

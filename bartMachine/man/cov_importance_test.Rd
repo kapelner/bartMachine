@@ -82,9 +82,6 @@ bart_machine = bartMachine(X, y)
 cov_importance_test(bart_machine, covariates = c(1))
 ## note the plot and the printed p-value
 
-##destroy BART model
-destroy_bart_machine(bart_machine)
-
 }
 
 }

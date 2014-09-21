@@ -83,9 +83,6 @@ bart_machine_cv = bartMachineCV(X, y)
 
 #information about cross-validated model
 summary(bart_machine_cv)
-
-#destroy BART model
-destroy_bart_machine(bart_machine_cv)
 }
 
 }

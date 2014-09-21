@@ -91,9 +91,6 @@ bart_machine = bartMachine(X, y)
 var_sel = var_selection_by_permute_response_three_methods(bart_machine)
 print(var_sel$important_vars_local_names)
 print(var_sel$important_vars_global_max_names)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
   }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

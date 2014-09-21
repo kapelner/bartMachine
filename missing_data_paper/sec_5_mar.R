@@ -88,9 +88,6 @@ for (nsim in 1 : Nsim){
 		y_hat_rf = predict(rf_mod, Xtest_miss_rf)
 		results_rf_mar[g, nsim] = sqrt(sum((ytest - y_hat_rf)^2) / n_test)
 		
-		destroy_bart_machine(bart_mod)
-		destroy_bart_machine(bart_mod_rf_imp)
-		
 		cat("bart oosrmse:", results_bart_mar[g, nsim], "rf oosrmse:", results_rf_mar[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_mar[g, nsim], "\n")
 		
 		avgs_mar_bart = apply(results_bart_mar, 1, mean, na.rm = TRUE)		

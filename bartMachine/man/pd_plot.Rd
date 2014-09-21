@@ -69,9 +69,6 @@ bart_machine = bartMachine(X, y)
 #partial dependence plot for quadratic term
 pd_plot(bart_machine, "X3")
 
-#destroy BART model
-destroy_bart_machine(bart_machine)
-
 
 #Classification example
 
@@ -85,9 +82,6 @@ bart_machine = bartMachine(iris2[ ,1:4], iris2$Species)
 
 #partial dependence plot 
 pd_plot(bart_machine, "Petal.Width")
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 

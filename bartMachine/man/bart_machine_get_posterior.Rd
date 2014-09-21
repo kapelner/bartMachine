@@ -58,9 +58,6 @@ bart_machine = bartMachine(X, y)
 posterior = bart_machine_get_posterior(bart_machine, X)
 print(posterior$y_hat)
 
-#destroy BART model
-destroy_bart_machine(bart_machine)
-
 
 #Classification example
 
@@ -75,9 +72,6 @@ bart_machine = bartMachine(iris2[ ,1 : 4], iris2$Species)
 #get posterior distribution
 posterior = bart_machine_get_posterior(bart_machine, iris2[ ,1 : 4])
 print(posterior$y_hat)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 

@@ -51,9 +51,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 #get variable inclusion counts
 var_counts = get_var_counts_over_chain(bart_machine)
 print(var_counts)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

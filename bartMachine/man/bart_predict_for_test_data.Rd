@@ -69,9 +69,6 @@ bart_machine = bartMachine(train_X, train_y)
 oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)
 print(oos_perf$rmse)
 
-#destroy BART model
-destroy_bart_machine(bart_machine)
-
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

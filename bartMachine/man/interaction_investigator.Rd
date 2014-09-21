@@ -81,9 +81,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 
 #investigate interactions
 interaction_investigator(bart_machine)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

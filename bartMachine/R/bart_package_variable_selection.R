@@ -1,8 +1,5 @@
 ##variable selection procedures from Bleich et al. (2013)
-var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
@@ -94,7 +91,6 @@ get_averaged_true_var_props = function(bart_machine, num_reps_for_avg, num_trees
 	for (i in 1 : num_reps_for_avg){
 		bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_for_permute)
 		var_props = var_props + get_var_props_over_chain(bart_machine_dup)
-		destroy_bart_machine(bart_machine_dup)
 		cat(".")
 	}
 	#average over many runs
@@ -121,7 +117,6 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute)
 			verbose = FALSE)
 	#just return the variable proportions	
 	var_props = get_var_props_over_chain(bart_machine_with_permuted_y)
-	destroy_bart_machine(bart_machine_with_permuted_y)
 	cat(".")
 	var_props
 }
@@ -147,9 +142,6 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 
 ##var selection -- choose best method via CV
 var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
-  	if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-  	}
   
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
@@ -184,8 +176,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				num_trees_for_permute = num_trees_for_permute,
         		num_reps_for_avg = num_reps_for_avg,                                                                          
 				alpha = alpha, 
-				plot = FALSE)		
-		destroy_bart_machine(bart_machine_temp)
+				plot = FALSE)
 		
 		#pull out test data
 		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, -ncol(bart_machine$model_matrix_training_data)]
@@ -212,14 +203,13 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				bart_machine_temp = bart_machine_duplicate(bart_machine, X = training_X_k_red_by_vars_picked_by_method, y = training_y_k,
 						num_trees = num_trees_pred_cv,
 						run_in_sample = FALSE,
-            cov_prior_vec = rep(1, times = ncol(training_X_k_red_by_vars_picked_by_method)),   ##do not want old vec -- standard here                                   
+            			cov_prior_vec = rep(1, times = ncol(training_X_k_red_by_vars_picked_by_method)),   ##do not want old vec -- standard here                                   
 						verbose = FALSE)
 				#and calculate oos-L2 and cleanup
 				test_X_k_red_by_vars_picked_by_method = data.frame(test_X_k[, vars_selected_by_method])
-        colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
+        		colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
 
-        predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
-				destroy_bart_machine(bart_machine_temp)
+        		predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
 				#now record it
 				L2_err_mat[k, method] = predict_obj$L2_err
 			}

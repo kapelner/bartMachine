@@ -34,9 +34,6 @@ oos_stats_cv
 
 predict(bart_machine_cv, X[1 : 14, ])
 
-##section 4.3
-destroy_bart_machine(bart_machine)
-
 ##### section 4.4
 
 #Figure 4

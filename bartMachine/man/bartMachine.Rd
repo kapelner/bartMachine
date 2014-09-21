@@ -179,7 +179,6 @@ independent MCMC chain of size \cr
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{destroy_bart_machine}},
 \code{\link{bartMachineCV}}
 }
 \examples{
@@ -196,16 +195,10 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 bart_machine = bartMachine(X, y)
 summary(bart_machine)
 
-#destroy BART model
-destroy_bart_machine(bart_machine)
-
 \dontrun{
 ##Build another BART regression model
 bart_machine = bartMachine(X,y, num_trees = 200, num_burn_in = 500,
-num_iterations_after_burn_in =1000)
-
-#Destroy BART model
-destroy_bart_machine(bart_machine)
+num_iterations_after_burn_in = 1000)
 
 ##Classification example
 
@@ -221,9 +214,6 @@ bart_machine = build_bart_machine(iris2[ ,1:4], iris2$Species)
 phat = bart_machine$p_hat_train
 ##look at in-sample confusion matrix
 bart_machine$confusion_matrix
-
-#destroy BART model 
-destroy_bart_machine(bart_machine)
 }
 
 
