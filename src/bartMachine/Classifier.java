@@ -38,13 +38,13 @@ public abstract class Classifier implements Serializable{
 	}
 	
 	/** an array of the raw training data by ROW i.e. consisting of xi = [xi1, ..., xiM, yi] */
-	protected ArrayList<double[]> X_y;
+	protected transient ArrayList<double[]> X_y;
 	/** an array of the raw training data by COLUMN i.e. consisting of xj = [x1j, ..., xnj] with the last entry being [y1, ..., yn] */ 
-	protected ArrayList<double[]> X_y_by_col;
+	protected transient ArrayList<double[]> X_y_by_col;
 	/** the raw responses */
-	protected double[] y_orig;
+	protected transient double[] y_orig;
 	/** the responses transformed (only if necessary) */
-	protected double[] y_trans;
+	protected transient double[] y_trans;
 	/** the number of records in the training set */
 	protected int n;
 	/** the number of features / predictors in the training set */
@@ -54,7 +54,7 @@ public abstract class Classifier implements Serializable{
 	protected String unique_name = "unnamed";
 
 	/** the in sample residuals [e1, ..., en] of this classifier after it has been built and evaluated */
-	private double[] in_sample_residuals;		
+	private transient double[] in_sample_residuals;		
 
 	
 	/** A dummy constructor which keeps <code>Serializable</code> happy */

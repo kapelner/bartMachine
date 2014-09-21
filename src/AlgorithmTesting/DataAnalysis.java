@@ -72,28 +72,30 @@ public class DataAnalysis {
 		}
 		
 		
-//		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("bartMachine.bin"));
-//		out.writeObject(machine);
-//		out.close();
-//
-//		machine = null;
-//		
-//		try {
-//			ObjectInputStream reader = new ObjectInputStream(new FileInputStream("bartMachine.bin")); 
-//			machine = new bartMachineRegressionMultThread(); 
-//			try {
-//				machine = (bartMachineRegressionMultThread) reader.readObject();
-//			} catch (ClassNotFoundException e) {e.printStackTrace();} 
-//			reader.close();
-//		} catch (IOException e){e.printStackTrace();}
-//		
-//		long L2 = Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4));
-//		System.out.println("(in sample) L1 error: " + 
-//			Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
-//			" L2 error: " + L2 + " rmse: " + Math.sqrt(L2 / (double)machine.getN()));
-		
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("bartMachine.bin"));
+		out.writeObject(machine);
+		out.close();
 //		XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream("bartMachine.xml")));
-//      encoder.writeObject(machine);
-//      encoder.close();
+//		encoder.writeObject(machine);
+//		encoder.close();
+		
+		
+		machine = null;
+		System.out.println("serialized and now reopening bartmachine");
+		
+		
+		try {
+			ObjectInputStream reader = new ObjectInputStream(new FileInputStream("bartMachine.bin")); 
+			machine = new bartMachineRegressionMultThread(); 
+			try {
+				machine = (bartMachineRegressionMultThread) reader.readObject();
+			} catch (ClassNotFoundException e) {e.printStackTrace();} 
+			reader.close();
+		} catch (IOException e){e.printStackTrace();}
+		
+		double[] record = {1.0};
+		System.out.println(machine.Evaluate(record));
+		
+
 	}
 }

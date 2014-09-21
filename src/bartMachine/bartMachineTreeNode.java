@@ -68,11 +68,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** this number of possible split variables at this node */
 	protected transient Integer padj;	
 	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */
-	protected int[] attribute_split_counts;
-
-	//special caches for gibbs sampler speedup. These are never to be duplicated during clone
-	//they are initialized to BAD_FLAG so we can save a pointer hop as well by using the Java primitive
-	public double qqqq = BAD_FLAG_double;
+	protected transient int[] attribute_split_counts;
 
 	
 	public bartMachineTreeNode(){}	

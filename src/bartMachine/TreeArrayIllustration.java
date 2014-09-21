@@ -18,8 +18,8 @@ import javax.imageio.ImageIO;
 public class TreeArrayIllustration {
 
 	private int sample_num;
-	private ArrayList<bartMachineTreeNode> trees;
-	private ArrayList<Double> likelihoods;
+	private transient ArrayList<bartMachineTreeNode> trees;
+	private transient ArrayList<Double> likelihoods;
 	private String unique_name;
 	
 	public static NumberFormat one_digit_format = NumberFormat.getInstance();
