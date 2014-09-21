@@ -165,7 +165,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
 		}
 		BuildOnAllThreads();
-		FlushData();
+		//FlushData();
 		long t1 = System.currentTimeMillis();
 		if (verbose){
 			System.out.println("done building BART in " + ((t1 - t0) / 1000.0) + " sec \n");
