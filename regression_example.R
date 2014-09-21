@@ -49,10 +49,24 @@ R
 options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 load("test_bart_machine.RData")
-.jinit()
-bart_machine$java_bart_machine
-#[1] "Java-Object<null>"
-## doesn't work
+predict(bart_machine, as.data.frame(x))
+q("no")
+
+## try using built-in jcache
+R
+options(java.parameters = "-Xmx1000m")
+library(bartMachine)
+x = 1 : 100; y = x + rnorm(100)
+bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
+save.image("test_bart_machine.RData")
+q("no")
+#close R, open R
+R
+options(java.parameters = "-Xmx1000m")
+library(bartMachine)
+load("test_bart_machine.RData")
+predict(bart_machine, as.data.frame(x))
+q("no")
 
 options(java.parameters = "-Xmx1000m")
 library(bartMachine)

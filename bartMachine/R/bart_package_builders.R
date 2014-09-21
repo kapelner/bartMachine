@@ -89,13 +89,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
 	}
 	
-	#Let's serialize the object if the user wishes
-	if (serialize){
-		.jcache(java_bart_machine)
-	}
-	
-
-	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
 	if (ncol(X) == 0){
@@ -394,6 +387,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		if (verbose){
 			cat("done\n")
 		}
+	}
+	
+	
+	#Let's serialize the object if the user wishes
+	if (serialize){
+		.jcache(bart_machine$java_bart_machine)
 	}
 	
 	#use R's S3 object orientation
