@@ -63,6 +63,6 @@ sample_mode = function(data){
 
 check_serialization = function(bart_machine){
 	if (is.jnull(bart_machine$java_bart_machine)){
-		stop("This bartMachine object was loaded from an R image but was not serialized.\nPlease build bartMachine using the option \"serialize = TRUE\" next time.\n")
+		stop("This bartMachine object was loaded from an R image but was not serialized.\n  Please build bartMachine using the option \"serialize = TRUE\" next time.\n")
 	}
 }

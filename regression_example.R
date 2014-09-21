@@ -4,7 +4,7 @@
 R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
-n = 5000
+n = 500
 x = 1 : n; y = x + rnorm(n)
 bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
 save.image("test_bart_machine.RData")
