@@ -15,7 +15,7 @@ options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 load("test_bart_machine.RData")
 predict(bart_machine, as.data.frame(x))
-q("no")
+
 
 ##how big is this stuff?
 data_names = names(bart_machine)
@@ -25,6 +25,7 @@ for (i in 1 : length(data_names)){
 	sizes[i, ] = object.size(bart_machine[[data_names[i]]]) / 1e6
 }
 t(t(sizes[order(-sizes), ]))
+q("no")
 
 ####ensure no more memory leak
 options(java.parameters = "-Xmx1000m")
