@@ -392,7 +392,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#Let's serialize the object if the user wishes
 	if (serialize){
+		cat("serializing in order to be saved for future R sessions...")
 		.jcache(bart_machine$java_bart_machine)
+		cat("done\n")
 	}
 	
 	#use R's S3 object orientation

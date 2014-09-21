@@ -1,73 +1,24 @@
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-x = 1 : 100; y = x + rnorm(100)
-bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
-save.image("test_bart_machine.RData")
-q("no")
-#close R, open R
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-load("test_bart_machine.RData")
-bart_machine$java_bart_machine
-predict(bart_machine, as.data.frame(x))
-## doesn't work
 
-
-#####WORKS
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-x = 1 : 100; y = x + rnorm(100)
-bart_machine = build_bart_machine(as.data.frame(x), y)
-serialized = .jserialize(bart_machine$java_bart_machine)
-save.image("test_bart_machine.RData")
-q("no")
-#close R, open R
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-load("test_bart_machine.RData")
-bart_machine$java_bart_machine = .junserialize(serialized)
-bart_machine$java_bart_machine
-predict(bart_machine, as.data.frame(x))
-q("no")
-
-
-## try using jcache
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-x = 1 : 100; y = x + rnorm(100)
-bart_machine = build_bart_machine(as.data.frame(x), y)
-.jcache(bart_machine$java_bart_machine)
-save.image("test_bart_machine.RData")
-q("no")
-#close R, open R
-R
-options(java.parameters = "-Xmx1000m")
-library(bartMachine)
-load("test_bart_machine.RData")
-predict(bart_machine, as.data.frame(x))
-q("no")
 
 ## try using built-in jcache
 R
-options(java.parameters = "-Xmx1000m")
+options(java.parameters = "-Xmx1500m")
 library(bartMachine)
-x = 1 : 100; y = x + rnorm(100)
+n = 10000
+x = 1 : n; y = x + rnorm(n)
 bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
 save.image("test_bart_machine.RData")
 q("no")
 #close R, open R
 R
-options(java.parameters = "-Xmx1000m")
+options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 load("test_bart_machine.RData")
 predict(bart_machine, as.data.frame(x))
 q("no")
 
+
+####ensure no more memory leak
 options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
