@@ -162,7 +162,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		//run a build on all threads
 		long t0 = System.currentTimeMillis();
 		if (verbose){
-			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
+			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup...");
 		}
 		BuildOnAllThreads();
 		long t1 = System.currentTimeMillis();
@@ -171,8 +171,6 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		}
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();
-
-		FlushData();
 	}	
 	
 	/** Create a post burn-in chain for ease of manipulation later */
