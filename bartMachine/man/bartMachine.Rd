@@ -26,6 +26,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
+serialize = FALSE,
 verbose = TRUE)
 
 build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
@@ -47,6 +48,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
+serialize = FALSE,
 verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -127,6 +129,11 @@ If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entri
   \item{mem_cache_for_speed}{
 Speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
 of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
+}
+  \item{serialize}{
+Setting this option to \code{TRUE} will allow serialization of bartMachine objects which allows for persistence between
+R sessions if the object is saved and reloaded. Note that serialized objects can take up a large amount of memory. 
+Thus, the default is \code{FALSE}.  
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 
