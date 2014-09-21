@@ -294,9 +294,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 
 	/** Remove all the data in this node and its children recursively to save memory */
 	public void flushNodeData() {
-		//yhats = null;
-		//indicies = null;	
-		//responses = null;
+		yhats = null;
+		indicies = null;	
+		responses = null;
 		possible_rule_variables = null;
 		possible_split_vals_by_attr = null;
 		

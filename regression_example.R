@@ -4,7 +4,7 @@
 R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
-n = 10000
+n = 5000
 x = 1 : n; y = x + rnorm(n)
 bart_machine = build_bart_machine(as.data.frame(x), y, serialize = TRUE)
 save.image("test_bart_machine.RData")
@@ -14,7 +14,7 @@ R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 load("test_bart_machine.RData")
-predict(bart_machine, as.data.frame(x))
+predict(bart_machine, as.data.frame(x[1:100]))
 
 
 ##how big is this stuff?
