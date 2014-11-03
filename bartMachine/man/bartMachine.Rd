@@ -140,11 +140,11 @@ Prints information about progress of the algorithm to the screen.
 }
 }
 \details{
-Returns an object of class ``bartMachine''. Note that this object persists in the Java heap until \code{\link{destroy_bart_machine}} is called or the R session is terminated. The ``bartMachine'' object contains a list of the following components:
+
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
+Returns an object of class ``bartMachine''. The ``bartMachine'' object contains a list of the following components:
+
   \item{java_bart_machine}{A pointer to the BART Java object.}
   \item{train_data_features}{The names of the variables used in the training data.}
   \item{training_data_features_with_missing_features.}{The names of the variables used in the training data. If \code{use_missing_data_dummies_as_covars = TRUE}, this also includes dummies for any predictors that contain at least one missing entry (named ``M_<feature>'').}
