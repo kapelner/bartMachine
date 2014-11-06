@@ -9,7 +9,8 @@ set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is requi
 #load up data
 data(benchmark_datasets)
 datalist_names = c("boston", "triazine", "ozone", "baseball", "wine.red", "ankara", "wine.white", "pole", "compactiv")
-
+##need to reorder boston because all others have response last
+boston = boston[, c(2 : 14, 1)]
 		
 # put the datasets into a hash.
 datalist = list()
@@ -125,8 +126,8 @@ k_fold_cv_rf = function(X, y, k_folds = 5, ...){
 for (nrep in 1 : NREP){
 	for (dname in datalist_names){
 		data = datalist[[dname]]
-		X = data[, 2 : ncol(data)]
-		y = data[, 1]
+		X = data[, 1 : (ncol(data)- 1)]
+		y = data[, ncol(data)] ##response is last
 		
 		rmse_bart_machine = k_fold_cv(X, y, k_folds = KFOLDS, verbose = FALSE)
 		oos_rmse_results[dname, 1, nrep] = rmse_bart_machine$rmse
