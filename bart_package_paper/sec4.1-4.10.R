@@ -1,22 +1,29 @@
-options(java.parameters = "-Xmx2500m")
+
+
+###### section 4.1
+options(java.parameters = "-Xmx5000m")
 library(bartMachine)
+set_bart_machine_num_cores(4)
 
 #load the data (for information on the dataset, see the footer of this file)
 data(automobile)
 #kill rows with missingness
 automobile = na.omit(automobile)
 #pull out X and y
-y = automobile$price #already logged
-X = automobile; X$price = NULL
+y = automobile$log_price #already logged
+X = automobile; X$log_price = NULL
 
 
-###### section 4.1
 
-set_bart_machine_num_cores(4)
 
 ###### section 4.2
 
 bart_machine = bartMachine(X, y)
+#If you get the following error:
+#Unsupported major.minor version 51.0
+#This means that rJava is configured with a different version of Java than bartMachine was compiled in. You may have to
+#download the code and compile it yourself using ant.
+
 #Figure 2
 bart_machine
 

@@ -55,7 +55,7 @@ k_fold_cv = function(X, y, k_folds = 5, verbose = FALSE, ...){
 		
    		#build bart object
 		bart_machine_cv = do.call(build_bart_machine, c(list(
-							x = training_data_k[, 1 : p, drop = FALSE], 
+							X = training_data_k[, 1 : p, drop = FALSE], 
 							y = training_data_k[, (p + 1)], 
 							run_in_sample = FALSE, 
 							verbose = verbose), args))
