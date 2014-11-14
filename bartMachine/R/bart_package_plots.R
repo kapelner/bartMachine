@@ -551,7 +551,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 }
 
 ##plot and invisibly return out-of-sample RMSE by the number of trees
-rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, ...){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "classification"){
@@ -576,7 +576,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				ytest = y[holdout_indicies]
 				
 				bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
-				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest) ##predict on holdout
+				predict_obj = suppressWarnings(bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)) ##predict on holdout
 				rmses[r, t] = predict_obj$rmse				
 			}
 			cat("..")
@@ -596,7 +596,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 			xlab = "Number of Trees", 
 			ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE"), 
 			main = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE by Number of Trees"), 
-			ylim = c(min(y_mins), max(y_maxs)))
+			ylim = c(min(y_mins), max(y_maxs)), ...)
 		if (num_replicates > 1){
 			for (t in 1 : length(tree_list)){
 				lowers = rmse_means[t] - 1.96 * rmse_sds[t] / sqrt(num_replicates)

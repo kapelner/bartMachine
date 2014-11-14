@@ -27,11 +27,11 @@ bart_machine = bartMachine(X, y)
 #Figure 2
 bart_machine
 
-oos_stats = k_fold_cv(X, y, k_folds = 10, verbose = FALSE)
-oos_stats
+k_fold_cv(X, y, k_folds = 10, verbose = FALSE)
 
 #Figure 3
-rmse_by_num_trees(bart_machine, num_replicates = 20)
+par(mar = c(4.3, 4.5, 1.5, 0.5), mgp = c(3, 1.3, 0))
+rmse_by_num_trees(bart_machine, num_replicates = 2, cex.axis = 2.0, cex.lab = 2.0, cex.main = 2.0)
 
 bart_machine_cv = bartMachineCV(X, y)
 bart_machine_cv

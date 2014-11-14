@@ -158,7 +158,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	factor_lengths = pre_process_obj$factor_lengths
 	
 	#now create a default cov_prior_vec that factors in the levels of the factors
-	if (is.null(cov_prior_vec) && length(factor_lengths) > 0){
+	null_cov_prior_vec = is.null(cov_prior_vec)
+	if (null_cov_prior_vec && length(factor_lengths) > 0){
 		#begin with the uniform
 		cov_prior_vec = rep(1, p)
 		j_factor_begin = p - sum(factor_lengths) + 1
@@ -256,11 +257,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		#put in checks here for user to make sure the covariate prior vec is the correct length
 		offset = length(cov_prior_vec) - (ncol(model_matrix_training_data) - 1) 
 		if (offset < 0){
-			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was lengthened (with 1's)"))
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was lengthened with 1's)"))
 			cov_prior_vec = c(cov_prior_vec, rep(1, -offset))
 		}
 		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
-			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was shortened"))
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was shortened)"))
 			cov_prior_vec = cov_prior_vec[1 : (ncol(model_matrix_training_data) - 1)]		
 		}		
 		if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
@@ -321,7 +322,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			mh_prob_steps = mh_prob_steps,
 			s_sq_y = s_sq_y,
 			run_in_sample = run_in_sample,
-			cov_prior_vec = cov_prior_vec,
 			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
@@ -335,9 +335,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			debug_log = debug_log,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
-	#if (serialize){
-	#	bart_machine$java_bart_machine_serialized = java_bart_machine_serialized
-	#}
+	#if the user used a cov prior vec, pass it back
+	if (!null_cov_prior_vec){
+		bart_machine$cov_prior_vec = cov_prior_vec
+	}
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
@@ -447,7 +448,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
 		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
 		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
-		serialize = bart_machine$serialize,
+		serialize = FALSE, #we do not want to waste CPU time here since these are created internally by us
 		verbose = verbose)
 }
 
