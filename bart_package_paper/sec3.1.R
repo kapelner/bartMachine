@@ -5,7 +5,7 @@ library(BayesTree)
 library(randomForest)
 
 
-nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000)
+nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000)
 p = 20
 
 n = 20000
@@ -83,23 +83,59 @@ for (n in nlist){
 
 
 # convert some minutes to seconds
-time_mat[8 : 9, ] = time_mat[8 : 9, ] * 60
+time_mat[8, ] = time_mat[8, ] * 60
 time_mat[7, c(1,2,3,5,7)] = time_mat[7, c(1,2,3,5,7)] * 60
 time_mat[6, 1] = time_mat[6, 1] * 60
 
 #Figure 1a
 COLORS = c("red", "darkblue", "darkblue", "darkviolet", "darkviolet", "darkgreen", "darkorange")
-LTYS = c(0, 1, 2, 3, 4, 5, 6) 
+LTYS = c(1, 1, 2, 1, 2, 3, 4) 
+LENDS = c(0, 1, 2, 1, 2, 0, 2)
+LJOINS = c(1, 2, 1, 2, 1, 1, 1)
+PCHS = c(0, 1, 2, 4, 10, 12, 11)
 NAMES = c("BayesTree", "bartMachine (1 core,\n memcache)", "bartMachine (1 core)", "bartMachine (4 cores,\n memcache)", "bartMachine (4 cores)", "bartMachine (4 cores,\n no in-sample)", "randomForest")
-plot(nlist / 1000, time_mat[, 1] / 60, type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size (1000's)", ylab = "Minutes", ylim = c(0, 12))
+plot(nlist / 1000, time_mat[, 1] / 60, type = "o", 
+		col = COLORS[1], 
+		lty = LTYS[2],
+		ljoin = LJOINS[1],
+		lend = LENDS[1],
+		pch = PCHS[1],
+		lwd = 3, 
+		xlab = "Sample Size (1000's)", 
+		ylab = "Minutes", 
+		ylim = c(0, 12))
 for (j in 2 : 7){
-	lines(nlist / 1000, time_mat[, j] / 60, type = "o", col = COLORS[j], lty = LTYS[j], lwd = 3)
+	lines(nlist / 1000, time_mat[, j] / 60, type = "o", 
+			col = COLORS[j], 
+			lty = LTYS[j], 
+			ljoin = LJOINS[j],
+			lend = LENDS[j],
+			pch = PCHS[j],
+			lwd = 3)
 }
-legend(x = -2, y = 13, NAMES, COLORS, lty = LTYS)
+legend(x = 0, y = 13, NAMES, 
+		COLORS, 
+		lty = LTYS,
+		pch = PCHS)
 
 #Figure 1b
-plot(nlist, time_mat[, 1], type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size", ylab = "Seconds", ylim = c(0, 27), xlim = c(100, 2000))
+plot(nlist, time_mat[, 1], type = "o", 
+		col = COLORS[1], 
+		lty = LTYS[1], 
+		ljoin = LJOINS[1],
+		lend = LENDS[1],
+		pch = PCHS[1],
+		lwd = 3, xlab = "Sample Size", ylab = "Seconds", ylim = c(0, 27), xlim = c(100, 2000))
 for (j in 2 : 7){
-	lines(nlist, time_mat[, j], type = "o", col = COLORS[j], lty = LTYS[j], lwd = 3)
+	lines(nlist, time_mat[, j], type = "o", 
+			col = COLORS[j], 
+			lty = LTYS[j], 
+			ljoin = LJOINS[j],
+			lend = LENDS[j],
+			pch = PCHS[j],
+			lwd = 3)
 }
-legend(x = -2, y = 29, NAMES, COLORS, lty = LTYS)
+legend(x = 0, y = 29, NAMES, 
+		COLORS, 
+		lty = LTYS,
+		pch = PCHS)
