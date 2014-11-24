@@ -94,8 +94,8 @@ pd_plot(bart_machine_cv, j = "stroke")
 
 data(automobile)
 #pull out X and y
-y = automobile$price
-X = automobile; X$price = NULL
+y = automobile$log_price
+X = automobile; X$log_price = NULL
 
 bart_machine = bartMachine(X, y, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
