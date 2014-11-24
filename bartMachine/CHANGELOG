@@ -1,3 +1,12 @@
+version 1.1.1
+
+* bartMachine now serializes models for transport in an image file (use serialize = TRUE option)
+* bartMachine models are now cleaned up by R's garbage collection (destroy_bart_machine function is removed)
+* rmse_by_num_trees no longer throws warnings
+* k_fold_cv now has random splits and the y-hats and p-hats are returned
+* jpackage is now used for initializing Java and thus "options(java.parameters = '...')" is used instead of set_bart_machine_memory which has been removed
+* vignette and documentation are now revamped
+
 version 1.0.4
 
 * fixed bug in confusion table creation in the pathological case when only one class is observed and predicted
