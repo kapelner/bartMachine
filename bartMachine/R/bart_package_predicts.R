@@ -1,8 +1,7 @@
 #S3 predict method
 predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, ...){
-	if (is_bart_destroyed(object)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
+	check_serialization(object) #ensure the Java object exists and fire an error if not
+	
 	if(!(type %in% c("prob", "class"))){
 		stop("For classification, type must be either \"prob\" or \"class\". ")
 	}
@@ -22,14 +21,12 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 
 ##private function
 labels_to_y_levels = function(bart_machine, labels){
-	ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2])
+	factor(ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)
 }
 
 ##utility function for predicting when test outcomes are known
-bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
+bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_class = NULL){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "regression"){ #regression list
 	  ytest_hat = predict(bart_machine, Xtest)
@@ -44,7 +41,12 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 				e = ytest - ytest_hat
 		)
 	} else { ##classification list
-	    ytest_hat = predict(bart_machine, Xtest, type = "class")
+    if(class(ytest)!= "factor") stop("ytest must be a factor.")
+    if(!all(levels(ytest) %in% bart_machine$y_levels)) stop("New factor level not seen in training introduced. Please remove.")
+    ptest_hat = predict(bart_machine, Xtest, type = "prob")
+    ytest_labels = ptest_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+    ytest_hat = labels_to_y_levels(bart_machine, ytest_labels)
+    
 		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
 		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
 		colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), "model errors")		
@@ -55,15 +57,14 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
 		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
 		
-		list(y_hat = ytest_hat, confusion_matrix = confusion_matrix)
+		list(y_hat = ytest_hat, p_hat = ptest_hat, confusion_matrix = confusion_matrix)
 	}
 }
 
 ##get full set of samples from posterior distribution of f(x)
-bart_machine_get_posterior = function(bart_machine, new_data){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+bart_machine_get_posterior = function(bart_machine, new_data){	
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (class(new_data) != "data.frame"){		
 		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
 	}
@@ -114,10 +115,8 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 
 ##compute credible intervals
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
-  	if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-    }
-  
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
@@ -141,13 +140,11 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 
 ##compute prediction intervals
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num_samples_per_data_point = 1000){
-
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
 	}
-    if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-  	}
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)

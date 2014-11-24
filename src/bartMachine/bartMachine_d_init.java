@@ -1,18 +1,20 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * This portion of the code initializes the Gibbs sampler
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_d_init extends bartMachine_c_debug {
+public abstract class bartMachine_d_init extends bartMachine_c_debug implements Serializable{
 
 	/** during debugging, we may want to fix sigsq */
-	protected double fixed_sigsq;
+	protected transient double fixed_sigsq;
 	/** the number of the current Gibbs sample */
 	protected int gibbs_sample_num;
 	/** cached current sum of residuals vector */
-	protected double[] sum_resids_vec;	
+	protected transient double[] sum_resids_vec;	
 	
 	/** Initializes the Gibbs sampler setting all zero entries and moves the counter to the first sample */
 	protected void SetupGibbsSampling(){

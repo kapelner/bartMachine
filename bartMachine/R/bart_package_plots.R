@@ -1,10 +1,8 @@
 
 ##check BART error assumptions via plot
 check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
-  	if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-  	}
-  
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (!(hetero_plot %in% c("ys", "yhats"))){
 		stop("You must specify the parameter \"hetero_plot\" as \"ys\" or \"yhats\"")
 	}
@@ -35,16 +33,13 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 
 ##private function for plotting tree depths
 plot_tree_depths = function(bart_machine){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
 	
 	tree_depths_after_burn_in = get_tree_depths(bart_machine)
 	
 	num_after_burn_in_per_core = nrow(tree_depths_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Depth by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
+		main = "Tree Depth by MCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
 		ylab = paste("Tree Depth for all cores"), ylim = c(0, max(tree_depths_after_burn_in)))
 	#plot burn in
 	for (t in 1 : ncol(tree_depths_after_burn_in)){
@@ -74,16 +69,13 @@ get_tree_depths = function(bart_machine){
 
 #private function for plotting number of nodes in the trees
 plot_tree_num_nodes = function(bart_machine){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
 	
 	tree_num_nodes_and_leaves_after_burn_in = get_tree_num_nodes_and_leaves(bart_machine)
 	
 	num_after_burn_in_per_core = nrow(tree_num_nodes_and_leaves_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Num Nodes And Leaves by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
+		main = "Tree Num Nodes And Leaves by\nMCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
 		ylab = paste("Tree Num Nodes and Leaves for all cores"), 
 		ylim = c(0, max(tree_num_nodes_and_leaves_after_burn_in)))
 	#plot burn in
@@ -112,9 +104,6 @@ get_tree_num_nodes_and_leaves = function(bart_machine){
 
 #private function for plotting the MH acceptance proportions by core
 plot_mh_acceptance_reject = function(bart_machine){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
 	
 	mh_acceptance_reject = get_mh_acceptance_reject(bart_machine)
 	a_r_before_burn_in = mh_acceptance_reject[["a_r_before_burn_in"]]
@@ -131,7 +120,7 @@ plot_mh_acceptance_reject = function(bart_machine){
 	
 	
 	plot(1 : num_gibbs_per_core, rep(0, num_gibbs_per_core), ylim = c(0, 1), type = "n", 
-			main = "Percent Acceptance by Gibbs Sample", xlab = "Gibbs Sample", ylab = "% of Trees Accepting")
+			main = "Percent Acceptance by MCMC Iteration", xlab = "MCMC Iteration", ylab = "% of Trees Accepting")
 	abline(v = bart_machine$num_burn_in, col = "grey")
 	#plot burn in
 	points(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees, col = "grey")
@@ -161,10 +150,8 @@ get_mh_acceptance_reject = function(bart_machine){
 
 #plot y vs yhat for training or test data
 plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
-  
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if( (!bart_machine$run_in_sample) & (is.null(Xtest) | is.null(ytest)) ){
 		stop("To run on training data, you must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
 	}
@@ -248,9 +235,8 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 
 ##get sigsqs and plot a histogram, if desired
 get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no sigsq's for classification.")
 	}
@@ -292,10 +278,7 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 }
 
 #private function for plotting convergence diagnostics for sigma^2
-plot_sigsqs_convergence_diagnostics = function(bart_machine){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+plot_sigsqs_convergence_diagnostics = function(bart_machine){	
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
 	}	
@@ -312,9 +295,9 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	avg_sigsqs_after_burn_in = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	plot(sigsqs, 
-		main = paste("Sigsq Estimates over Gibbs Samples"), 
-		xlab = "Gibbs sample (yellow lines: after burn-in 95% CI)", 
-		ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
+		main = paste("Sigsq Estimates over MCMC Iteration"), 
+		xlab = "MCMC Iteration (yellow lines: after burn-in 95% CI)", 
+		ylab = paste("Sigsq by MCMC Iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
 		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
 		pch = ".", 
 		cex = 3,
@@ -335,18 +318,15 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 
 ##function for investigating variable inclusion proportions
 investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
-
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
 	for (i in 1 : num_replicates_for_avg){
 		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){ ##if original BART is using right number of trees
 			var_props[i, ] = get_var_props_over_chain(bart_machine, type)
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck, run_in_sample = FALSE, verbose = FALSE)			
-			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)
-			destroy_bart_machine(bart_machine_dup)					
+			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)				
 		}
 		cat(".")
 	}
@@ -392,10 +372,8 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 
 ##user function calling private plotting methods
 plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
-  if (is_bart_destroyed(bart_machine)){
-  	stop("This bartMachine model has been destroyed. Please recreate.")
-  }
-  
+  check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
   if(length(plots) > 2){
     par(mfrow = c(2, 2))	  
 	} else if (length(plots) == 2){
@@ -429,6 +407,7 @@ shapiro_wilk_p_val = function(vec){
 
 ##function for investigating interactions
 interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	
@@ -438,7 +417,6 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
 			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts"), .jevalArray)
-			destroy_bart_machine(bart_machine_dup)
 			cat(".")
 			if (r %% 40 == 0){
 				cat("\n")
@@ -517,9 +495,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 
 ##partial dependence plot
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
 	} else if (class(j) == "character" && !(j %in% bart_machine$training_data_features)){
@@ -574,10 +551,9 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 }
 
 ##plot and invisibly return out-of-sample RMSE by the number of trees
-rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}
+rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, ...){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (bart_machine$pred_type == "classification"){
 		stop("This function does not work for classification.")
 	}		
@@ -600,10 +576,9 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				ytest = y[holdout_indicies]
 				
 				bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
-				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest) ##predict on holdout
+				predict_obj = suppressWarnings(bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)) ##predict on holdout
 				rmses[r, t] = predict_obj$rmse				
 			}
-			destroy_bart_machine(bart_machine_dup)
 			cat("..")
 			cat(tree_list[t])			
 		}
@@ -621,7 +596,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 			xlab = "Number of Trees", 
 			ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE"), 
 			main = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE by Number of Trees"), 
-			ylim = c(min(y_mins), max(y_maxs)))
+			ylim = c(min(y_mins), max(y_maxs)), ...)
 		if (num_replicates > 1){
 			for (t in 1 : length(tree_list)){
 				lowers = rmse_means[t] - 1.96 * rmse_sds[t] / sqrt(num_replicates)

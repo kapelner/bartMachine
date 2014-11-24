@@ -1,5 +1,6 @@
 package bartMachine;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -7,7 +8,7 @@ import java.util.ArrayList;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal {
+public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal implements Serializable{
 	
 	/** turning this flag on prints out debugging information about the Metropolis-Hastings tree search step */
 	private static final boolean DEBUG_MH = false;

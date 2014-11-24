@@ -1,6 +1,8 @@
 .onLoad = function(libname, pkgname) {
+  .jpackage(pkgname, lib.loc = libname)
   assign("bartMachine_globals", new.env(), envir = parent.env(environment()))
 }
+
 .onAttach = function(libname, pkgname){
-  packageStartupMessage("Welcome to bartMachine v1.0.3b\n")
+  packageStartupMessage(paste("Welcome to bartMachine v", VERSION, "\n", sep = ""))
 }

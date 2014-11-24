@@ -1,12 +1,14 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * This class handles the parallelization of many Gibbs chains over many CPU cores
  * to create one BART regression model. It also handles all operations on the completed model.
  * @author Adam Kapelner and Justin Bleich
  * 
  */
-public class bartMachineClassificationMultThread extends bartMachineRegressionMultThread {
+public class bartMachineClassificationMultThread extends bartMachineRegressionMultThread implements Serializable{
 	
 	/** The default value of the <code>classification_rule</code> */
 	private static double DEFAULT_CLASSIFICATION_RULE = 0.5;

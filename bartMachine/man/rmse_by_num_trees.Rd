@@ -9,7 +9,7 @@ Assess out-of-sample RMSE of a BART model for varying numbers of trees in the su
 }
 \usage{
 rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200),
-in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4)
+in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,9 @@ Percentage of the data to be treated as an out-of-sample holdout.
 }
   \item{num_replicates}{
 Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).
+}
+  \item{...}{
+Other arguments to be passed to the plot function.
 }
 }
 
@@ -62,9 +65,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 
 #explore RMSE by number of trees
 rmse_by_num_trees(bart_machine)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

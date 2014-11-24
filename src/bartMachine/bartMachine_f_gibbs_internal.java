@@ -1,5 +1,7 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 import gnu.trove.list.array.TIntArrayList;
 
 /**
@@ -8,7 +10,7 @@ import gnu.trove.list.array.TIntArrayList;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_base {
+public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_base implements Serializable{
 
 	/**
 	 * Assigns a value to this terminal node; the value is the prediction at this corner of X space.

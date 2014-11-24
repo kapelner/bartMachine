@@ -3,6 +3,7 @@ package bartMachine;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public class bartMachineTreeNode implements Cloneable {
+public class bartMachineTreeNode implements Cloneable, Serializable {
 	
 	/** Setting this to true will print out debug information at the node level during Gibbs sampling */
 	public static final boolean DEBUG_NODES = false;
@@ -67,11 +68,7 @@ public class bartMachineTreeNode implements Cloneable {
 	/** this number of possible split variables at this node */
 	protected transient Integer padj;	
 	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */
-	protected int[] attribute_split_counts;
-
-	//special caches for gibbs sampler speedup. These are never to be duplicated during clone
-	//they are initialized to BAD_FLAG so we can save a pointer hop as well by using the Java primitive
-	public double qqqq = BAD_FLAG_double;
+	protected transient int[] attribute_split_counts;
 
 	
 	public bartMachineTreeNode(){}	

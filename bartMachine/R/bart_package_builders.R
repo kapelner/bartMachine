@@ -26,17 +26,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
+		serialize = FALSE,
 		verbose = TRUE){
 	
 	if (verbose){
 		cat("bartMachine initializing with", num_trees, "trees...\n")	
 	}	
 	t0 = Sys.time()
-	
-	#immediately initialize Java (if it has not already been initialized) with a custom amount of memory
-	if (!exists("JVM_INITIALIZED", envir = bartMachine_globals)){
-		init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
-	}
 	
 	if (use_missing_data_dummies_as_covars && replace_missing_data_with_x_j_bar){
 		stop("You cannot impute by averages and use missing data as dummies simultaneously.")
@@ -66,6 +62,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
 	
+	#we are about to construct a bartMachine object. First, let R garbage collect
+	#to clean up previous bartMachine objects that are no longer in use. This is important
+	#because R's garbage collection system does not "see" the size of Java objects. Thus,
+	#you are at risk of running out of memory without this invocation. 
+	gc() #Delete at your own risk!	
+
 	#now take care of classification or regression
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
@@ -85,9 +87,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		pred_type = "classification"
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
-	}	
-	
-
+	}
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
@@ -158,7 +158,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	factor_lengths = pre_process_obj$factor_lengths
 	
 	#now create a default cov_prior_vec that factors in the levels of the factors
-	if (is.null(cov_prior_vec) && length(factor_lengths) > 0){
+	null_cov_prior_vec = is.null(cov_prior_vec)
+	if (null_cov_prior_vec && length(factor_lengths) > 0){
 		#begin with the uniform
 		cov_prior_vec = rep(1, p)
 		j_factor_begin = p - sum(factor_lengths) + 1
@@ -256,11 +257,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		#put in checks here for user to make sure the covariate prior vec is the correct length
 		offset = length(cov_prior_vec) - (ncol(model_matrix_training_data) - 1) 
 		if (offset < 0){
-			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was lengthened (with 1's)"))
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was lengthened with 1's)"))
 			cov_prior_vec = c(cov_prior_vec, rep(1, -offset))
 		}
 		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
-			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was shortened"))
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was shortened)"))
 			cov_prior_vec = cov_prior_vec[1 : (ncol(model_matrix_training_data) - 1)]		
 		}		
 		if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
@@ -321,7 +322,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			mh_prob_steps = mh_prob_steps,
 			s_sq_y = s_sq_y,
 			run_in_sample = run_in_sample,
-			cov_prior_vec = cov_prior_vec,
 			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
@@ -330,10 +330,15 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
+			serialize = serialize,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
+	#if the user used a cov prior vec, pass it back
+	if (!null_cov_prior_vec){
+		bart_machine$cov_prior_vec = cov_prior_vec
+	}
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
@@ -359,7 +364,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1])
+			y_hat_train = factor(ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1]), levels = y_levels)
 			#return a bunch more stuff
 			bart_machine$p_hat_train = p_hat_train
 			bart_machine$y_hat_train = y_hat_train
@@ -385,16 +390,21 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}
 	
+	
+	#Let's serialize the object if the user wishes
+	if (serialize){
+		cat("serializing in order to be saved for future R sessions...")
+		.jcache(bart_machine$java_bart_machine)
+		cat("done\n")
+	}
+	
 	#use R's S3 object orientation
 	class(bart_machine) = "bartMachine"
 	bart_machine
 }
 
 ##private function that creates a duplicate of an existing bartMachine object.
-bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){
-  if (is_bart_destroyed(bart_machine)){
-    stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){	
 	if (is.null(X)){
 		X = bart_machine$X
 	}
@@ -438,6 +448,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
 		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
 		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
+		serialize = FALSE, #we do not want to waste CPU time here since these are created internally by us
 		verbose = verbose)
 }
 
@@ -485,6 +496,11 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs), ncol = 6)
 	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "oos_error", "% diff with lowest")
 	
+  ##generate a single set of folds to keep using
+	temp = rnorm(length(y))
+	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+	                include.lowest= T, labels = F)
+  
     #cross-validate
 	run_counter = 1
 	for (k in k_cvs){
@@ -498,7 +514,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
-					k_folds = k_folds,
+					folds_vec = folds_vec, ##will hold the cv folds constant 
 					num_trees = num_trees,
 					k = k,
 					nu = nu_q[1],
@@ -540,17 +556,8 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
 	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
 	bart_machine_cv$cv_stats = cv_stats
+  bart_machine_cv$folds = folds_vec
 	bart_machine_cv
-}
-
-destroy_bart_machine = function(bart_machine){
-	.jcall(bart_machine$java_bart_machine, "V", "destroy")
-	#explicitly ask the JVM to give us the RAM back right now (probably not really necessary, but why not?)
-	.jcall("java/lang/System", "V", "gc")  
-}
-
-is_bart_destroyed = function(bart_machine){
-	.jcall(bart_machine$java_bart_machine, "Z", "isDestroyed") #check java flag
 }
 
 ##private function for filling in missing data with averages for cont. vars and modes for cat. vars

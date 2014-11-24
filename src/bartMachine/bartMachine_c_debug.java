@@ -1,12 +1,14 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * This portion of the code used to have many debug functions. These have 
  * been removed during the tidy up for release.
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams {
+public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams implements Serializable{
 
 	/** should we create illustrations of the trees and save the images to the debug directory? */
 	protected boolean tree_illust = false;

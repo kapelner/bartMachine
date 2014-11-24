@@ -48,9 +48,6 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 #Get variable inclusion proportions
 var_props = get_var_props_over_chain(bart_machine)
 print(var_props)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

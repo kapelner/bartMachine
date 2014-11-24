@@ -1,7 +1,14 @@
 package AlgorithmTesting;
 
+import java.beans.XMLEncoder;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import bartMachine.*;
 import bartMachine.Classifier.ErrorTypes;
@@ -10,6 +17,7 @@ import bartMachine.Classifier.ErrorTypes;
 public class DataAnalysis {
 	
 	/** this is a file that is in CSV format (csv extension) with/out a header named c_<name> or r_<name> for classification or regression respectively */
+	private static final String DataSetFilename = "r_simple";
 //	private static final String DataSetFilename = "r_just_noise";
 //	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_treemodel_high_p";
@@ -20,7 +28,7 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_friedman_hd";	
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-	private static final String DataSetFilename = "r_boston";
+//	private static final String DataSetFilename = "r_boston";
 //	private static final String DataSetFilename = "r_boston_half";	
 //	private static final String DataSetFilename = "r_boston_tiny_with_missing";	
 //	private static final String DataSetFilename = "r_zach";
@@ -52,11 +60,8 @@ public class DataAnalysis {
 			long end_time = System.currentTimeMillis();
 			System.out.println("Current Time:"+ (end_time-start_time)/1000);
 		}
-		
 		else {
-		//regression problem
-//			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
-//			for (int num_times = 0; num_times < 100; num_times++){
+			//regression problem
 			machine = new bartMachineRegressionMultThread();
 			machine.setData(data.getX_y());
 			machine.Build();
@@ -65,5 +70,32 @@ public class DataAnalysis {
 				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
 				" L2 error: " + L2 + " rmse: " + Math.sqrt(L2 / (double)machine.getN()));
 		}
+		
+		
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("bartMachine.bin"));
+		out.writeObject(machine);
+		out.close();
+//		XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream("bartMachine.xml")));
+//		encoder.writeObject(machine);
+//		encoder.close();
+		
+		
+		machine = null;
+		System.out.println("serialized and now reopening bartmachine");
+		
+		
+		try {
+			ObjectInputStream reader = new ObjectInputStream(new FileInputStream("bartMachine.bin")); 
+			machine = new bartMachineRegressionMultThread(); 
+			try {
+				machine = (bartMachineRegressionMultThread) reader.readObject();
+			} catch (ClassNotFoundException e) {e.printStackTrace();} 
+			reader.close();
+		} catch (IOException e){e.printStackTrace();}
+		
+		double[] record = {1.0};
+		System.out.println(machine.Evaluate(record));
+		
+
 	}
 }

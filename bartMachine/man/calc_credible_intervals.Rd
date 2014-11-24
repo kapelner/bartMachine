@@ -57,9 +57,6 @@ bart_machine = bartMachine(X, y)
 #get credible interval
 cred_int = calc_credible_intervals(bart_machine, X)
 print(head(cred_int))
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -1,5 +1,7 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 import OpenSourceExtensions.StatUtil;
 
 /**
@@ -8,7 +10,7 @@ import OpenSourceExtensions.StatUtil;
  * @author Adam Kapelner and Justin Bleich
  *
  */
-public class bartMachineClassification extends bartMachineRegression {
+public class bartMachineClassification extends bartMachineRegression implements Serializable{
 
 	public bartMachineClassification() {
 		super();		

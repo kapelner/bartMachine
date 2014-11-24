@@ -1,8 +1,6 @@
 ##variable selection procedures from Bleich et al. (2013)
-var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
-	if (is_bart_destroyed(bart_machine)){
-		stop("This bartMachine model has been destroyed. Please recreate.")
-	}	
+var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
@@ -22,17 +20,17 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
-  ##use local cutoff
+    ##use local cutoff
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
 	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
 	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-  ##use global max cutoff
+    ##use global max cutoff
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
 	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
 	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-  #use global se cutoff
+    #use global se cutoff
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
@@ -94,7 +92,6 @@ get_averaged_true_var_props = function(bart_machine, num_reps_for_avg, num_trees
 	for (i in 1 : num_reps_for_avg){
 		bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_for_permute)
 		var_props = var_props + get_var_props_over_chain(bart_machine_dup)
-		destroy_bart_machine(bart_machine_dup)
 		cat(".")
 	}
 	#average over many runs
@@ -121,7 +118,6 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute)
 			verbose = FALSE)
 	#just return the variable proportions	
 	var_props = get_var_props_over_chain(bart_machine_with_permuted_y)
-	destroy_bart_machine(bart_machine_with_permuted_y)
 	cat(".")
 	var_props
 }
@@ -146,11 +142,9 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 ##var selection -- choose best method via CV
-var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
-  	if (is_bart_destroyed(bart_machine)){
-    	stop("This bartMachine model has been destroyed. Please recreate.")
-  	}
-  
+var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
 	}	
@@ -179,13 +173,12 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		bart_machine_temp = bart_machine_duplicate(bart_machine, X = as.data.frame(training_X_k), y = training_y_k, run_in_sample = FALSE, verbose = FALSE)
     
         ##do variable selection
-		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
+		bart_variables_select_obj_k = var_selection_by_permute(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
 				num_trees_for_permute = num_trees_for_permute,
         		num_reps_for_avg = num_reps_for_avg,                                                                          
 				alpha = alpha, 
-				plot = FALSE)		
-		destroy_bart_machine(bart_machine_temp)
+				plot = FALSE)
 		
 		#pull out test data
 		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, -ncol(bart_machine$model_matrix_training_data)]
@@ -212,14 +205,13 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				bart_machine_temp = bart_machine_duplicate(bart_machine, X = training_X_k_red_by_vars_picked_by_method, y = training_y_k,
 						num_trees = num_trees_pred_cv,
 						run_in_sample = FALSE,
-            cov_prior_vec = rep(1, times = ncol(training_X_k_red_by_vars_picked_by_method)),   ##do not want old vec -- standard here                                   
+            			cov_prior_vec = rep(1, times = ncol(training_X_k_red_by_vars_picked_by_method)),   ##do not want old vec -- standard here                                   
 						verbose = FALSE)
 				#and calculate oos-L2 and cleanup
 				test_X_k_red_by_vars_picked_by_method = data.frame(test_X_k[, vars_selected_by_method])
-        colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
+        		colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
 
-        predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
-				destroy_bart_machine(bart_machine_temp)
+        		predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
 				#now record it
 				L2_err_mat[k, method] = predict_obj$L2_err
 			}
@@ -234,7 +226,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 
 	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
 	cat("final", "\n")
-	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
+	bart_variables_select_obj = var_selection_by_permute(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
 	    	num_reps_for_avg = num_reps_for_avg,                                                                        

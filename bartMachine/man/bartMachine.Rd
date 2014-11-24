@@ -26,6 +26,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
+serialize = FALSE,
 verbose = TRUE)
 
 build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
@@ -47,6 +48,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
+serialize = FALSE,
 verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -128,16 +130,21 @@ If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entri
 Speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
 of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
 }
+  \item{serialize}{
+Setting this option to \code{TRUE} will allow serialization of bartMachine objects which allows for persistence between
+R sessions if the object is saved and reloaded. Note that serialized objects can take up a large amount of memory. 
+Thus, the default is \code{FALSE}.  
+}
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 
 }
 }
 \details{
-Returns an object of class ``bartMachine''. Note that this object persists in the Java heap until \code{\link{destroy_bart_machine}} is called or the R session is terminated. The ``bartMachine'' object contains a list of the following components:
+
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
+Returns an object of class ``bartMachine''. The ``bartMachine'' object contains a list of the following components:
+
   \item{java_bart_machine}{A pointer to the BART Java object.}
   \item{train_data_features}{The names of the variables used in the training data.}
   \item{training_data_features_with_missing_features.}{The names of the variables used in the training data. If \code{use_missing_data_dummies_as_covars = TRUE}, this also includes dummies for any predictors that contain at least one missing entry (named ``M_<feature>'').}
@@ -179,7 +186,6 @@ independent MCMC chain of size \cr
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{destroy_bart_machine}},
 \code{\link{bartMachineCV}}
 }
 \examples{
@@ -196,16 +202,10 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 bart_machine = bartMachine(X, y)
 summary(bart_machine)
 
-#destroy BART model
-destroy_bart_machine(bart_machine)
-
 \dontrun{
 ##Build another BART regression model
 bart_machine = bartMachine(X,y, num_trees = 200, num_burn_in = 500,
-num_iterations_after_burn_in =1000)
-
-#Destroy BART model
-destroy_bart_machine(bart_machine)
+num_iterations_after_burn_in = 1000)
 
 ##Classification example
 
@@ -221,9 +221,6 @@ bart_machine = build_bart_machine(iris2[ ,1:4], iris2$Species)
 phat = bart_machine$p_hat_train
 ##look at in-sample confusion matrix
 bart_machine$confusion_matrix
-
-#destroy BART model 
-destroy_bart_machine(bart_machine)
 }
 
 

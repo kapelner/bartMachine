@@ -2,6 +2,7 @@ package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.apache.commons.math.MathException;
@@ -13,17 +14,18 @@ import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_b_hyperparams extends bartMachine_a_base {
+public abstract class bartMachine_b_hyperparams extends bartMachine_a_base implements Serializable{
+
 
 	/** The static field that controls the bounds on the transformed y variable which is between negative and positive this value */
 	protected static final double YminAndYmaxHalfDiff = 0.5;
 	
 	/** A cached library of chi-squared with degrees of freedom nu plus n (used for Gibbs sampling the variance) */
-	protected static double[] samps_chi_sq_df_eq_nu_plus_n;	
+	protected static double[] samps_chi_sq_df_eq_nu_plus_n = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY	
 	/** The number of samples in the cached library of chi-squared values */
 	protected static int samps_chi_sq_df_eq_nu_plus_n_length;
 	/** A cached library of standard normal values (used for Gibbs sampling the posterior means of the terminal nodes) */
-	protected static double[] samps_std_normal;
+	protected static double[] samps_std_normal = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY
 	/** The number of samples in the cached library of standard normal values */
 	protected static int samps_std_normal_length;
 	

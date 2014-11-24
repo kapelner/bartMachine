@@ -1,5 +1,7 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 import gnu.trove.list.array.TIntArrayList;
 
 /**
@@ -8,7 +10,7 @@ import gnu.trove.list.array.TIntArrayList;
  * @author 	Adam Kapelner and Justin Bleich
  * @see 	Section 4.10 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
  */
-public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval {
+public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements Serializable{
 	
 	/** Do we use this feature in this BART model? */
 	protected boolean use_prior_cov_spec;

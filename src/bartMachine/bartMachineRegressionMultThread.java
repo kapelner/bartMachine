@@ -2,6 +2,7 @@ package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,24 +18,24 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public class bartMachineRegressionMultThread extends Classifier {
+public class bartMachineRegressionMultThread extends Classifier implements Serializable {
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
-	protected int num_cores = 1;
+	protected int num_cores = 1; //default
 	/** the number of trees in this BART model on all Gibbs chains */
-	protected int num_trees = 50;
+	protected int num_trees = 50; //default
 	
 	/** the collection of <code>num_cores</code> BART models which will run separate Gibbs chains */
-	protected transient bartMachineRegression[] bart_gibbs_chain_threads;
+	protected bartMachineRegression[] bart_gibbs_chain_threads;
 	/** this is the combined gibbs samples after burn in from all of the <code>num_cores</code> chains */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
 	
 	/** the estimate of some upper limit of the variance of the response which is usually the MSE from a a linear regression */
 	private Double sample_var_y;
 	/** the number of burn-in samples in each Gibbs chain */
-	protected int num_gibbs_burn_in = 250;
+	protected int num_gibbs_burn_in = 250; //default
 	/** the total number of gibbs samples where each chain gets a number of burn-in and then the difference from the total divided by <code>num_cores</code> */ 
-	protected int num_gibbs_total_iterations = 1250;
+	protected int num_gibbs_total_iterations = 1250; //default
 	/** the total number of Gibbs samples for each of the <code>num_cores</code> chains */
 	protected int total_iterations_multithreaded;
 
@@ -63,8 +64,6 @@ public class bartMachineRegressionMultThread extends Classifier {
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
-	/** "Destroyed" means this model's Gibbs samplers' data has been released to RAM and hence cannot be operated on */
-	protected boolean destroyed;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -163,7 +162,7 @@ public class bartMachineRegressionMultThread extends Classifier {
 		//run a build on all threads
 		long t0 = System.currentTimeMillis();
 		if (verbose){
-			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
+			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup...");
 		}
 		BuildOnAllThreads();
 		long t1 = System.currentTimeMillis();
@@ -502,14 +501,6 @@ public class bartMachineRegressionMultThread extends Classifier {
 	 */
 	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
 		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
-	
-	/** to save memory, delete all the data for this BART model on all Gibbs chains */
-	public void destroy(){
-		bart_gibbs_chain_threads = null;
-		gibbs_samples_of_bart_trees_after_burn_in = null;
-		cov_split_prior = null;
-		destroyed = true; 
 	}
 	
 	public void setData(ArrayList<double[]> X_y){
@@ -573,10 +564,6 @@ public class bartMachineRegressionMultThread extends Classifier {
 	
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
 		this.mem_cache_for_speed = mem_cache_for_speed;
-	}
-	
-	public boolean isDestroyed(){		
-		return destroyed;
 	}
 	
 	/** Must be implemented, but does nothing */

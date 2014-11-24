@@ -5,11 +5,9 @@ import(missForest)
 
 export(bartMachine)
 export(build_bart_machine)
-export(destroy_bart_machine)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
-export(set_bart_machine_memory)
 
 export(dummify_data)
 export(get_var_counts_over_chain)
@@ -36,8 +34,8 @@ export(build_bart_machine_cv)
 export(bartMachineCV)
 export(k_fold_cv)
 
-export(var_selection_by_permute_response_three_methods)
-export(var_selection_by_permute_response_cv)
+export(var_selection_by_permute)
+export(var_selection_by_permute_cv)
 
 
 S3method(predict, bartMachine)

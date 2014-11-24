@@ -1,5 +1,6 @@
 ##function to permute columns of X and check BART's performance
 cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE){
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	#be able to handle regular expressions to find the covariates
 	
 	all_covariates = bart_machine$training_data_features_with_missing_features
@@ -44,8 +45,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 			bart_machine_samp = bart_machine_duplicate(bart_machine, X = X_samp, covariates_to_permute = covariates_left_to_permute, run_in_sample = TRUE, verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		}
 		#record permutation result
-		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)
-		destroy_bart_machine(bart_machine_samp)		
+		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)	
 	}
 	cat("\n")
   

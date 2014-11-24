@@ -39,11 +39,11 @@ public class TreeIllustration {
 	/** the root of the tree we're illustrating */
 	private bartMachineTreeNode root;
 	/** the illustration image */
-	private BufferedImage canvas;
+	private transient BufferedImage canvas;
 
 	//	private int breadth_in_num_splits;
 	private int depth_in_num_splits;
-	private HashMap<String, String> info;
+	private transient HashMap<String, String> info;
 
 	public TreeIllustration(bartMachineTreeNode root, HashMap<String, String> info) {
 		this.root = root;

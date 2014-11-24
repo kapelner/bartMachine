@@ -66,9 +66,6 @@ bart_machine = bartMachine(X, y)
 ##make predictions on the training data
 y_hat = predict(bart_machine, X)
 
-##destroy BART model
-destroy_bart_machine(bart_machine)
-
 #Classification example
 data(iris)
 iris2 = iris[51 : 150, ] #do not include the third type of flower for this example
@@ -83,9 +80,6 @@ y_hat_class = predict(bart_machine, X, type = "class")
 
 ##make class predictions on test data conservatively for ''versicolor''
 y_hat_class_conservative = predict(bart_machine, X, type = "class", prob_rule_class = 0.9)
-
-##destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 

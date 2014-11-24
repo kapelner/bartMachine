@@ -1,10 +1,10 @@
+options(java.parameters = "-Xmx2500m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
 
 #set bartMachine computing parameters
 set_bart_machine_num_cores(4)
-set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
 
 #load up data
 data(benchmark_datasets)

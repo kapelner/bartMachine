@@ -1,5 +1,6 @@
 package bartMachine;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -7,7 +8,7 @@ import java.util.Arrays;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_h_eval extends bartMachine_g_mh {
+public abstract class bartMachine_h_eval extends bartMachine_g_mh implements Serializable{
 	
 	/**
 	 * The default BART evaluation of a new observations is done via sample average of the 

@@ -1,8 +1,6 @@
+options(java.parameters = "-Xmx5000m")
 library(bartMachine)
 library(MASS)
-
-set_bart_machine_num_cores(1)
-init_java_for_bart_machine_with_mem_in_mb(3000)
 
 ###constants for simulation
 Nsim = 500
@@ -99,9 +97,6 @@ for (nsim in 1 : Nsim){
 		results_bart_w_rfi_and_mf_mar_with_bumpup[g, nsim] = bart_predict_for_test_data(bart_mod_rf_imp, Xtest_miss_rf, ytest)$rmse
 		y_hat_rf = predict(rf_mod, Xtest_miss_rf)
 		results_rf_mar_with_bumpup[g, nsim] = sqrt(sum((ytest - y_hat_rf)^2) / n_test)
-		
-		destroy_bart_machine(bart_mod)
-		destroy_bart_machine(bart_mod_rf_imp)
 		
 		cat("bart oosrmse:", results_bart_mar_with_bumpup[g, nsim], "rf oosrmse:", results_rf_mar_with_bumpup[g, nsim], "bart_with_rf_imp oosrmse:", results_bart_w_rfi_and_mf_mar_with_bumpup[g, nsim], "\n")
 		

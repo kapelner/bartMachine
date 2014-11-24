@@ -1,12 +1,14 @@
 package bartMachine;
 
+import java.io.Serializable;
+
 /**
  * The base class for any BART implementation. Contains
  * mostly instance variables and settings for the algorithm
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public abstract class bartMachine_a_base extends Classifier {
+public abstract class bartMachine_a_base extends Classifier implements Serializable {
 
 	/** all Gibbs samples for burn-in and post burn-in where each entry is a vector of pointers to the <code>num_trees</code> trees in the sum-of-trees model */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees;

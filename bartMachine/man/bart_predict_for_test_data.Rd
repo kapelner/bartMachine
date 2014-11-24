@@ -8,7 +8,7 @@ Predict for Test Data with Known Outcomes
 Utility wrapper function for computing out-of-sample metrics for a BART model when the test set outcomes are known.
 }
 \usage{
-bart_predict_for_test_data(bart_machine, Xtest, ytest)
+bart_predict_for_test_data(bart_machine, Xtest, ytest, prob_rule_class = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,9 @@ Data frame for test data containing rows at which predictions are to be made. Co
 }
   \item{ytest}{
 Actual outcomes for test data.
+}
+  \item{prob_rule_class}{
+Threshold for classification.
 }
 }
 
@@ -34,6 +37,7 @@ For regression models, a list with the following components is returned:
 For classification models, a list with the following components is returned: 
 
   \item{y_hat}{Class predictions for the test observations.}
+  \item{p_hat}{Probability estimates for the test observations.}
   \item{confusion_matrix}{A confusion matrix for the test observations.}
 
 %% ...
@@ -68,9 +72,6 @@ bart_machine = bartMachine(train_X, train_y)
 #explore performance on test data
 oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)
 print(oos_perf$rmse)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

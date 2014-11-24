@@ -49,9 +49,6 @@ bart_machine = bartMachine(X, y)
 
 #check error diagnostics
 check_bart_error_assumptions(bart_machine)
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

@@ -47,9 +47,6 @@ print(bart_machine)
 
 ##Also, the default print works too
 bart_machine
-
-##destroy BART model
-destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

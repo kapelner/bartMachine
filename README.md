@@ -4,8 +4,10 @@ bartMachine
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
-Copyright (C) 2013 Adam Kapelner & Justin Bleich, 
-Department of Statistics
+Copyright (C) 2014 Adam Kapelner1,2 & Justin Bleich2, 
+1 Department of Mathematics
+Queens College, City University of New York
+2 Department of Statistics
 The Wharton School of the University of Pennsylvania
 
 This is a Java implementation of the algorithm found in Chipman, George, & McCulloch 

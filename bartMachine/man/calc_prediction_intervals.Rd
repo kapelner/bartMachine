@@ -68,9 +68,6 @@ bart_machine = bartMachine(X, y)
 #get prediction interval
 pred_int = calc_prediction_intervals(bart_machine, X)
 print(head(pred_int))
-
-#destroy BART model
-destroy_bart_machine(bart_machine)
 }
 
 }

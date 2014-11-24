@@ -1,12 +1,11 @@
 ##bart vs bayestree speed runs
-
+options(java.parameters = "-Xmx5000m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
 
-set_bart_machine_memory(2500)
 
-nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000)
+nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000)
 p = 20
 
 n = 20000
@@ -36,7 +35,6 @@ for (n in nlist){
 	t3 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t4 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_1_m = t4 - t3
 	cat("Our 1 core memcache time =", our_time_1_m, "\n")  
 	time_mat[as.character(n), "Us1coremem"] = our_time_1_m
@@ -45,7 +43,6 @@ for (n in nlist){
 	t5 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t6 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_1 = t6 - t5
 	cat("Our 1 core time =", our_time_1, "\n") 
 	time_mat[as.character(n), "Us1core"] = our_time_1
@@ -54,7 +51,6 @@ for (n in nlist){
 	t7 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = TRUE)
 	t8 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4_m = t8 - t7
 	cat("Our 4 core memcache time =", our_time_4_m, "\n")
 	time_mat[as.character(n), "Us4coremem"] = our_time_4_m
@@ -63,7 +59,6 @@ for (n in nlist){
 	t9 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE)
 	t10 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4 = t10 - t9
 	cat("Our 4 core time =", our_time_4, "\n")
 	time_mat[as.character(n), "Us4core"] = our_time_4
@@ -72,7 +67,6 @@ for (n in nlist){
 	t11 = Sys.time()
 	bart_machine = bartMachine(as.data.frame(X), y, num_trees = num_trees, mem_cache_for_speed = FALSE, run_in_sample = FALSE)
 	t12 = Sys.time()
-	destroy_bart_machine(bart_machine)
 	our_time_4_no_run = t12 - t11
 	cat("Our 4 core time with no run in sample =", our_time_4_no_run, "\n")
 	time_mat[as.character(n), "Us4core_no_run"] = our_time_4_no_run  
@@ -89,23 +83,59 @@ for (n in nlist){
 
 
 # convert some minutes to seconds
-time_mat[8 : 9, ] = time_mat[8 : 9, ] * 60
+time_mat[8, ] = time_mat[8, ] * 60
 time_mat[7, c(1,2,3,5,7)] = time_mat[7, c(1,2,3,5,7)] * 60
 time_mat[6, 1] = time_mat[6, 1] * 60
 
 #Figure 1a
 COLORS = c("red", "darkblue", "darkblue", "darkviolet", "darkviolet", "darkgreen", "darkorange")
-LTYS = c(1, 1, 2, 1, 2, 1, 1) 
+LTYS = c(1, 1, 2, 1, 2, 3, 4) 
+LENDS = c(0, 1, 2, 1, 2, 0, 2)
+LJOINS = c(1, 2, 1, 2, 1, 1, 1)
+PCHS = c(0, 1, 2, 4, 10, 12, 11)
 NAMES = c("BayesTree", "bartMachine (1 core,\n memcache)", "bartMachine (1 core)", "bartMachine (4 cores,\n memcache)", "bartMachine (4 cores)", "bartMachine (4 cores,\n no in-sample)", "randomForest")
-plot(nlist / 1000, time_mat[, 1] / 60, type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size (1000's)", ylab = "Minutes", ylim = c(0, 12))
+plot(nlist / 1000, time_mat[, 1] / 60, type = "o", 
+		col = COLORS[1], 
+		lty = LTYS[2],
+		ljoin = LJOINS[1],
+		lend = LENDS[1],
+		pch = PCHS[1],
+		lwd = 3, 
+		xlab = "Sample Size (1000's)", 
+		ylab = "Minutes", 
+		ylim = c(0, 12))
 for (j in 2 : 7){
-	lines(nlist / 1000, time_mat[, j] / 60, type = "o", col = COLORS[j], lty = LTYS[j], lwd = 3)
+	lines(nlist / 1000, time_mat[, j] / 60, type = "o", 
+			col = COLORS[j], 
+			lty = LTYS[j], 
+			ljoin = LJOINS[j],
+			lend = LENDS[j],
+			pch = PCHS[j],
+			lwd = 3)
 }
-legend(x = -2, y = 13, NAMES, COLORS, lty = LTYS)
+legend(x = 0, y = 13, NAMES, 
+		COLORS, 
+		lty = LTYS,
+		pch = PCHS)
 
 #Figure 1b
-plot(nlist, time_mat[, 1], type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size", ylab = "Seconds", ylim = c(0, 27), xlim = c(100, 2000))
+plot(nlist, time_mat[, 1], type = "o", 
+		col = COLORS[1], 
+		lty = LTYS[1], 
+		ljoin = LJOINS[1],
+		lend = LENDS[1],
+		pch = PCHS[1],
+		lwd = 3, xlab = "Sample Size", ylab = "Seconds", ylim = c(0, 27), xlim = c(100, 2000))
 for (j in 2 : 7){
-	lines(nlist, time_mat[, j], type = "o", col = COLORS[j], lty = LTYS[j], lwd = 3)
+	lines(nlist, time_mat[, j], type = "o", 
+			col = COLORS[j], 
+			lty = LTYS[j], 
+			ljoin = LJOINS[j],
+			lend = LENDS[j],
+			pch = PCHS[j],
+			lwd = 3)
 }
-legend(x = -2, y = 29, NAMES, COLORS, lty = LTYS)
+legend(x = 0, y = 29, NAMES, 
+		COLORS, 
+		lty = LTYS,
+		pch = PCHS)
