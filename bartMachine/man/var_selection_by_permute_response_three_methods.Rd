@@ -1,5 +1,5 @@
-\name{var_selection_by_permute_response_three_methods}
-\alias{var_selection_by_permute_response_three_methods}
+\name{var_selection_by_permute}
+\alias{var_selection_by_permute}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Perform Variable Selection using Three Threshold-based Procedures
@@ -8,7 +8,7 @@ Perform Variable Selection using Three Threshold-based Procedures
 Performs variable selection using the three thresholding methods introduced in Bleich et al. (2013). 
 }
 \usage{
-var_selection_by_permute_response_three_methods(bart_machine, 
+var_selection_by_permute(bart_machine, 
 num_reps_for_avg = 10, num_permute_samples = 100, 
 num_trees_for_permute = 20, alpha = 0.05, 
 plot = TRUE, num_var_plot = Inf, bottom_margin = 10)
@@ -73,7 +73,7 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{var_selection_by_permute_response_cv}}, \code{\link{investigate_var_importance}}
+\code{\link{var_selection_by_permute}}, \code{\link{investigate_var_importance}}
 }
 \examples{
 \dontrun{
@@ -88,7 +88,7 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 bart_machine = bartMachine(X, y)
 
 #variable selection
-var_sel = var_selection_by_permute_response_three_methods(bart_machine)
+var_sel = var_selection_by_permute(bart_machine)
 print(var_sel$important_vars_local_names)
 print(var_sel$important_vars_global_max_names)
 }

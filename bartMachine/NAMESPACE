@@ -34,8 +34,8 @@ export(build_bart_machine_cv)
 export(bartMachineCV)
 export(k_fold_cv)
 
-export(var_selection_by_permute_response_three_methods)
-export(var_selection_by_permute_response_cv)
+export(var_selection_by_permute)
+export(var_selection_by_permute_cv)
 
 
 S3method(predict, bartMachine)

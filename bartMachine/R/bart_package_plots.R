@@ -39,7 +39,7 @@ plot_tree_depths = function(bart_machine){
 	num_after_burn_in_per_core = nrow(tree_depths_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Depth by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
+		main = "Tree Depth by MCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
 		ylab = paste("Tree Depth for all cores"), ylim = c(0, max(tree_depths_after_burn_in)))
 	#plot burn in
 	for (t in 1 : ncol(tree_depths_after_burn_in)){
@@ -75,7 +75,7 @@ plot_tree_num_nodes = function(bart_machine){
 	num_after_burn_in_per_core = nrow(tree_num_nodes_and_leaves_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Num Nodes And Leaves by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
+		main = "Tree Num Nodes And Leaves by\nMCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
 		ylab = paste("Tree Num Nodes and Leaves for all cores"), 
 		ylim = c(0, max(tree_num_nodes_and_leaves_after_burn_in)))
 	#plot burn in
@@ -120,7 +120,7 @@ plot_mh_acceptance_reject = function(bart_machine){
 	
 	
 	plot(1 : num_gibbs_per_core, rep(0, num_gibbs_per_core), ylim = c(0, 1), type = "n", 
-			main = "Percent Acceptance by Gibbs Sample", xlab = "Gibbs Sample", ylab = "% of Trees Accepting")
+			main = "Percent Acceptance by MCMC Iteration", xlab = "MCMC Iteration", ylab = "% of Trees Accepting")
 	abline(v = bart_machine$num_burn_in, col = "grey")
 	#plot burn in
 	points(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees, col = "grey")
@@ -295,9 +295,9 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	avg_sigsqs_after_burn_in = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	plot(sigsqs, 
-		main = paste("Sigsq Estimates over Gibbs Samples"), 
-		xlab = "Gibbs sample (yellow lines: after burn-in 95% CI)", 
-		ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
+		main = paste("Sigsq Estimates over MCMC Iteration"), 
+		xlab = "MCMC Iteration (yellow lines: after burn-in 95% CI)", 
+		ylab = paste("Sigsq by MCMC Iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
 		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
 		pch = ".", 
 		cex = 3,

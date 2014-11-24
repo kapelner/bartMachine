@@ -1,5 +1,5 @@
 ##bart vs bayestree speed runs
-options(java.parameters = "-Xmx2500m")
+options(java.parameters = "-Xmx5000m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
@@ -89,7 +89,7 @@ time_mat[6, 1] = time_mat[6, 1] * 60
 
 #Figure 1a
 COLORS = c("red", "darkblue", "darkblue", "darkviolet", "darkviolet", "darkgreen", "darkorange")
-LTYS = c(1, 1, 2, 1, 2, 1, 1) 
+LTYS = c(0, 1, 2, 3, 4, 5, 6) 
 NAMES = c("BayesTree", "bartMachine (1 core,\n memcache)", "bartMachine (1 core)", "bartMachine (4 cores,\n memcache)", "bartMachine (4 cores)", "bartMachine (4 cores,\n no in-sample)", "randomForest")
 plot(nlist / 1000, time_mat[, 1] / 60, type = "o", col = COLORS[1], lty = LTYS[1], lwd = 3, xlab = "Sample Size (1000's)", ylab = "Minutes", ylim = c(0, 12))
 for (j in 2 : 7){

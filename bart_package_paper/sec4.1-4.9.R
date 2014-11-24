@@ -31,17 +31,16 @@ k_fold_cv(X, y, k_folds = 10, verbose = FALSE)
 
 #Figure 3
 par(mar = c(4.3, 4.5, 1.5, 0.5), mgp = c(3, 1.3, 0))
-rmse_by_num_trees(bart_machine, num_replicates = 2, cex.axis = 2.0, cex.lab = 2.0, cex.main = 2.0)
+rmse_by_num_trees(bart_machine, num_replicates = 20, cex.axis = 0.9, cex.lab = 0.9, cex.main = 1.1)
 
 bart_machine_cv = bartMachineCV(X, y)
 bart_machine_cv
 
-oos_stats_cv = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200, verbose = FALSE)
-oos_stats_cv
+k_fold_cv(X, y, k_folds = 10, k = 2, nu = 3, q = 0.9, num_trees = 200, verbose = FALSE)
 
-predict(bart_machine_cv, X[1 : 14, ])
+predict(bart_machine_cv, X[1 : 7, ])
 
-##### section 4.4
+##### section 4.3
 
 #Figure 4
 check_bart_error_assumptions(bart_machine_cv)
@@ -49,7 +48,7 @@ check_bart_error_assumptions(bart_machine_cv)
 #Figure 5
 plot_convergence_diagnostics(bart_machine_cv)
 
-##### section 4.5
+##### section 4.4
 
 calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
 calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
@@ -59,12 +58,12 @@ plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
 #Figure 6b
 plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 
-##### section 4.6
+##### section 4.5
 
 #Figure 7
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
-##### section 4.7
+##### section 4.6
 
 #Figure 8a
 cov_importance_test(bart_machine_cv, covariates = c("width"))
@@ -84,14 +83,14 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 #Figure 8d
 cov_importance_test(bart_machine_cv)
 
-##### section 4.8
+##### section 4.7
 
 #Figure 9a
 pd_plot(bart_machine_cv, j = "horsepower")
 #Figure 9b
 pd_plot(bart_machine_cv, j = "stroke")
 
-##### section 4.9
+##### section 4.8
 
 data(automobile)
 #pull out X and y
@@ -113,16 +112,16 @@ x_star[c("curb_weight", "symboling")] = NA
 calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
 
 
-##### section 4.10
+##### section 4.9
 
 #Figure 10
-vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples = 10)
+vs = var_selection_by_permute(bart_machine, bottom_margin = 10, num_permute_samples = 10)
 
 vs$important_vars_local_names
 vs$important_vars_global_max_names
 vs$important_vars_global_se_names
 
-cv_vars = var_selection_by_permute_response_cv(bart_machine, num_permute_samples = 10)
+cv_vars = var_selection_by_permute_cv(bart_machine, num_permute_samples = 10)
 cv_vars
 
 

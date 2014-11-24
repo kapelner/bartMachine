@@ -1,5 +1,5 @@
 ##variable selection procedures from Bleich et al. (2013)
-var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
+var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
@@ -142,7 +142,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 ##var selection -- choose best method via CV
-var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
+var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
@@ -173,7 +173,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		bart_machine_temp = bart_machine_duplicate(bart_machine, X = as.data.frame(training_X_k), y = training_y_k, run_in_sample = FALSE, verbose = FALSE)
     
         ##do variable selection
-		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
+		bart_variables_select_obj_k = var_selection_by_permute(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
 				num_trees_for_permute = num_trees_for_permute,
         		num_reps_for_avg = num_reps_for_avg,                                                                          
@@ -226,7 +226,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 
 	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
 	cat("final", "\n")
-	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
+	bart_variables_select_obj = var_selection_by_permute(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
 	    	num_reps_for_avg = num_reps_for_avg,                                                                        
