@@ -139,9 +139,7 @@ Thus, the default is \code{FALSE}.
 Prints information about progress of the algorithm to the screen. 
 }
 }
-\details{
 
-}
 \value{
 Returns an object of class ``bartMachine''. The ``bartMachine'' object contains a list of the following components:
 

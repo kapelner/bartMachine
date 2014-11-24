@@ -514,6 +514,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
+          k_folds = k_folds,
 					folds_vec = folds_vec, ##will hold the cv folds constant 
 					num_trees = num_trees,
 					k = k,

@@ -21,7 +21,7 @@ Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a 
   \item{k_folds}{
 Number of folds to cross-validate over. This argument is ignored if \code{folds_vec} is non-null.
 }
-  \item{k_folds}{
+  \item{folds_vec}{
 An integer vector of indices specifying which fold each observation belongs to. 
 }
   \item{verbose}{
