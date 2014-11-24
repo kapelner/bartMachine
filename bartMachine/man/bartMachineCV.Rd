@@ -50,7 +50,7 @@ Additional arguments to be passed to \code{bartMachine}.
 
 \value{
 Returns an object of class ``bartMachine'' with the set of hyperparameters chosen via cross-validation. We also return a matrix ``cv_stats''
-which contains the out-of-sample RMSE for each hyperparameter set tried.
+which contains the out-of-sample RMSE for each hyperparameter set tried and ``folds'' which gives the fold in which each observation fell across the k-folds.
 }
 \references{
 HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.

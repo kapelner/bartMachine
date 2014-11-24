@@ -364,7 +364,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1])
+			y_hat_train = factor(ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1]), levels = y_levels)
 			#return a bunch more stuff
 			bart_machine$p_hat_train = p_hat_train
 			bart_machine$y_hat_train = y_hat_train
@@ -496,6 +496,11 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs), ncol = 6)
 	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "oos_error", "% diff with lowest")
 	
+  ##generate a single set of folds to keep using
+	temp = rnorm(length(y))
+	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+	                include.lowest= T, labels = F)
+  
     #cross-validate
 	run_counter = 1
 	for (k in k_cvs){
@@ -509,7 +514,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
-					k_folds = k_folds,
+					folds_vec = folds_vec, ##will hold the cv folds constant 
 					num_trees = num_trees,
 					k = k,
 					nu = nu_q[1],
@@ -551,6 +556,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
 	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
 	bart_machine_cv$cv_stats = cv_stats
+  bart_machine_cv$folds = folds_vec
 	bart_machine_cv
 }
 

@@ -8,7 +8,7 @@ Estimate Out-of-sample Error with K-fold Cross validation
 Builds a BART model using a specified set of arguments to \code{build_bart_machine} and estimates the out-of-sample performance by using k-fold cross validation.
 }
 \usage{
-k_fold_cv(X, y, k_folds = 5, verbose = FALSE, ...)
+k_fold_cv(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,7 +19,10 @@ Data frame of predictors. Factors are automatically converted to dummies interal
 Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
 }
   \item{k_folds}{
-Number of folds to cross-validate over.
+Number of folds to cross-validate over. This argument is ignored if \code{folds_vec} is non-null.
+}
+  \item{k_folds}{
+An integer vector of indices specifying which fold each observation belongs to. 
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 
@@ -33,16 +36,19 @@ For each fold, a new BART model is trained (using the same set of arguments) and
 }
 \value{
 For regression models, a list with the following components is returned:
-
+  \item{y_hat}{Predictions for the observations computed on the fold for which the observation was omitted from the training set.}
   \item{L1_err}{Aggregate L1 error across the folds.}
   \item{L2_err}{Aggregate L1 error across the folds.}
   \item{rmse}{Aggregate RMSE across the folds.}
+  \item{folds}{Vector of indices specifying which fold each observation belonged to.}
 
 For classification models, a list with the following components is returned: 
 
-  \item{y_hat}{Class predictions for the test observations.}
+  \item{y_hat}{Class predictions for the observations computed on the fold for which the observation was omitted from the training set.}
+    \item{p_hat}{Probability estimates for the observations computed on the fold for which the observation was omitted from the training set.}
   \item{confusion_matrix}{Aggregate confusion matrix across the folds.}
     \item{misclassification_error}{Total misclassification error across the folds.}
+    \item{folds}{Vector of indices specifying which fold each observation belonged to.}
 }
 
 \author{

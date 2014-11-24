@@ -21,11 +21,11 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 
 ##private function
 labels_to_y_levels = function(bart_machine, labels){
-	ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2])
+	factor(ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)
 }
 
 ##utility function for predicting when test outcomes are known
-bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
+bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_class = NULL){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "regression"){ #regression list
@@ -41,7 +41,12 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 				e = ytest - ytest_hat
 		)
 	} else { ##classification list
-	    ytest_hat = predict(bart_machine, Xtest, type = "class")
+    if(class(ytest)!= "factor") stop("ytest must be a factor.")
+    if(!all(levels(ytest) %in% bart_machine$y_levels)) stop("New factor level not seen in training introduced. Please remove.")
+    ptest_hat = predict(bart_machine, Xtest, type = "prob")
+    ytest_labels = ptest_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+    ytest_hat = labels_to_y_levels(bart_machine, ytest_labels)
+    
 		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
 		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
 		colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), "model errors")		
@@ -52,7 +57,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
 		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
 		
-		list(y_hat = ytest_hat, confusion_matrix = confusion_matrix)
+		list(y_hat = ytest_hat, p_hat = ptest_hat, confusion_matrix = confusion_matrix)
 	}
 }
 
