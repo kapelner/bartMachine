@@ -1,10 +1,10 @@
-options(java.parameters = "-Xmx2500m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
 
 #set bartMachine computing parameters
 set_bart_machine_num_cores(4)
+set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
 
 #load up data
 data(benchmark_datasets)
@@ -37,6 +37,9 @@ oos_rmse_results = array(NA, c(length(datalist_names), 3, NREP))
 rownames(oos_rmse_results) = datalist_names
 colnames(oos_rmse_results) = c("bartMachine", "BayesTree", "RF")
 
+run_time_results = array(NA, c(length(datalist_names), 3, NREP))
+rownames(run_time_results) = datalist_names
+colnames(run_time_results) = c("bartMachine", "BayesTree", "RF")
 
 k_fold_cv_bayes_tree = function(X, y, k_folds = 5, ...){	
 	n = nrow(X)	
@@ -81,7 +84,7 @@ k_fold_cv_bayes_tree = function(X, y, k_folds = 5, ...){
 }
 
 k_fold_cv_rf = function(X, y, k_folds = 5, ...){	
-	n = nrow(X)	
+  n = nrow(X)	
 	p = ncol(X)
 	
 	if (k_folds <= 1 || k_folds > n){
@@ -100,6 +103,7 @@ k_fold_cv_rf = function(X, y, k_folds = 5, ...){
 	
 	Xy = data.frame(X, y) ##set up data
 	
+  
 	for (k in 1 : k_folds){
 		cat(".")
 		holdout_index_i = split_points[k]
@@ -119,6 +123,7 @@ k_fold_cv_rf = function(X, y, k_folds = 5, ...){
 		L2_err = L2_err + sum((y_test_k - y_hat)^2)
 	}
 	cat("\n")
+  
 	list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2))	
 }
 
@@ -129,29 +134,57 @@ for (nrep in 1 : NREP){
 		X = data[, 1 : (ncol(data)- 1)]
 		y = data[, ncol(data)] ##response is last
 		
+    ##bartmachine
+    
+		t0 = Sys.time()
+    
 		rmse_bart_machine = k_fold_cv(X, y, k_folds = KFOLDS, verbose = FALSE)
+    
+		run_time = Sys.time() - t0
+    
 		oos_rmse_results[dname, 1, nrep] = rmse_bart_machine$rmse
-		
+		run_time_results[dname, 1, nrep] = run_time
+    
+    #bayestree
+    
+		t0 = Sys.time()
+    
 		rmse_rbart = k_fold_cv_bayes_tree(X, y, k_folds = KFOLDS)
-		oos_rmse_results[dname, 2, nrep] = rmse_rbart$rmse
 		
+		run_time = Sys.time() - t0
+    
+    oos_rmse_results[dname, 2, nrep] = rmse_rbart$rmse
+		run_time_results[dname, 2, nrep] = run_time
+    
+    ##rf
+    
+		t0 = Sys.time()
+    
 		rmse_rf = k_fold_cv_rf(X, y, k_folds = KFOLDS)
+    
+		run_time = Sys.time() - t0
+    
 		oos_rmse_results[dname, 3, nrep] = rmse_rf$rmse
-		
+		run_time_results[dname, 3, nrep] = run_time
+    
 	}	
 	print(oos_rmse_results[,, nrep])	
 }
 save(oos_rmse_results, file = "oos_rmse_results.RData")
-
+save(run_time_results, file = "run_time_results.RData")
 
 oos_rmse_results_avg = apply(oos_rmse_results, c(1, 2), mean)
+run_time_results_avg = apply(run_time_results, c(1, 2), mean)
 
 #table B1
 library(xtable)
-xtable(round(oos_rmse_results_avg, 3))
+xtable(oos_rmse_results_avg, digits = 3)
+xtable(run_time_results_avg, digits = 1)
+print(tab, digits = 5)
+
 
 #do naive comparisons
-alpha_bonferroni = 0.05 / nrow(oos_rmse_results)
+alpha_bonferroni = 0.05 / (2 * nrow(oos_rmse_results))
 t.test(oos_rmse_results[1, 1 ,], oos_rmse_results[1, 2 ,])$p.value < alpha_bonferroni
 t.test(oos_rmse_results[2, 1 ,], oos_rmse_results[2, 2 ,])$p.value < alpha_bonferroni
 t.test(oos_rmse_results[3, 1 ,], oos_rmse_results[3, 2 ,])$p.value < alpha_bonferroni

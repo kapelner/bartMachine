@@ -5,7 +5,7 @@ citEntry(
 	 title       = "bart{M}achine: Machine Learning With Bayesian Additive Regression Trees",
 	 author      = personList(as.person("Adam Kapelner"), as.person("Justin Bleich")),
 	 journal     = "Ar{X}iv e-prints",
-	 year        = "2013", 
-	 textVersion = "Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning. ArXiv e-prints, 2013",
+	 year        = "2014", 
+	 textVersion = "Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning. ArXiv e-prints, 2014",
 	 header      = "To cite bartMachine in publications, please use:"
 )
