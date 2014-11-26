@@ -6,6 +6,7 @@ version 1.1.1
 * k_fold_cv now has random splits and the y-hats and p-hats are returned
 * jpackage is now used for initializing Java and thus "options(java.parameters = '...')" is used instead of set_bart_machine_memory which has been removed
 * vignette and documentation are now revamped
+* setting verbose flag set to FALSE eliminates Java output as well
 
 version 1.0.4
 

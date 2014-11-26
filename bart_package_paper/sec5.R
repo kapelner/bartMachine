@@ -3,7 +3,7 @@ library(bartMachine)
 library(MASS)
 
 data(Pima.te)
-X = Pima.te[, -8]
+X = data.frame(Pima.te[, -8])
 y = Pima.te[, 8]
 
 set_bart_machine_num_cores(4)

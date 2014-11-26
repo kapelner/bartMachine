@@ -29,7 +29,9 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		//get Z's
 		SampleZs();
 		for (int t = 0; t < num_trees; t++){
-			GibbsSampleDebugMessage(t);
+			if (verbose){
+				GibbsSampleDebugMessage(t);
+			}
 			SampleTree(gibbs_sample_num, t, bart_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
