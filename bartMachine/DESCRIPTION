@@ -5,7 +5,7 @@ Version: 1.1.1
 Date: 2014-11-24
 Author: Adam Kapelner and Justin Bleich (R package), see COPYRIGHTS file for the authors of the java libraries
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
-Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization
+Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
 License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.8-4), car, randomForest, missForest
 SystemRequirements: Java (>= 1.6.27)
