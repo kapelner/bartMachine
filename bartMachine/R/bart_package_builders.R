@@ -577,3 +577,7 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 	}
 	X_with_missing
 }
+
+destroy_bart_machine = function(bart_machine){
+	#does nothing anymore...
+}
