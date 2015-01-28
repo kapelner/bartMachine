@@ -27,6 +27,7 @@ impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
 serialize = FALSE,
+seed = NULL,
 verbose = TRUE)
 
 build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
@@ -49,6 +50,7 @@ impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
 mem_cache_for_speed = TRUE,
 serialize = FALSE,
+seed = NULL,
 verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -134,6 +136,9 @@ of predictors is large, the memory requirements become large. We recommend keepi
 Setting this option to \code{TRUE} will allow serialization of bartMachine objects which allows for persistence between
 R sessions if the object is saved and reloaded. Note that serialized objects can take up a large amount of memory. 
 Thus, the default is \code{FALSE}.  
+}
+  \item{seed}{
+Optional: sets the seed in both R and Java. Default is \code{NULL} which does not set the seed in R nor Java.  
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 

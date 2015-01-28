@@ -23,9 +23,10 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
     impute_missingness_with_x_j_bar_for_lm = TRUE,
     mem_cache_for_speed = TRUE,
 	serialize = FALSE,
+	seed = NULL,
     verbose = TRUE){
  
-    bart_machine = build_bart_machine(X, y, Xy, 
+    build_bart_machine(X, y, Xy, 
 	    num_trees, #
 	    num_burn_in, 
 	    num_iterations_after_burn_in, 
@@ -50,9 +51,8 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	    impute_missingness_with_x_j_bar_for_lm,
 	    mem_cache_for_speed,
 		serialize,
+		seed,
 	    verbose)
-
-    bart_machine
 }
 
 

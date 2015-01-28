@@ -1,3 +1,7 @@
+version 1.1.2
+
+* there is now a seed argument which sets the seed in both R and Java (for debugging)
+
 version 1.1.1
 
 * bartMachine now serializes models for transport in an image file (use serialize = TRUE option)

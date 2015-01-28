@@ -27,6 +27,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		serialize = FALSE,
+		seed = NULL,
 		verbose = TRUE){
 	
 	if (verbose){
@@ -247,6 +248,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
+	if (!is.null(seed)){
+		#set the seed in R
+		set.seed(seed)
+		#set the seed in Java
+		.jcall(java_bart_machine, "V", "setSeed", as.integer(seed))
+	}
 	
 	#now we need to set random samples
 	.jcall(java_bart_machine, "V", "setNormSamples", rnorm(num_rand_samps_in_library))
@@ -333,6 +340,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			serialize = serialize,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
+			seed = seed,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
 	#if the user used a cov prior vec, pass it back

@@ -557,6 +557,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	public void setVerbose(boolean verbose){
 		this.verbose = verbose;
 	}
+
+	public void setSeed(int seed){
+		StatToolbox.setSeed(seed);
+	}	
 	
 	public void setNumCores(int num_cores){
 		this.num_cores = num_cores;
