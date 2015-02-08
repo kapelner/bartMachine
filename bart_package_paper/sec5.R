@@ -20,10 +20,10 @@ oos_stats$confusion_matrix
 predict(bart_machine_cv, X[1 : 2, ], type = "prob")
 predict(bart_machine_cv, X[1 : 2, ], type = "class")
 
-# Figure 12
+# Figure 11
 cov_importance_test(bart_machine_cv, covariates = c("age"))
 
-# Figure 13
+# Figure 12
 pd_plot(bart_machine_cv, j = "glu")
 
 calc_credible_intervals(bart_machine_cv, X[1 : 2, ])

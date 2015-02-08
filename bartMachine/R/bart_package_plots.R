@@ -296,7 +296,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	
 	plot(sigsqs, 
 		main = paste("Sigsq Estimates over MCMC Iteration"), 
-		xlab = "MCMC Iteration (yellow lines: after burn-in 95% CI)", 
+		xlab = "MCMC Iteration (green lines: after burn-in 95% CI)", 
 		ylab = paste("Sigsq by MCMC Iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
 		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
 		pch = ".", 
@@ -304,8 +304,8 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 		col = "gray")
 	points(sigsqs, pch = ".", col = "red")
 	ppi_sigsqs = quantile(sigsqs[num_burn_in : length(sigsqs)], c(.025, .975))
-	abline(a = ppi_sigsqs[1], b = 0, col = "yellow")
-	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")
+	abline(a = ppi_sigsqs[1], b = 0, col = "darkgreen")
+	abline(a = ppi_sigsqs[2], b = 0, col = "darkgreen")
 	abline(a = avg_sigsqs_after_burn_in, b = 0, col = "blue")
 	abline(v = num_burn_in, col = "gray")
 	if (bart_machine$num_cores > 1){
@@ -313,7 +313,6 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 			abline(v = num_burn_in + (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
 		}		
 	}
-
 }
 
 ##function for investigating variable inclusion proportions

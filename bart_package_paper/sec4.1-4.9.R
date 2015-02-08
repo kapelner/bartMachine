@@ -24,12 +24,11 @@ bart_machine = bartMachine(X, y)
 #This means that rJava is configured with a different version of Java than bartMachine was compiled in. You may have to
 #download the code and compile it yourself using ant.
 
-#Figure 2
 bart_machine
 
 k_fold_cv(X, y, k_folds = 10, verbose = FALSE)
 
-#Figure 3
+#Figure 2
 par(mar = c(4.3, 4.5, 1.5, 0.5), mgp = c(3, 1.3, 0))
 rmse_by_num_trees(bart_machine, num_replicates = 20, cex.axis = 0.9, cex.lab = 0.9, cex.main = 1.1)
 
@@ -42,10 +41,10 @@ predict(bart_machine_cv, X[1 : 7, ])
 
 ##### section 4.3
 
-#Figure 4
+#Figure 3
 check_bart_error_assumptions(bart_machine_cv)
 
-#Figure 5
+#Figure 4
 plot_convergence_diagnostics(bart_machine_cv)
 
 ##### section 4.4
@@ -53,23 +52,23 @@ plot_convergence_diagnostics(bart_machine_cv)
 calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
 calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
 
-#Figure 6a
+#Figure 5a
 plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
-#Figure 6b
+#Figure 5b
 plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 
 ##### section 4.5
 
-#Figure 7
+#Figure 6
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
 ##### section 4.6
 
-#Figure 8a
+#Figure 7a
 cov_importance_test(bart_machine_cv, covariates = c("width"))
-#Figure 8b
+#Figure 7b
 cov_importance_test(bart_machine_cv, covariates = c("body_style"))
-#Figure 8c
+#Figure 7c
 cov_importance_test(bart_machine_cv, covariates = c("width",
 	"curb_weight",
 	"city_mpg",
@@ -80,14 +79,14 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 	"highway_mpg", 
 	"peak_rpm", 
 	"normalized_losses"))
-#Figure 8d
+#Figure 7d
 cov_importance_test(bart_machine_cv)
 
 ##### section 4.7
 
-#Figure 9a
+#Figure 8a
 pd_plot(bart_machine_cv, j = "horsepower")
-#Figure 9b
+#Figure 8b
 pd_plot(bart_machine_cv, j = "stroke")
 
 ##### section 4.8
@@ -114,7 +113,7 @@ calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
 
 ##### section 4.9
 
-#Figure 10
+#Figure 9
 vs = var_selection_by_permute(bart_machine, bottom_margin = 10, num_permute_samples = 10)
 
 vs$important_vars_local_names
