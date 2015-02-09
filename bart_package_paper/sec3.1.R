@@ -114,7 +114,7 @@ for (j in 2 : 7){
 			pch = PCHS[j],
 			lwd = 3)
 }
-legend(x = 0, y = 13, NAMES, 
+legend(x = -0.7, y = 13, NAMES, 
 		col = COLORS, 
 		lty = LTYS,
 		pch = PCHS)
@@ -136,7 +136,7 @@ for (j in 2 : 7){
 			pch = PCHS[j],
 			lwd = 3)
 }
-legend(x = 0, y = 29, NAMES, 
+legend(x = 20, y = 29, NAMES, 
 		col = COLORS, 
 		lty = LTYS,
 		pch = PCHS)
