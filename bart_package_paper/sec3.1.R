@@ -1,5 +1,5 @@
 ##bart vs bayestree speed runs
-options(java.parameters = "-Xmx5000m")
+options(java.parameters = "-Xmx10000m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)
@@ -86,6 +86,7 @@ for (n in nlist){
 time_mat[8, ] = time_mat[8, ] * 60
 time_mat[7, c(1,2,3,5,7)] = time_mat[7, c(1,2,3,5,7)] * 60
 time_mat[6, 1] = time_mat[6, 1] * 60
+save(time_mat, file = "time_mat.RData")
 
 #Figure 1a
 COLORS = c("red", "darkblue", "darkblue", "darkviolet", "darkviolet", "darkgreen", "darkorange")
@@ -114,7 +115,7 @@ for (j in 2 : 7){
 			lwd = 3)
 }
 legend(x = 0, y = 13, NAMES, 
-		COLORS, 
+		col = COLORS, 
 		lty = LTYS,
 		pch = PCHS)
 
@@ -136,6 +137,6 @@ for (j in 2 : 7){
 			lwd = 3)
 }
 legend(x = 0, y = 29, NAMES, 
-		COLORS, 
+		col = COLORS, 
 		lty = LTYS,
 		pch = PCHS)

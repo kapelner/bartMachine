@@ -5,5 +5,5 @@
 
 .onAttach = function(libname, pkgname){
   num_gigs_ram_available = .jcall(.jnew("java/lang/Runtime"), "J", "maxMemory") / 1e9
-  packageStartupMessage(paste("Welcome to bartMachine v", VERSION, ". ", round(num_gigs_ram_available, 2), "GB memory available\n", sep = ""))
+  packageStartupMessage(paste("Welcome to bartMachine v", VERSION, "! You have ", round(num_gigs_ram_available, 2), "GB memory available.\n", sep = ""))
 }
