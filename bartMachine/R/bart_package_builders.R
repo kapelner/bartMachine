@@ -29,7 +29,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		serialize = FALSE,
 		seed = NULL,
 		verbose = TRUE){
-	
+
 	if (verbose){
 		cat("bartMachine initializing with", num_trees, "trees...\n")	
 	}	

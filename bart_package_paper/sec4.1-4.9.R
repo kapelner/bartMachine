@@ -22,7 +22,7 @@ bart_machine = bartMachine(X, y)
 #If you get the following error:
 #Unsupported major.minor version 51.0
 #This means that rJava is configured with a different version of Java than bartMachine was compiled in. You may have to
-#download the code and compile it yourself using ant.
+#download the code from github and compile it yourself using ant.
 
 bart_machine
 

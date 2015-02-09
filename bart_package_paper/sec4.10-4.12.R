@@ -1,36 +1,39 @@
-##Generate Friedman data
-library(bartMachine)
-
-set_bart_machine_num_cores(4)
 options(java.parameters = "-Xmx2500m")
+library(bartMachine)
+set_bart_machine_num_cores(4)
+
 
 gen_friedman_data = function(n, p, sigma){
   if (p < 5){
 	  stop("p must be greater than or equal to 5")
   }
-  X = matrix(runif(n * p ), nrow = n, ncol = p)
+  X = matrix(runif(n * p), nrow = n, ncol = p)
   y = 10 * sin(pi * X[, 1] *X[, 2]) + 20 *(X[, 3] - .5)^2 + 10 * X[, 4] + 5 * X[, 5] + rnorm(n, 0, sigma)
   data.frame(y, X)
 }
 
 ##### section 4.10
 
-#make training data
-fr_data = gen_friedman_data(500, 100, 1)
-y = fr_data$y
-X = fr_data[, 2 : 101]
+#set up prior
+p = 5
+p0 = 95
+prior = c(rep(5, times = p), rep(1, times = p0)) 
 
-#make test data
-fr_data = gen_friedman_data(500, 100, 1)
-Xtest = fr_data[, 2 : 101]
+#make training and test data
+ntrain = 500
+sigma = 1
+fr_data = gen_friedman_data(ntrain, p + p0, sigma)
+y = fr_data$y
+X = fr_data[, 2 : (p + p0 + 1)]
+ntest = 500
+fr_data = gen_friedman_data(ntest, p + p0, sigma)
+Xtest = fr_data[, 2 : (p + p0 + 1)]
 ytest = fr_data$y
 
 #build uninformed and informed models
 bart_machine = bartMachine(X, y)
-
-prior = c(rep(5, times = 5), rep(1, times = 95)) 
 bart_machine_informed = bartMachine(X, y, cov_prior_vec = prior)
-
+#test out of sample
 bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
 bart_predict_for_test_data(bart_machine_informed, Xtest, ytest)$rmse
 

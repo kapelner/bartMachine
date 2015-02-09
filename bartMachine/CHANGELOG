@@ -1,6 +1,10 @@
 version 1.1.2
 
-* there is now a seed argument which sets the seed in both R and Java (for debugging)
+* there is now a seed argument which sets the seed in both R and Java (especially useful for debugging)
+* sigsq convergence plot now easier to read
+* plot_y_vs_y_hat plot now easier to read and print in black & white
+* pd_plot now has interval shaded for reading ease
+* cov_prior_vec bug fixed
 
 version 1.1.1
 

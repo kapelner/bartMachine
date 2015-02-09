@@ -1,5 +1,5 @@
 ##package constants
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 
 ##color array 
 COLORS = array(NA, 500)

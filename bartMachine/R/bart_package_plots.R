@@ -193,11 +193,11 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 			cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "grey", lwd = 0.1)	
+			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "gray54", lwd = 0.6)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
-			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
+			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkblue", "red"), cex = 0.6, pch = ifelse(y_in_ppi[i], 16, 4))	
 		}		
 	} else if (prediction_intervals){
 		credible_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
@@ -215,11 +215,11 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 				cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "grey", lwd = 0.1)	
+			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "gray54", lwd = 0.6)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
-			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
+			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkblue", "red"), cex = 0.6, pch = ifelse(y_in_ppi[i], 16, 4))
 		}		
 	} else {
 		plot(ytest, y_hat, 
@@ -536,15 +536,17 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	bart_avg_predictions_upper = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = upper_ci)
 	
 	var_name = ifelse(class(j) == "character", j, bart_machine$training_data_features[j])
-  ylab_name = ifelse(bart_machine$pred_type == "classification", "Partial Effect (Probits)", "Partial Effect")
+    ylab_name = ifelse(bart_machine$pred_type == "classification", "Partial Effect (Probits)", "Partial Effect")
 	plot(x_j_quants, bart_avg_predictions_by_quantile, 
 			type = "o", 
 			main = "Partial Dependence Plot",
 			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
 			ylab = ylab_name,
 			xlab = paste(var_name, "plotted at specified quantiles"))
-	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
-	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
+	polygon(c(x_j_quants, rev(x_j_quants)), c(bart_avg_predictions_upper, rev(bart_avg_predictions_lower)), col = "gray87", border = NA)
+	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue", lwd = 1)
+	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue", lwd = 1)
+	lines(x_j_quants, bart_avg_predictions_by_quantile, type = "o", lwd = 2)
 	
 	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
 }
