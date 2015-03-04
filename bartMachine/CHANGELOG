@@ -1,7 +1,7 @@
 version 1.2.0
 
 * A major memory leak was fixed. bartMachine objects are also generated about 5% faster. Variable importance
-  metrics are a tad slower as a result.
+  metrics are a tad slower as a result. Thanks to Matt Olson for pointing this out.
 
 version 1.1.2
 
