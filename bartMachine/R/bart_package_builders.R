@@ -25,7 +25,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		replace_missing_data_with_x_j_bar = FALSE,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
-		importance = TRUE,
 		mem_cache_for_speed = TRUE,
 		serialize = FALSE,
 		seed = NULL,
@@ -248,7 +247,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
-	.jcall(java_bart_machine, "V", "setImportance", importance)
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	
 	if (!is.null(seed)){
@@ -341,7 +339,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
 			serialize = serialize,
-			importance = importance,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
 			seed = seed,
@@ -459,7 +456,6 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
 		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
 		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
-		importance = bart_machine$importance,
 		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
 		serialize = FALSE, #we do not want to waste CPU time here since these are created internally by us
 		verbose = verbose)

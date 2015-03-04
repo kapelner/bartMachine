@@ -62,15 +62,3 @@ bart_machine
 plot_y_vs_yhat(bart_machine)
 
 yhat = predict(bart_machine, Xtest)
-
-###test difference in building times for importance on/off
-options(java.parameters = "-Xmx2500m")
-library(bartMachine)
-n = 4000
-x = 1 : n; y = x + rnorm(n)
-bart_machine = build_bart_machine(as.data.frame(x), y, importance = TRUE)
-bart_machine$time_to_build
-
-x = 1 : n; y = x + rnorm(n)
-bart_machine = build_bart_machine(as.data.frame(x), y, importance = FALSE)
-bart_machine$time_to_build

@@ -1,7 +1,6 @@
 ##variable selection procedures from Bleich et al. (2013)
 var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
@@ -145,7 +144,6 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 ##var selection -- choose best method via CV
 var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
 	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")

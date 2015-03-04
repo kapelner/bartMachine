@@ -1,8 +1,7 @@
 version 1.2.0
 
-* There is an option for importance when constructing bartMachine objects. Setting it to FALSE will disable
-  variable importance metrics, but increase the speed of construction by about 5%.
-* When constructing bartMachine objects with importance = TRUE, a memory leak was now fixed.
+* A major memory leak was fixed. bartMachine objects are also generated about 5% faster. Variable importance
+  metrics are a tad slower as a result.
 
 version 1.1.2
 
