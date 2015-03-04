@@ -82,7 +82,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	public bartMachineTreeNode(bartMachineTreeNode parent, bartMachine_b_hyperparams bart){
 		this.parent = parent;
 		this.yhats = parent.yhats;
-		this.attribute_split_counts = parent.attribute_split_counts;
+		if (bart.importance){
+			this.attribute_split_counts = parent.attribute_split_counts;
+		}
 		this.bart = bart;
 		
 		if (parent != null){
@@ -132,7 +134,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
 		copy.yhats = yhats;
-		copy.attribute_split_counts = attribute_split_counts.clone();
+		if (bart.importance){
+			copy.attribute_split_counts = attribute_split_counts.clone();
+		}
 		
 		if (left != null){ //we need to clone the child and mark parent correctly
 			copy.left = left.clone();
@@ -632,7 +636,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		//initialize the yhats
 		yhats = new double[n_eta];
 		//intialize the var counts
-		attribute_split_counts = new int[p];
+		if (bart.importance){
+			attribute_split_counts = new int[p];
+		}
 		//initialize sendMissing
 		sendMissingDataRight = pickRandomDirectionForMissingData();
 		

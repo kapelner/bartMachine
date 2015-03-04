@@ -30,6 +30,8 @@ set_bart_machine_memory = function(bart_max_mem){
 ##get variable counts
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
+	
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}
@@ -41,6 +43,8 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 #get variable inclusion proportions
 get_var_props_over_chain = function(bart_machine, type = "splits"){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
+	
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}	
@@ -64,5 +68,11 @@ sample_mode = function(data){
 check_serialization = function(bart_machine){
 	if (is.jnull(bart_machine$java_bart_machine)){
 		stop("This bartMachine object was loaded from an R image but was not serialized.\n  Please build bartMachine using the option \"serialize = TRUE\" next time.\n")
+	}
+}
+
+check_importance = function(bart_machine){
+	if (!bart_machine$importance){
+		stop("This bartMachine object cannot perform variable importance metrics.\n  Please build bartMachine using the option \"importance = TRUE\" next time.\n")
 	}
 }

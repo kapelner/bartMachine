@@ -25,6 +25,7 @@ use_missing_data_dummies_as_covars = FALSE,
 replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
+importance = TRUE,
 mem_cache_for_speed = TRUE,
 serialize = FALSE,
 seed = NULL,
@@ -48,6 +49,7 @@ use_missing_data_dummies_as_covars = FALSE,
 replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
+importance = TRUE,
 mem_cache_for_speed = TRUE,
 serialize = FALSE,
 seed = NULL,
@@ -127,6 +129,14 @@ If TRUE, missing entries are filled in using the rf.impute() function from the \
 }
   \item{impute_missingness_with_x_j_bar_for_lm}{
 If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entries are imputed with average value or modal category.
+}
+  \item{importance}{
+ IF \code{TRUE}, records information about variables used in the splits during construction. Set to \code{FALSE} to
+ speed up construction by about 5\%. However, without this option
+ toggled, you cannot run any of the variable importance investigator functions nor interaction investigator functions
+ such as \code{\link{get_var_counts_over_chain}}, \code{\link{get_var_props_over_chain}}, 
+ \code{\link{investigate_var_importance}}, \code{\link{interaction_investigator}},
+ \code{\link{var_selection_by_permute}} or \code{\link{var_selection_by_permute_cv}}. The default is \code{TRUE}. 
 }
   \item{mem_cache_for_speed}{
 Speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number

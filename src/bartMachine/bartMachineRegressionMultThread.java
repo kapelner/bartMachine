@@ -64,6 +64,8 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
+	/** whether we should collect importance metrics for each attribute */
+	private boolean importance;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -120,6 +122,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
+		bart.setImportance(importance);
 		bart.setMemCacheForSpeed(mem_cache_for_speed);
 		
 		//set features
@@ -564,6 +567,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	
 	public void setNumCores(int num_cores){
 		this.num_cores = num_cores;
+	}
+
+	public void setImportance(boolean importance){
+		this.importance = importance;
 	}
 	
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){

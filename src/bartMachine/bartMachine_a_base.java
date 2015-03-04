@@ -42,6 +42,8 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	protected boolean mem_cache_for_speed;	
 	/** should we print stuff out to screen? */
 	protected boolean verbose = true;
+	/** whether we should collect importance metrics for each attribute */
+	protected boolean importance;
 	
 
 
@@ -73,6 +75,11 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	public void setTotalNumThreads(int num_cores) {
 		this.num_cores = num_cores;
 	}	
+	
+
+	public void setImportance(boolean importance) {
+		this.importance = importance;
+	}
 
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
 		this.mem_cache_for_speed = mem_cache_for_speed;

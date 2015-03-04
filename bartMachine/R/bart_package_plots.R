@@ -318,6 +318,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 ##function for investigating variable inclusion proportions
 investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
 	
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
 	for (i in 1 : num_replicates_for_avg){
@@ -407,6 +408,7 @@ shapiro_wilk_p_val = function(vec){
 ##function for investigating interactions
 interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	check_importance(bart_machine) #ensure the bartMachine object was built with variable split information recorded
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	

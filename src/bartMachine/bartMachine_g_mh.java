@@ -90,7 +90,9 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		//now start the growth process
 		//first pick the attribute and then the split
 		grow_node.splitAttributeM = pickRandomPredictorThatCanBeAssigned(grow_node);
-		T_star.increment_variable_count(grow_node.splitAttributeM);
+		if (importance){
+			T_star.increment_variable_count(grow_node.splitAttributeM);
+		}
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 		//now pick randomly which way the missing data goes - left (false) or right (true)
 		grow_node.sendMissingDataRight = bartMachineTreeNode.pickRandomDirectionForMissingData();
@@ -142,8 +144,10 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		//if we didn't find one to prune, then we can't prunce, so reject offhand
 		if (prune_node == null){
 			return Double.NEGATIVE_INFINITY;
-		}		
-		T_star.decrement_variable_count(prune_node.splitAttributeM);
+		}	
+		if (importance){
+			T_star.decrement_variable_count(prune_node.splitAttributeM);
+		}
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
@@ -326,8 +330,11 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		eta_star.left.clearRulesAndSplitCache();
 		eta_star.right.clearRulesAndSplitCache();
 		
-		T_star.decrement_variable_count(eta_just_for_calculation.splitAttributeM);
-		T_star.increment_variable_count(eta_star.splitAttributeM);
+		if (importance){
+			T_star.decrement_variable_count(eta_just_for_calculation.splitAttributeM);
+			T_star.increment_variable_count(eta_star.splitAttributeM);			
+		}
+
 		
 		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star);
 		if (DEBUG_MH){

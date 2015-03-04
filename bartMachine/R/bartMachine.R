@@ -21,6 +21,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
     replace_missing_data_with_x_j_bar = FALSE,
     impute_missingness_with_rf_impute = FALSE,
     impute_missingness_with_x_j_bar_for_lm = TRUE,
+	importance = TRUE,
     mem_cache_for_speed = TRUE,
 	serialize = FALSE,
 	seed = NULL,
@@ -49,6 +50,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	    replace_missing_data_with_x_j_bar,
 	    impute_missingness_with_rf_impute,
 	    impute_missingness_with_x_j_bar_for_lm,
+		importance,
 	    mem_cache_for_speed,
 		serialize,
 		seed,
@@ -62,19 +64,9 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
    nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
    k_folds = 5, verbose = FALSE, ...){
   
-  build_bart_machine_cv(X, y, Xy, 
-   num_tree_cvs,
-   k_cvs,
-   nu_q_cvs ,
-   k_folds, ...)
-}
-
-unserialize_bart_machine_if_necessary = function(bart_machine){
-	if (is.jnull(bart_machine$java_bart_machine)){
-		stop("The bartMachine object")
-	}
-	
-	if (is.jnull(bart_machine$java_bart_machine)){
-		stop("The bartMachine object")
-	}
+  	build_bart_machine_cv(X, y, Xy, 
+	   num_tree_cvs,
+	   k_cvs,
+	   nu_q_cvs ,
+	   k_folds, ...)
 }
