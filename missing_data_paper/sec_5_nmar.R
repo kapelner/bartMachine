@@ -112,23 +112,23 @@ for (nsim in 1 : Nsim){
 				ylim = c(min(rel_nmar_avgs_bart, rel_nmar_avgs_bart_w_rfi_and_mf, rel_nmar_avgs_rf, na.rm = TRUE), max(rel_nmar_avgs_bart, rel_nmar_avgs_bart_w_rfi_and_mf, rel_nmar_avgs_rf, na.rm = TRUE)))
 		for (i in 1 : length(approx_prop_missing)){
 			x = approx_prop_missing[i]
-			y = rel_nmar_avgs_bart[i]
+			y_plot = rel_nmar_avgs_bart[i]
 			moe = 1.96 * sd_nmar_bart[i] / sqrt(nsim)
-			segments(x, y - moe, x, y + moe, col = "green")
+			segments(x, y_plot - moe, x, y_plot + moe, col = "green")
 		}
 		points(approx_prop_missing, rel_nmar_avgs_bart_w_rfi_and_mf, col = "blue", type = "o")
 		for (i in 1 : length(approx_prop_missing)){
 			x = approx_prop_missing[i]
-			y = rel_nmar_avgs_bart_w_rfi_and_mf[i]
+			y_plot = rel_nmar_avgs_bart_w_rfi_and_mf[i]
 			moe = 1.96 * sd_nmar_bart_w_rfi_and_mf[i] / sqrt(nsim)
-			segments(x, y - moe, x, y + moe, col = "blue")
+			segments(x, y_plot - moe, x, y_plot + moe, col = "blue")
 		}
 		points(approx_prop_missing, rel_nmar_avgs_rf, col = "red", type = "o")
 		for (i in 1 : length(approx_prop_missing)){
 			x = approx_prop_missing[i]
-			y = rel_nmar_avgs_rf[i]
+			y_plot = rel_nmar_avgs_rf[i]
 			moe = 1.96 * sd_nmar_rf[i] / sqrt(nsim)
-			segments(x, y - moe, x, y + moe, col = "red")
+			segments(x, y_plot - moe, x, y_plot + moe, col = "red")
 		}
 	}
 	
