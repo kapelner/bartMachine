@@ -51,7 +51,7 @@ majority of issues have been resolved on forums.
 
 ### Install bartMachine via CRAN
 
-Use `install.packages("bartMachine")` within R and then `library(bartMachine)`.
+Use `install.packages("bartMachine")` within R and then `options(java.parameters = "-Xmx2500m")` to set a larger amount of RAM than the default of 500MB and then `library(bartMachine)`.
 
 ### Install bartMachine via compilation from source
 
