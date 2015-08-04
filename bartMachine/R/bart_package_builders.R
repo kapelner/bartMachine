@@ -213,6 +213,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			if (impute_missingness_with_x_j_bar_for_lm){
 				X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
 			}
+			else if (nrow(na.omit(X_for_lm)) == 0){
+				stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
+			}
 			mod = lm(y_trans ~ ., X_for_lm)
 			mse = var(mod$residuals)
 			sig_sq_est = as.numeric(mse)
