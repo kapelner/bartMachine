@@ -284,7 +284,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){
-		.jcall(java_bart_machine, "V", "addTrainingDataRow", as.character(model_matrix_training_data[i, ]))
+		row_as_char = as.character(model_matrix_training_data[i, ])
+		row_as_char = replace(row_as_char, is.na(row_as_char), "NA") #this seems to be necessary for some R-rJava-linux distro-Java combinations
+		.jcall(java_bart_machine, "V", "addTrainingDataRow", row_as_char)
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
 	
