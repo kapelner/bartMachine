@@ -1,3 +1,10 @@
+version 1.2.1
+
+* Error message for pathological case with missing data
+* Fix for datasets with missing data in some operating systems
+* Fix for error checking function (normality test)
+* Fix pd_plot function for missing data
+
 version 1.2.0
 
 * A major memory leak was fixed. bartMachine objects are also generated about 5% faster. Variable importance
