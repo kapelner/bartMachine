@@ -15,7 +15,12 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	y_hat = bart_machine$y_hat
 	
 	#plot/test for normality
-	normal_p_val = shapiro.test(es)$p.value
+	if (length(es) > 5000){
+		normal_p_val = shapiro.test(sample(es, 5000))$p.value
+	} else {
+		normal_p_val = shapiro.test(es)$p.value
+	}
+	
 	qqp(es, col = "blue",
 			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
 			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")	
@@ -505,7 +510,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	}
 	
 	x_j = bart_machine$model_matrix_training_data[, j]
-	x_j_quants = quantile(x_j, levs)
+	x_j_quants = quantile(x_j, levs, na.rm = TRUE)
 	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
 	
 	for (q in 1 : length(levs)){

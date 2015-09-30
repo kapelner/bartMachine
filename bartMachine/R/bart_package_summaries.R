@@ -29,7 +29,11 @@ summary.bartMachine = function(object, ...){
 					"Pseudo-Rsq =", round(object$PseudoRsq, 4))
 			
 			es = object$residuals
-			normal_p_val = shapiro.test(es)$p.value
+			if (length(es) > 5000){
+				normal_p_val = shapiro.test(sample(es, 5000))$p.value
+			} else {
+				normal_p_val = shapiro.test(es)$p.value
+			}
 			cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
 			
 			centered_p_val = t.test(es)$p.value
