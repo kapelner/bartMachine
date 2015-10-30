@@ -589,6 +589,16 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 			}
 		}
 	}
+	#now we have to go through and drop columns that are all NaN's if need be
+	bad_cols = c()
+	for (j in colnames(X_with_missing)){
+		if (sum(is.nan(X_with_missing[, j])) == nrow(X_with_missing)){
+			bad_cols = c(bad_cols, j)
+		}
+	}
+	for (j in bad_cols){
+		X_with_missing[, j] = NULL
+	}
 	X_with_missing
 }
 

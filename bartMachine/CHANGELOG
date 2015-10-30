@@ -4,6 +4,7 @@ version 1.2.1
 * Fix for datasets with missing data in some operating systems
 * Fix for error checking function (normality test)
 * Fix pd_plot function for missing data
+* Fix error for sigsq estimate when there are variables consisting entirely of missing data
 
 version 1.2.0
 
