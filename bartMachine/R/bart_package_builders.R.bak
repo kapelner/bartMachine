@@ -2,7 +2,7 @@ BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give witho
 BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
 ##build a BART model
-build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL, 
+build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
@@ -11,8 +11,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		k = 2,
 		q = 0.9,
 		nu = 3.0,
-		theta = 3.0,
-		q2 = 0.9,
 		prob_rule_class = 0.5,
 		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
 		debug_log = FALSE,
@@ -59,7 +57,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
 		colnames(X) = colnames(Xy)[1 : (ncol(Xy) - 1)]
 	}
-
+	
 	#make sure it's a data frame
 	if (class(X) != "data.frame"){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
@@ -159,7 +157,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	model_matrix_training_data = cbind(pre_process_obj$data, y_remaining)
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	factor_lengths = pre_process_obj$factor_lengths
-
+	
 	#now create a default cov_prior_vec that factors in the levels of the factors
 	null_cov_prior_vec = is.null(cov_prior_vec)
 	if (null_cov_prior_vec && length(factor_lengths) > 0){
@@ -248,7 +246,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	.jcall(java_bart_machine, "V", "setK", k)
 	.jcall(java_bart_machine, "V", "setQ", q)
 	.jcall(java_bart_machine, "V", "setNU", nu)
-
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
@@ -284,26 +281,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
 	}
-
-	#takes care of random intercept stuff here.
-	if (!is.null(group)&&length(group)!= 0){
-		if (length(group)!=length(y)){
-			stop("Error. length of group is not the same as length of outcome.")
-		}
-		group_level = unique(group)
-		##estimate tau^2 to be given to the BART model
-		tau_sq_est = sig_sq_est	
-		.jcall(java_bart_machine, "V", "setQ2", q2)
-		.jcall(java_bart_machine, "V", "setTHETA", theta)
-		.jcall(java_bart_machine, "V", "setgroup", .jarray(as.numeric(group)))
-		.jcall(java_bart_machine, "V", "setgroup_level", .jarray(group_level))
-	}
 	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){
-		row_as_char = as.character(model_matrix_training_data[i, ])
-		row_as_char = replace(row_as_char, is.na(row_as_char), "NA") #this seems to be necessary for some R-rJava-linux distro-Java combinations
-		.jcall(java_bart_machine, "V", "addTrainingDataRow", row_as_char)
+		.jcall(java_bart_machine, "V", "addTrainingDataRow", as.character(model_matrix_training_data[i, ]))
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
 	
@@ -333,8 +314,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features
 			X = X,
 			y = y,
-			group = group,
-			group_level = group_level,
 			y_levels = y_levels,
 			pred_type = pred_type,
 			model_matrix_training_data = model_matrix_training_data,
@@ -349,15 +328,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 			beta = beta,
 			k = k,
 			q = q,
-			q = q2,
 			nu = nu,
-			theta = theta,
 			prob_rule_class = prob_rule_class,
 			mh_prob_steps = mh_prob_steps,
 			s_sq_y = s_sq_y,
 			run_in_sample = run_in_sample,
 			sig_sq_est = sig_sq_est,
-			tau_sq_est = tau_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
 			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
@@ -374,10 +350,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	#if the user used a cov prior vec, pass it back
 	if (!null_cov_prior_vec){
 		bart_machine$cov_prior_vec = cov_prior_vec
-	}
-
-	if (!is.null(group)){
-		bart_machine$group = group
 	}
 	
 	#once its done gibbs sampling, see how the training data does if user wants
@@ -454,9 +426,6 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 	if (is.null(cov_prior_vec)){
 		cov_prior_vec = bart_machine$cov_prior_vec
 	}
-	if (is.null(group)){
-		group = bart_machine$group
-	}
 	if (is.null(num_trees)){
 		num_trees = bart_machine$num_trees
 	}	
@@ -469,7 +438,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 	if (is.null(verbose)){
 		verbose = FALSE
 	}	
-	build_bart_machine(X, y, group = group,
+	build_bart_machine(X, y,
 		num_trees = num_trees, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = bart_machine$num_burn_in, 
 		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
@@ -477,9 +446,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		beta = bart_machine$beta,
 		k = bart_machine$k,
 		q = bart_machine$q,
-		q2 = bart_machine$q2,
 		nu = bart_machine$nu,
-		theta = bart_machine$theta,
 		prob_rule_class = bart_machine$prob_rule_class,
 		mh_prob_steps = bart_machine$mh_prob_steps, #only the first two matter
 		run_in_sample = run_in_sample,
@@ -619,6 +586,16 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 				}
 			}
 		}
+	}
+	#now we have to go through and drop columns that are all NaN's if need be
+	bad_cols = c()
+	for (j in colnames(X_with_missing)){
+		if (sum(is.nan(X_with_missing[, j])) == nrow(X_with_missing)){
+			bad_cols = c(bad_cols, j)
+		}
+	}
+	for (j in bad_cols){
+		X_with_missing[, j] = NULL
 	}
 	X_with_missing
 }
