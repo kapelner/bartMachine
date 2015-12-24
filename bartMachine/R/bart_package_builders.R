@@ -62,7 +62,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (class(X) != "data.frame"){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
-	
+	if (verbose){
+		cat("bartMachine vars checked...\n")
+	}	
 	#we are about to construct a bartMachine object. First, let R garbage collect
 	#to clean up previous bartMachine objects that are no longer in use. This is important
 	#because R's garbage collection system does not "see" the size of Java objects. Thus,
@@ -101,6 +103,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (length(y) != nrow(X)){
 		stop("The number of responses must be equal to the number of observations in the training data.")
 	}
+	if (verbose){
+		cat("bartMachine java init...\n")
+	}
 	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
@@ -116,7 +121,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	for (predictor in predictors_which_are_factors){
 		X[, predictor] = factor(X[, predictor])
 	}
-	
+	if (verbose){
+		cat("bartMachine factors created...\n")
+	}
 	
 	if (length(na.omit(y_remaining)) != length(y_remaining)){
 		stop("You cannot have any missing data in your response vector.")
@@ -151,13 +158,18 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		if (verbose){
 			cat("Imputed missing data using attribute averages.\n")
 		}
-	}	
-
+	}
+	if (verbose){
+		cat("bartMachine before preprocess...\n")
+	}
+	
 	pre_process_obj = pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing)
 	model_matrix_training_data = cbind(pre_process_obj$data, y_remaining)
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	factor_lengths = pre_process_obj$factor_lengths
-	
+	if (verbose){
+		cat("bartMachine after preprocess...", ncol(model_matrix_training_data), "total features...\n")
+	}
 	#now create a default cov_prior_vec that factors in the levels of the factors
 	null_cov_prior_vec = is.null(cov_prior_vec)
 	if (null_cov_prior_vec && length(factor_lengths) > 0){
@@ -228,6 +240,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		sig_sq_est = sig_sq_est * y_range^2		
 	}
+	if (verbose){
+		cat("bartMachine sigsq estimated...\n")
+	}
 	
 	#if the user hasn't set a number of cores, set it here
 	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){
@@ -289,6 +304,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		.jcall(java_bart_machine, "V", "addTrainingDataRow", row_as_char)
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
+	if (verbose){
+		cat("bartMachine training data finalized...\n")
+	}
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
