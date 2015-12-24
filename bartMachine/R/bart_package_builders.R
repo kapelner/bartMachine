@@ -126,7 +126,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		cat("bartMachine factors created...\n")
 	}
 	
-	if (length(na.omit(y_remaining)) != length(y_remaining)){
+	if (sum(is.na(y_remaining)) > 0){
 		stop("You cannot have any missing data in your response vector.")
 	}
 	
@@ -144,6 +144,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
 		}
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
+	}
+	if (verbose){
+		cat("bartMachine after rf imputations...\n")
 	}
 	
 	#if we're not using missing data, go on and get rid of it
@@ -246,7 +249,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}		
 	} else {
 		if (verbose){
-			cat("bartMachine sigsq estimated...\n")
+			cat("bartMachine using previous sigsq estimated...\n")
 		}		
 	}
 
