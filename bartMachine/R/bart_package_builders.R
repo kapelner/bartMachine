@@ -16,6 +16,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
+		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
 #		print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
@@ -215,34 +216,40 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		
 	}
 	
-  ##estimate sigma^2 to be given to the BART model
-	sig_sq_est = NULL
-	if (pred_type == "regression"){		
-		y_range = max(y) - min(y)
-		y_trans = (y - min(y)) / y_range - 0.5
-		if (s_sq_y == "mse"){
-			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
-			if (impute_missingness_with_x_j_bar_for_lm){
-				X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
+  	##estimate sigma^2 to be given to the BART model
+	if (is.null(sig_sq_est)){
+		if (pred_type == "regression"){		
+			y_range = max(y) - min(y)
+			y_trans = (y - min(y)) / y_range - 0.5
+			if (s_sq_y == "mse"){
+				X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
+				if (impute_missingness_with_x_j_bar_for_lm){
+					X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
+				}
+				else if (nrow(na.omit(X_for_lm)) == 0){
+					stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
+				}
+				mod = lm(y_trans ~ ., X_for_lm)
+				mse = var(mod$residuals)
+				sig_sq_est = as.numeric(mse)
+				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+			} else if (s_sq_y == "var"){
+				sig_sq_est = as.numeric(var(y_trans))
+				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+			} else { #if it's not a valid flag, throw an error
+				stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
 			}
-			else if (nrow(na.omit(X_for_lm)) == 0){
-				stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
-			}
-			mod = lm(y_trans ~ ., X_for_lm)
-			mse = var(mod$residuals)
-			sig_sq_est = as.numeric(mse)
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else if (s_sq_y == "var"){
-			sig_sq_est = as.numeric(var(y_trans))
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else { #if it's not a valid flag, throw an error
-			stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
+			sig_sq_est = sig_sq_est * y_range^2		
 		}
-		sig_sq_est = sig_sq_est * y_range^2		
+		if (verbose){
+			cat("bartMachine sigsq estimated...\n")
+		}		
+	} else {
+		if (verbose){
+			cat("bartMachine sigsq estimated...\n")
+		}		
 	}
-	if (verbose){
-		cat("bartMachine sigsq estimated...\n")
-	}
+
 	
 	#if the user hasn't set a number of cores, set it here
 	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){

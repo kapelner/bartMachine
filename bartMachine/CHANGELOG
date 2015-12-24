@@ -5,6 +5,8 @@ version 1.2.1
 * Fix for error checking function (normality test)
 * Fix pd_plot function for missing data
 * Fix error for sigsq estimate when there are variables consisting entirely of missing data
+* More verbose messages for debugging intialization of bartMachine objects
+* Ability to pass in an estimate of sigsq. This is important since this step may take a lot of time for datasets with a large number of features
 
 version 1.2.0
 
