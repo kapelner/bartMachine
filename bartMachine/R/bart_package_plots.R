@@ -498,7 +498,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 }
 
 ##partial dependence plot
-pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
@@ -511,14 +511,17 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	
 	x_j = bart_machine$model_matrix_training_data[, j]
 	x_j_quants = quantile(x_j, levs, na.rm = TRUE)
-	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
+	n_pd_plot = round(bart_machine$n * prop_data) 
+	bart_predictions_by_quantile = array(NA, c(length(levs), n_pd_plot, bart_machine$num_iterations_after_burn_in))
 	
 	for (q in 1 : length(levs)){
 		x_j_quant = x_j_quants[q]
 		
+		#pull out a certain proportion of the data randomly
+		indices = sample(1 : bart_machine$n, n_pd_plot)
 		#now create test data matrix
-		test_data = bart_machine$X
-		test_data[, j] = rep(x_j_quant, bart_machine$n)
+		test_data = bart_machine$X[indices, ]
+		test_data[, j] = rep(x_j_quant, n_pd_plot)
 		
 		bart_predictions_by_quantile[q, , ] = bart_machine_get_posterior(bart_machine, test_data)$y_hat_posterior_samples
 		cat(".")

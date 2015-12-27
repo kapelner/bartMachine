@@ -144,9 +144,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
 		}
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
-	}
-	if (verbose){
-		cat("bartMachine after rf imputations...\n")
+		if (verbose){
+			cat("bartMachine after rf imputations...\n")
+		}	
 	}
 	
 	#if we're not using missing data, go on and get rid of it
