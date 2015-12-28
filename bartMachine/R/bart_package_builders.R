@@ -599,7 +599,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
 	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
 	bart_machine_cv$cv_stats = cv_stats
-  bart_machine_cv$folds = folds_vec
+  	bart_machine_cv$folds = folds_vec
 	bart_machine_cv
 }
 

@@ -8,6 +8,7 @@ version 1.2.1
 * More verbose messages for debugging intialization of bartMachine objects
 * Ability to pass in an estimate of sigsq. This is important since this step may take a lot of time for datasets with a large number of features
 * When creating partial dependence plots, there is now an option for proportion of data to use. The lower the proportion, the lower the resolution but the speedier the plot will generate.
+* When creating partial dependence plots, there is now less duplication in the calculations which results in faster plotting.
 
 version 1.2.0
 
