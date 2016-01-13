@@ -312,17 +312,17 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	}
 
 	#takes care of random intercept stuff here.
-	if (!is.null(group)&&length(group)!= 0){
-		if (length(group)!=length(y)){
+	if (!is.null(group)){
+		if (length(group) != length(y)){
 			stop("Error. length of group is not the same as length of outcome.")
 		}
-		group_level = unique(group)
+		group_levels = unique(group)
 		##estimate tau^2 to be given to the BART model
 		tau_sq_est = sig_sq_est	
 		.jcall(java_bart_machine, "V", "setQ2", q2)
 		.jcall(java_bart_machine, "V", "setTHETA", theta)
 		.jcall(java_bart_machine, "V", "setgroup", .jarray(as.numeric(group)))
-		.jcall(java_bart_machine, "V", "setgroup_level", .jarray(group_level))
+		.jcall(java_bart_machine, "V", "setgroup_level", .jarray(group_levels))
 	}
 	
 	#now load the training data into BART
@@ -363,7 +363,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 			X = X,
 			y = y,
 			group = group,
-			group_level = group_level,
+			group_level = group_levels,
 			y_levels = y_levels,
 			pred_type = pred_type,
 			model_matrix_training_data = model_matrix_training_data,
@@ -648,6 +648,16 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 				}
 			}
 		}
+	}
+	#now we have to go through and drop columns that are all NaN's if need be
+	bad_cols = c()
+	for (j in colnames(X_with_missing)){
+		if (sum(is.nan(X_with_missing[, j])) == nrow(X_with_missing)){
+			bad_cols = c(bad_cols, j)
+		}
+	}
+	for (j in bad_cols){
+		X_with_missing[, j] = NULL
 	}
 	X_with_missing
 }
