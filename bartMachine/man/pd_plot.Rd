@@ -10,7 +10,7 @@ Creates a partial dependence plot for a BART model for regression or classificat
 \usage{
 pd_plot(bart_machine, j, 
 levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.95), 
-lower_ci = 0.025, upper_ci = 0.975)
+lower_ci = 0.025, upper_ci = 0.975, prop_data = 1)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,6 +28,10 @@ Lower limit for credible interval
 }
   \item{upper_ci}{
 Upper limit for credible interval
+}
+  \item{prop_data}{
+ The proportion of the training data to use. Default is 1. Use a lower proportion for speedier pd_plots. The closer to 1, the more resolution
+ the PD plot will have; the closer to 0, the lower but faster.
 }
 }
 \details{

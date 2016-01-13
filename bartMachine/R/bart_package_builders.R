@@ -18,6 +18,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
+		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
 #		print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
@@ -64,7 +65,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	if (class(X) != "data.frame"){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
-	
+	if (verbose){
+		cat("bartMachine vars checked...\n")
+	}	
 	#we are about to construct a bartMachine object. First, let R garbage collect
 	#to clean up previous bartMachine objects that are no longer in use. This is important
 	#because R's garbage collection system does not "see" the size of Java objects. Thus,
@@ -103,6 +106,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	if (length(y) != nrow(X)){
 		stop("The number of responses must be equal to the number of observations in the training data.")
 	}
+	if (verbose){
+		cat("bartMachine java init...\n")
+	}
 	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
@@ -118,9 +124,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	for (predictor in predictors_which_are_factors){
 		X[, predictor] = factor(X[, predictor])
 	}
+	if (verbose){
+		cat("bartMachine factors created...\n")
+	}
 	
-	
-	if (length(na.omit(y_remaining)) != length(y_remaining)){
+	if (sum(is.na(y_remaining)) > 0){
 		stop("You cannot have any missing data in your response vector.")
 	}
 	
@@ -138,6 +146,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
 		}
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
+		if (verbose){
+			cat("bartMachine after rf imputations...\n")
+		}	
 	}
 	
 	#if we're not using missing data, go on and get rid of it
@@ -153,13 +164,19 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		if (verbose){
 			cat("Imputed missing data using attribute averages.\n")
 		}
-	}	
-
+	}
+	if (verbose){
+		cat("bartMachine before preprocess...\n")
+	}
+	
 	pre_process_obj = pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing)
 	model_matrix_training_data = cbind(pre_process_obj$data, y_remaining)
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	factor_lengths = pre_process_obj$factor_lengths
 
+	if (verbose){
+		cat("bartMachine after preprocess...", ncol(model_matrix_training_data), "total features...\n")
+	}
 	#now create a default cov_prior_vec that factors in the levels of the factors
 	null_cov_prior_vec = is.null(cov_prior_vec)
 	if (null_cov_prior_vec && length(factor_lengths) > 0){
@@ -205,31 +222,40 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		
 	}
 	
-  ##estimate sigma^2 to be given to the BART model
-	sig_sq_est = NULL
-	if (pred_type == "regression"){		
-		y_range = max(y) - min(y)
-		y_trans = (y - min(y)) / y_range - 0.5
-		if (s_sq_y == "mse"){
-			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
-			if (impute_missingness_with_x_j_bar_for_lm){
-				X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
+  	##estimate sigma^2 to be given to the BART model
+	if (is.null(sig_sq_est)){
+		if (pred_type == "regression"){		
+			y_range = max(y) - min(y)
+			y_trans = (y - min(y)) / y_range - 0.5
+			if (s_sq_y == "mse"){
+				X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
+				if (impute_missingness_with_x_j_bar_for_lm){
+					X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
+				}
+				else if (nrow(na.omit(X_for_lm)) == 0){
+					stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
+				}
+				mod = lm(y_trans ~ ., X_for_lm)
+				mse = var(mod$residuals)
+				sig_sq_est = as.numeric(mse)
+				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+			} else if (s_sq_y == "var"){
+				sig_sq_est = as.numeric(var(y_trans))
+				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+			} else { #if it's not a valid flag, throw an error
+				stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
 			}
-			else if (nrow(na.omit(X_for_lm)) == 0){
-				stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
-			}
-			mod = lm(y_trans ~ ., X_for_lm)
-			mse = var(mod$residuals)
-			sig_sq_est = as.numeric(mse)
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else if (s_sq_y == "var"){
-			sig_sq_est = as.numeric(var(y_trans))
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else { #if it's not a valid flag, throw an error
-			stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
+			sig_sq_est = sig_sq_est * y_range^2		
 		}
-		sig_sq_est = sig_sq_est * y_range^2		
+		if (verbose){
+			cat("bartMachine sigsq estimated...\n")
+		}		
+	} else {
+		if (verbose){
+			cat("bartMachine using previous sigsq estimated...\n")
+		}		
 	}
+
 	
 	#if the user hasn't set a number of cores, set it here
 	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){
@@ -306,6 +332,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		.jcall(java_bart_machine, "V", "addTrainingDataRow", row_as_char)
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
+	if (verbose){
+		cat("bartMachine training data finalized...\n")
+	}
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
@@ -602,7 +631,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
 	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
 	bart_machine_cv$cv_stats = cv_stats
-  bart_machine_cv$folds = folds_vec
+  	bart_machine_cv$folds = folds_vec
 	bart_machine_cv
 }
 

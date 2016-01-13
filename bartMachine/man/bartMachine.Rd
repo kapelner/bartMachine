@@ -17,6 +17,7 @@ mh_prob_steps = c(2.5, 2.5, 4)/9,
 debug_log = FALSE, 
 run_in_sample = TRUE,  
 s_sq_y = "mse",
+sig_sq_est = NULL,
 cov_prior_vec = NULL, 
 use_missing_data = FALSE, 
 covariates_to_permute = NULL,
@@ -40,6 +41,7 @@ mh_prob_steps = c(2.5, 2.5, 4)/9,
 debug_log = FALSE, 
 run_in_sample = TRUE,  
 s_sq_y = "mse",
+sig_sq_est = NULL,
 cov_prior_vec = NULL, 
 use_missing_data = FALSE, 
 covariates_to_permute = NULL,
@@ -114,6 +116,9 @@ If TRUE, in-sample statistics such as \eqn{\hat{f}(x)}, Pseudo-\eqn{R^2}, and RM
 }
   \item{s_sq_y}{
 If ``mse'', a data-based estimated of the error variance is computed as the MSE from ordinary least squares regression. If ``var''., the data-based estimate is computed as the variance of the response. Not used in classification. 
+}
+\item{sig_sq_est}{
+Pass in an estimate of the maximum sig_sq of the model. This is useful to cache somewhere and then pass in during cross-validation since the default method of estimation is a linear model. In large dimensions, linear model estimation is slow.
 }
   \item{cov_prior_vec}{
 Vector assigning relative weights to how often a particular variable should be proposed as a candidate for a split. The vector is internally normalized so that the weights sum to 1. Note that the length of this vector must equal the length of the design matrix after dummification and augmentation of indicators of missingness (if used). To see what the dummified matrix looks like, use \code{\link{dummify_data}}. See Bleich et al. (2013) for more details on when this feature is most appropriate. 

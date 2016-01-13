@@ -498,9 +498,11 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 }
 
 ##partial dependence plot
-pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	
+	if (class(j) == "integer"){
+		j = as.numeric(j)
+	}
 	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
 	} else if (class(j) == "character" && !(j %in% bart_machine$training_data_features)){
@@ -510,15 +512,29 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	}
 	
 	x_j = bart_machine$model_matrix_training_data[, j]
-	x_j_quants = quantile(x_j, levs, na.rm = TRUE)
-	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
 	
-	for (q in 1 : length(levs)){
-		x_j_quant = x_j_quants[q]
-		
+	#fail with a warning if there's only one value (we don't want an error because it would fail on loops).
+	if (length(unique(na.omit(x_j))) <= 1){
+		warning("There must be more than one unique value in this training feature. PD plot not generated.")
+		return()
+	}
+	x_j_quants = unique(quantile(x_j, levs, na.rm = TRUE))
+	
+	#fail with a warning if there's only one value (we don't want an error because it would fail on loops).
+	if (length(unique(x_j_quants)) <= 1){
+		warning("There must be more than one unique value among the quantiles selected. PD plot not generated.")
+		return()
+	}
+	
+	n_pd_plot = round(bart_machine$n * prop_data)
+	bart_predictions_by_quantile = array(NA, c(length(x_j_quants), n_pd_plot, bart_machine$num_iterations_after_burn_in))
+	
+	for (q in 1 : length(x_j_quants)){
+		#pull out a certain proportion of the data randomly
+		indices = sample(1 : bart_machine$n, n_pd_plot)
 		#now create test data matrix
-		test_data = bart_machine$X
-		test_data[, j] = rep(x_j_quant, bart_machine$n)
+		test_data = bart_machine$X[indices, ]
+		test_data[, j] = rep(x_j_quants[q], n_pd_plot)
 		
 		bart_predictions_by_quantile[q, , ] = bart_machine_get_posterior(bart_machine, test_data)$y_hat_posterior_samples
 		cat(".")
@@ -529,8 +545,8 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
     	bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
   	}
   
-	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(levs), bart_machine$num_iterations_after_burn_in))
-	for (q in 1 : length(levs)){
+	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(x_j_quants), bart_machine$num_iterations_after_burn_in))
+	for (q in 1 : length(x_j_quants)){
 		for (g in 1 : bart_machine$num_iterations_after_burn_in){
 			bart_avg_predictions_by_quantile_by_gibbs[q, g] = mean(bart_predictions_by_quantile[q, , g])
 		}		
@@ -553,7 +569,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue", lwd = 1)
 	lines(x_j_quants, bart_avg_predictions_by_quantile, type = "o", lwd = 2)
 	
-	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
+	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile, prop_data = prop_data))
 }
 
 ##plot and invisibly return out-of-sample RMSE by the number of trees
