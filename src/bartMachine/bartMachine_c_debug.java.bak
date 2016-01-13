@@ -45,20 +45,7 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 			sigsqs_to_export[n_g] = un_transform_sigsq(gibbs_samples_of_sigsq[n_g]);		
 		}
 		return sigsqs_to_export;
-	}
-	
-	/**
-	 * Get the untransformed samples of the tausqs from the Gibbs chaing
-	 * 
-	 * @return	The vector of untransformed variances over all the Gibbs samples
-	 */
-	public double[] getGibbsSamplesTausqs(){
-		double[] tausqs_to_export = new double[gibbs_samples_of_tausq.length];
-		for (int n_g = 0; n_g < gibbs_samples_of_tausq.length; n_g++){			
-			tausqs_to_export[n_g] = un_transform_tausq(gibbs_samples_of_tausq[n_g]);		
-		}
-		return tausqs_to_export;
-	}
+	}	
 	
 	/**
 	 * Queries the depths of the <code>num_trees</code> trees between a range of Gibbs samples

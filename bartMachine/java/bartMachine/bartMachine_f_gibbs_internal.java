@@ -78,6 +78,16 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (sse + hyper_nu * hyper_lambda));
 	}
 
+	protected double drawTausqFromPosterior(int sample_num, double[] es) {
+		//first calculate the SSE
+		double sse = 0;
+		for (double e : es){
+			sse += e * e; 
+		}
+		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
+		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
+		return StatToolbox.sample_from_inv_gamma((hyper_theta + es.length) / 2, 2 / (sse + hyper_theta * hyper_rho));
+	}
 	/**
 	 * Pick a random predictor from the set of valid, possible predictors at this point in the tree
 	 * 

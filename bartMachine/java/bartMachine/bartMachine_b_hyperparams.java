@@ -24,6 +24,10 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected static double[] samps_chi_sq_df_eq_nu_plus_n = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY	
 	/** The number of samples in the cached library of chi-squared values */
 	protected static int samps_chi_sq_df_eq_nu_plus_n_length;
+	/** A cached library of chi-squared with degrees of freedom theta plus n (used for Gibbs sampling the variance) */
+	protected static double[] samps_chi_sq_df_eq_theta_plus_n = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY	
+	/** The number of samples in the cached library of chi-squared values */
+	protected static int samps_chi_sq_df_eq_theta_plus_n_length;
 	/** A cached library of standard normal values (used for Gibbs sampling the posterior means of the terminal nodes) */
 	protected static double[] samps_std_normal = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY
 	/** The number of samples in the cached library of standard normal values */
@@ -37,10 +41,16 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected double hyper_nu = 3.0;
 	/** the multiplier of the scale parameter of the inverse gamma prior on the variance */
 	protected double hyper_lambda;
+	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the random intercept variance */
+	protected double hyper_theta = 3.0;
+	/** the multiplier of the scale parameter of the inverse gamma prior on the random intercept variance */
+	protected double hyper_rho;
 	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
 	protected double hyper_k = 2.0;
 	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_lambda</code> by forcing q proportion to be at that value in the inverse gamma CDF */
 	protected double hyper_q = 0.9;
+	/** At a fixed <code>hyper_theta</code>, this controls where to set <code>hyper_rho</code> by forcing q2 proportion to be at that value in the inverse gamma CDF */
+	protected double hyper_q2 = 0.9;
 		
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree independent of depth */
 	protected double alpha = 0.95;
@@ -54,6 +64,9 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected double y_range_sq;
 	/** the sample variance of the response variable on its original scale */
 	protected Double sample_var_y;
+	
+	protected double[] group;
+	protected double[] group_level;
 		
 	/** A wrapper to set data which also calculates hyperparameters and statistics about the repsonse variable */
 	public void setData(ArrayList<double[]> X_y){
@@ -81,6 +94,10 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		}
 
 		hyper_lambda = ten_pctile_chisq_df_hyper_nu / hyper_nu * sample_var_y;
+		
+		if (group != null){
+			hyper_rho = hyper_lambda;
+		}
 	}	
 	
 	/** Computes the transformed y variable using the procedure outlined in the following paper:
@@ -172,6 +189,32 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	}			
 	
 	/**
+	 * Untransforms a random intercept variance value on the transformed scale back to the original scale
+	 * 
+	 * @param tausq_t_i		The transformed variance value
+	 * @return				The original variance value
+	 */
+	public double un_transform_tausq(double tausq_t_i){
+		//Based on the following elementary calculation: 
+		//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
+		return tausq_t_i * y_range_sq;
+	}
+	
+	/**
+	 * Untransforms many random intercept variance values on the transformed scale back to the original scale
+	 * 
+	 * @param tausq_t_is	The transformed variance values
+	 * @return				The original variance values
+	 */
+	public double[] un_transform_tausq(double[] tausq_t_is){
+		double[] tausq_is = new double[tausq_t_is.length];
+		for (int i = 0; i < tausq_t_is.length; i++){
+			tausq_is[i] = un_transform_tausq(tausq_t_is[i]);
+		}
+		return tausq_is;
+	}			
+	
+	/**
 	 * Untransforms a response value on the transformed scale back to the original scale and rounds to one decimal digit
 	 * 
 	 * @param yt_i	The transformed response value
@@ -216,6 +259,14 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	public void setNu(double hyper_nu) {
 		this.hyper_nu = hyper_nu;
 	}
+	
+	public void setQ2(double hyper_q2) {
+		this.hyper_q2 = hyper_q2;
+	}
+
+	public void setTheta(double hyper_theta) {
+		this.hyper_theta = hyper_theta;
+	}
 		
 	public void setAlpha(double alpha){
 		this.alpha = alpha;
@@ -223,6 +274,14 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	
 	public void setBeta(double beta){
 		this.beta = beta;
+	}
+	
+	public void setgroup(double[] group) {
+		this.group = group;
+	}
+	
+	public void setgrplvl(double[] group_level) {
+		this.group_level = group_level;
 	}
 	
 	public double getHyper_mu_mu() {
@@ -240,6 +299,14 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	public double getHyper_lambda() {
 		return hyper_lambda;
 	}
+	
+	public double getHyper_theta() {
+		return hyper_theta;
+	}
+
+	public double getHyper_rho() {
+		return hyper_rho;
+	}
 
 	public double getY_min() {
 		return y_min;
@@ -251,5 +318,13 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 
 	public double getY_range_sq() {
 		return y_range_sq;
+	}
+	
+	public double[] getgroup() {
+		return group;
+	}
+	
+	public double[] getgrplvl() {
+		return group_level;
 	}
 }

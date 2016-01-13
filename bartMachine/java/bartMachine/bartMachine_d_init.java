@@ -11,6 +11,8 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 
 	/** during debugging, we may want to fix sigsq */
 	protected transient double fixed_sigsq;
+	/** during debugging, we may want to fix tausq */
+	protected transient double fixed_tausq;
 	/** the number of the current Gibbs sample */
 	protected int gibbs_sample_num;
 	/** cached current sum of residuals vector */
@@ -19,7 +21,10 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	/** Initializes the Gibbs sampler setting all zero entries and moves the counter to the first sample */
 	protected void SetupGibbsSampling(){
 		InitGibbsSamplingData();	
-		InitizializeSigsq();
+		InitializeSigsq();
+		if (group != null){
+			InitializeTausq();
+		}
 		InitializeTrees();
 		InitializeMus();	
 		//the zeroth gibbs sample is the initialization we just did; now we're onto the first in the chain
@@ -35,6 +40,11 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		gibbs_samples_of_bart_trees_after_burn_in = new bartMachineTreeNode[num_gibbs_total_iterations - num_gibbs_burn_in + 1][num_trees];
 		gibbs_samples_of_sigsq = new double[num_gibbs_total_iterations + 1];	
 		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
+		
+		if (group != null){
+			gibbs_samples_of_tausq = new double[num_gibbs_total_iterations + 1];	
+			gibbs_samples_of_tausq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
+		}
 		
 		accept_reject_mh = new boolean[num_gibbs_total_iterations + 1][num_trees];	
 		accept_reject_mh_steps = new char[num_gibbs_total_iterations + 1][num_trees];
@@ -61,9 +71,14 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	}
 	
 	/** Initializes the first variance value by drawing from the prior */
-	protected void InitizializeSigsq() {
+	protected void InitializeSigsq() {
 		gibbs_samples_of_sigsq[0] = StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda));
 	}	
+	
+	/** Initializes the first random intercept variance value by drawing from the prior */
+	protected void InitializeTausq() {
+		gibbs_samples_of_tausq[0] = StatToolbox.sample_from_inv_gamma(hyper_theta / 2, 2 / (hyper_theta * hyper_rho));
+	}
 	
 	/** this is the number of posterior Gibbs samples afte burn-in (thinning was never implemented) */
 	public int numSamplesAfterBurningAndThinning(){
@@ -80,6 +95,10 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	
 	public void setSigsq(double fixed_sigsq){
 		this.fixed_sigsq = fixed_sigsq;
+	}
+	
+	public void setTausq(double fixed_tausq){
+		this.fixed_tausq = fixed_tausq;
 	}
 	
 	public boolean[][] getAcceptRejectMH(){

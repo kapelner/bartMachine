@@ -41,6 +41,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 
 	/** The probability vector that samples covariates for selecting split rules */
 	protected double[] cov_split_prior;
+	/** The grouping vector used for calculating random intercept */
+	protected double[] group;
+	/** The grouping level vector used for identifying the groups */
+	protected double[] group_level;
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree independent of depth */
 	protected Double alpha = 0.95;
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree dependent on depth which makes it more difficult as the tree gets deeper */
@@ -49,6 +53,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected Double hyper_k = 2.0;
 	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_lambda</code> by forcing q proportion to be at that value in the inverse gamma CDF */
 	protected Double hyper_q = 0.9;
+	/** At a fixed <code>hyper_theta</code>, this controls where to set <code>hyper_rho</code> by forcing q2 proportion to be at that value in the inverse gamma CDF */
+	protected Double hyper_q2 = 0.9;
+	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the variance */
+	protected Double hyper_theta = 3.0;
 	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the variance */
 	protected Double hyper_nu = 3.0;
 	/** the hyperparameter of the probability of picking a grow step during the Metropolis-Hastings tree proposal */
@@ -126,6 +134,14 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
 		}
+		
+		if (group != null){
+			bart.setgroup(group);
+			bart.setgrplvl(group_level);
+			bart.setTheta(hyper_theta);		
+			bart.setQ2(hyper_q2);
+		}
+		
 		//do special stuff for regression model
 		if (!(bart instanceof bartMachineClassification)){
 			bart.setNu(hyper_nu);		
@@ -327,6 +343,20 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		}
 		return sigsqs_to_export.toArray();
 	}
+
+	public double[] getGibbsSamplesTausqs(){
+		TDoubleArrayList tausqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
+		for (int t = 0; t < num_cores; t++){
+			TDoubleArrayList tausqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesTausqs());
+			if (t == 0){
+				tausqs_to_export.addAll(tausqs_to_export_by_thread);
+			}
+			else {
+				tausqs_to_export.addAll(tausqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
+			}
+		}
+		return tausqs_to_export.toArray();
+	}
 	
 	/**
 	 * Returns a record of Metropolis-Hastings acceptances or rejections for all trees during burn-in
@@ -513,6 +543,14 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		this.cov_split_prior = cov_split_prior;
 	}
 	
+	public void setgroup(double[] group){
+		this.group = group;
+	}
+	
+	public void setgrplvl(double[] group_level){
+		this.group_level = group_level;
+	}
+	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
 		this.num_gibbs_burn_in = num_gibbs_burn_in;
 	}	
@@ -544,8 +582,15 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	public void setNU(double hyper_nu) {
 		this.hyper_nu = hyper_nu;
 	}	
-	
-	
+
+	public void setQ2(double hyper_q2) {
+		this.hyper_q2 = hyper_q2;
+	}
+
+	public void setTheta(double hyper_theta) {
+		this.hyper_theta = hyper_theta;
+	}
+
 	public void setProbGrow(double prob_grow) {
 		this.prob_grow = prob_grow;
 	}

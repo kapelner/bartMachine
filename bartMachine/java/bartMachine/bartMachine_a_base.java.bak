@@ -18,10 +18,6 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	protected double[] gibbs_samples_of_sigsq;
 	/** Gibbs samples for post burn-in of the variances */
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
-	/** Gibbs samples for burn-in and post burn-in of the random intercept variances */
-	protected double[] gibbs_samples_of_tausq;
-	/** Gibbs samples for post burn-in of the random intercept variances */
-	protected double[] gibbs_samples_of_tausq_after_burn_in;
 	/** a record of whether each Gibbs sample accepted or rejected the MH step within each of the <code>num_trees</code> trees */
 	protected boolean[][] accept_reject_mh;
 	/** a record of the proposal of each Gibbs sample within each of the <code>m</code> trees: G, P or C for "grow", "prune", "change" */

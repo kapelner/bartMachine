@@ -10,6 +10,10 @@ import java.io.Serializable;
  */
 public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implements Serializable{
 
+	protected double[] group;
+	protected double[] group_level;
+	protected double[] b_i;
+	
 	/** Builds a BART model by unleashing the Gibbs sampler */
 	public void Build() {
 		SetupGibbsSampling();
@@ -18,6 +22,13 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 
 	/** Run the Gibbs sampler for the total number of samples prespecified while flushing unneeded memory from the previous sample */
 	protected void DoGibbsSampling(){
+		
+		if (group!=null){
+				for (int i = 0; i < n; i++){
+					b_i[i] = 0;
+				}
+		}
+		
 		while (gibbs_sample_num <= num_gibbs_total_iterations){			
 			DoOneGibbsSample();
 			//now flush the previous previous gibbs sample to not leak memory
@@ -32,7 +43,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		//this array is the array of trees for this given sample
 		final bartMachineTreeNode[] bart_trees = new bartMachineTreeNode[num_trees];				
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
-
+		
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
@@ -42,8 +53,38 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 			R_j = SampleTree(gibbs_sample_num, t, bart_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
+		
 		//now we have the last residual vector which we pass on to sample sigsq
 		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
+		
+		if (group != null) {
+			double[] e_i = getResidualsFromFullSumModel(gibbs_sample_num, R_j);
+			double[] tmp_ei_bi = new double[n];
+			for (int k = 0; k < n; k++){
+				tmp_ei_bi[k] = e_i[k]+b_i[k];
+			}
+			SampleTausq(gibbs_sample_num, tmp_ei_bi);
+			double mult = gibbs_samples_of_tausq[gibbs_sample_num]/(gibbs_samples_of_tausq[gibbs_sample_num]+gibbs_samples_of_sigsq[gibbs_sample_num]);
+			for (int g = 0; g < group_level.length; g++){
+				double tmp_bi = 0;
+				double count = 0;
+				double tmp_resid = 0;
+				for (int k = 0; k < n; k++){
+					if (group[k]==group_level[g]) {
+						tmp_resid = tmp_resid + tmp_ei_bi[k];
+						count++;
+					}
+				}
+				tmp_bi = StatToolbox.sample_from_norm_dist(mult*tmp_resid/count, gibbs_samples_of_sigsq[gibbs_sample_num]*mult/count);
+				for (int k = 0; k < n; k++){
+					if (group[k]==group_level[g]) {
+						y_trans[k] = y_orig[k] - tmp_bi;
+						b_i[k] = tmp_bi;
+					}
+				}	
+			}
+		}
+			
 //		DebugSample(gibbs_sample_num, tree_array_illustration);
 	}
 
@@ -102,6 +143,11 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		gibbs_samples_of_sigsq[sample_num] = sigsq;
 	}
 	
+	protected void SampleTausq(int sample_num, double[] gx) {
+		double tausq = drawTausqFromPosterior(sample_num, gx);
+		gibbs_samples_of_tausq[sample_num] = tausq;
+	}
+	
 	/**
 	 * This function calculates the residuals from the sum-of-trees model using the diff trick explained in the paper
 	 * 
@@ -110,7 +156,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @return				The vector of residuals at this point in the Gibbs chain
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected double[] getResidualsFromFullSumModel(int sample_num, double[] R_j){	
+	protected double[] getResidualsFromFullSumModel(int sample_num, double[] R_j) {	
 		//all we need to do is subtract the last tree's yhats now
 		bartMachineTreeNode last_tree = gibbs_samples_of_bart_trees[sample_num][num_trees - 1];
 		for (int i = 0; i < n; i++){
@@ -155,7 +201,17 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	
 	protected abstract double drawSigsqFromPosterior(int sample_num, double[] es);
 	
+	protected abstract double drawTausqFromPosterior(int sample_num, double[] es);
+	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
 	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+	
+	public void setgroup(double[] group) {
+		this.group = group;
+	}
+	
+	public void setgrplvl(double[] group_level) {
+		this.group_level = group_level;
+	}
 }
