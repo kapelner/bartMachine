@@ -18,6 +18,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public class bartMachineRegressionMultThread extends Classifier implements Serializable {
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
@@ -543,11 +544,11 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		this.cov_split_prior = cov_split_prior;
 	}
 	
-	public void setgroup(double[] group){
+	public void setGroup(double[] group){
 		this.group = group;
 	}
 	
-	public void setgrplvl(double[] group_level){
+	public void setGroupLevel(double[] group_level){
 		this.group_level = group_level;
 	}
 	

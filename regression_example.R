@@ -38,6 +38,11 @@ for (i in 1 : 10000){
 ## If it helps, this may
 
 #get some data
+
+options(java.parameters = "-Xmx4000m")
+library(bartMachine)
+set_bart_machine_num_cores(4)
+
 library(MASS)
 data(Boston)
 X = Boston
@@ -49,16 +54,33 @@ ytrain = y[1 : (nrow(X) / 2)]
 Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
-set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
 		num_iterations_after_burn_in = 1000,
 		use_missing_data = TRUE,
-		debug_log = TRUE,
 		verbose = TRUE)
 bart_machine
 
 plot_y_vs_yhat(bart_machine)
 
 yhat = predict(bart_machine, Xtest)
+
+
+#now attempt to use Random Intercepts
+group = X$chas
+X$chas = NULL
+
+Xtrain = X[1 : (nrow(X) / 2), ]
+ytrain = y[1 : (nrow(X) / 2)]
+grouptrain = group[1 : (nrow(X) / 2)]
+Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
+ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
+
+bart_machine = build_bart_machine(Xtrain, ytrain, group = grouptrain,
+		num_trees = 200,
+		num_burn_in = 300,
+		num_iterations_after_burn_in = 1000,
+		use_missing_data = TRUE,
+		verbose = TRUE)
+bart_machine

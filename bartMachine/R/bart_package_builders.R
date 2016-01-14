@@ -2,7 +2,8 @@ BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give witho
 BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
 ##build a BART model
-build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL, 
+build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
+		group = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
@@ -312,6 +313,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 	}
 
 	#takes care of random intercept stuff here.
+	group_levels = NULL
 	if (!is.null(group)){
 		if (length(group) != length(y)){
 			stop("Error. length of group is not the same as length of outcome.")
@@ -320,9 +322,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 		##estimate tau^2 to be given to the BART model
 		tau_sq_est = sig_sq_est	
 		.jcall(java_bart_machine, "V", "setQ2", q2)
-		.jcall(java_bart_machine, "V", "setTHETA", theta)
-		.jcall(java_bart_machine, "V", "setgroup", .jarray(as.numeric(group)))
-		.jcall(java_bart_machine, "V", "setgroup_level", .jarray(group_levels))
+		.jcall(java_bart_machine, "V", "setTheta", theta)
+		.jcall(java_bart_machine, "V", "setGroup", .jarray(as.numeric(group)))
+		.jcall(java_bart_machine, "V", "setGroupLevel", .jarray(as.numeric(group_levels)))
 	}
 	
 	#now load the training data into BART
@@ -385,8 +387,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, group=NULL,
 			mh_prob_steps = mh_prob_steps,
 			s_sq_y = s_sq_y,
 			run_in_sample = run_in_sample,
-			sig_sq_est = sig_sq_est,
-			tau_sq_est = tau_sq_est,
+			sig_sq_est = sig_sq_est, #tausqest is the same
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
 			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
