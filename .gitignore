@@ -77,6 +77,8 @@ RWeka/
 rJAVA_examples/
 bartMachine.Rcheck
 bartMachine.Rcheck/**/*
+bartMachineJARs.Rcheck
+bartMachineJARs.Rcheck/**/*
 old_mar/*
 datasets/r_zach.csv
 datasets/c_crime.csv
