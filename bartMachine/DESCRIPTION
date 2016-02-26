@@ -2,10 +2,11 @@ Package: bartMachine
 Type: Package
 Title: Bayesian Additive Regression Trees
 Version: 1.2.1
-Date: 2015-03-05
-Author: Adam Kapelner and Justin Bleich (R package), see COPYRIGHTS file for the authors of the java libraries
+Date: 2016-02-24
+Author: Adam Kapelner and Justin Bleich (R package)
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
 License: GPL-3
-Depends: R (>= 2.14.0), rJava (>= 0.8-4), car, randomForest, missForest
-SystemRequirements: Java (>= 1.6.27)
+Depends: R (>= 2.14.0), rJava (>= 0.9-8), bartMachineJARs (>= 1.0), car, randomForest, missForest
+Imports: graphics, grDevices, stats
+SystemRequirements: Java (>= 1.7.0)

@@ -14,6 +14,7 @@ R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 load("test_bart_machine.RData")
+x = 1 : n
 predict(bart_machine, as.data.frame(x))
 
 
@@ -28,16 +29,22 @@ t(t(sizes[order(-sizes), ]))
 q("no")
 
 ####ensure no more memory leak
+R
 options(java.parameters = "-Xmx1000m")
 library(bartMachine)
 x = 1 : 100; y = x + rnorm(100)
 for (i in 1 : 10000){
 	bart_machine = build_bart_machine(as.data.frame(x), y)
 }
+q("no")
 
 ## If it helps, this may
 
 #get some data
+R
+options(java.parameters = "-Xmx1000m")
+library(bartMachine)
+
 library(MASS)
 data(Boston)
 X = Boston
@@ -62,3 +69,4 @@ bart_machine
 plot_y_vs_yhat(bart_machine)
 
 yhat = predict(bart_machine, Xtest)
+q("no")

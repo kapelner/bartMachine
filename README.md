@@ -4,11 +4,10 @@ bartMachine
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
-Copyright (C) 2015 Adam Kapelner1 & Justin Bleich2, 
-1 Department of Mathematics
-Queens College, City University of New York
-2 Department of Statistics
-The Wharton School of the University of Pennsylvania
+Copyright (C) 2016 Adam Kapelner  
+Department of Mathematics, Queens College, City University of New York & 
+Justin Bleich
+Department of Statistics, The Wharton School of the University of Pennsylvania
 
 This is a Java implementation of the algorithm found in Chipman, George, & McCulloch 
 [BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics. 
@@ -34,13 +33,12 @@ Setup Instructions
 ------------------
 
 To install the bartMachine package in R, you first need to install Java and rJava and configure your computer, then you 
-can install the package from CRAN or compile from source
+can install the package from CRAN or compile from source.
 
 ### Install Java JDK (not the JRE)
 
 Download the latest [Java JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html "Download the Java JDK for all operating systems")
-and install it properly. rJava requires the JDK; you cannot just have a JRE. We recommend installing JDK for Java 7 so you can get all the latest benefits (the shipped release 
-of bartMachine is in Java 6r27 for the most widespread compatibility).
+and install it properly (Java7 or above required). rJava requires the JDK; you cannot just have a JRE.
 
 ### Install rJava
 
