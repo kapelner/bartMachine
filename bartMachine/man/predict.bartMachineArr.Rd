@@ -12,7 +12,7 @@ Gibbs sampler gets locked into local modes at times. This is a way
 to average over many chains.
 }
 \usage{
-\method{predict}{bartMachineArr}(object, new_data, ...)
+predict(object, new_data, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -36,7 +36,7 @@ a numeric vector of \code{p_hat}, the best guess as to the probability of the re
 }
 
 \author{
-Adam Kapelner and Justin Bleich
+Adam Kapelner
 }
 
 

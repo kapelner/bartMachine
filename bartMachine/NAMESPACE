@@ -1,7 +1,12 @@
 import(rJava)
+import(bartMachineJARs)
 import(car)
 import(randomForest)
 import(missForest)
+
+import(graphics)
+import(grDevices)
+import(stats)
 
 export(bartMachine)
 export(build_bart_machine)
