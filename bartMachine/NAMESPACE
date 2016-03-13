@@ -1,16 +1,11 @@
 import(rJava)
-import(bartMachineJARs)
 import(car)
 import(randomForest)
 import(missForest)
 
-import(graphics)
-import(grDevices)
-import(stats)
-
-
 export(bartMachine)
 export(build_bart_machine)
+export(bartMachineArr)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
@@ -20,6 +15,7 @@ export(get_var_counts_over_chain)
 export(get_var_props_over_chain)
 
 export(cov_importance_test)
+export(linearity_test)
 
 export(plot_y_vs_yhat)
 export(check_bart_error_assumptions)
@@ -47,5 +43,6 @@ export(destroy_bart_machine) #deprecated... do not use!
 
 
 S3method(predict, bartMachine)
+S3method(predict, bartMarchineArr)
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print

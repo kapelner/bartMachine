@@ -58,7 +58,7 @@ verbose = TRUE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-Data frame of predictors. Factors are automatically converted to dummies interally. 
+Data frame of predictors. Factors are automatically converted to dummies internally. 
 }
   \item{y}{
 Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.

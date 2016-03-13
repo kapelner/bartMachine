@@ -64,3 +64,12 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 	invisible(list(permutation_samples_of_error = permutation_samples_of_error, observed_error_estimate = observed_error_estimate, pval = pval))
 }
 
+linearity_test = function(lin_mod = NULL, X = NULL, y = NULL, num_permutation_samples = 100, plot = TRUE, ...){
+	if (is.null(lin_mod)){
+		lin_mod = lm(y ~ as.matrix(X))
+	}
+	y_hat = predict(lin_mod, X)
+	bart_mod = bartMachine(X, y - y_hat, ...)
+	cov_importance_test(bart_mod, num_permutation_samples = num_permutation_samples, plot = plot)	
+}
+

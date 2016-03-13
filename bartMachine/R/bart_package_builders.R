@@ -87,7 +87,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
 		java_bart_machine = .jnew("bartMachine.bartMachineClassificationMultThread")
-		y_remaining = ifelse(y == y_levels[1], 0, 1)
+		y_remaining = ifelse(y == y_levels[1], 1, 0)
 		pred_type = "classification"
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
