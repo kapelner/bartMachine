@@ -1,5 +1,5 @@
 ##bart vs bayestree speed runs
-options(java.parameters = "-Xmx10000m")
+options(java.parameters = "-Xmx15000m")
 library(bartMachine)
 library(BayesTree)
 library(randomForest)

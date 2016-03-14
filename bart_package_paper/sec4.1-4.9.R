@@ -49,8 +49,8 @@ plot_convergence_diagnostics(bart_machine_cv)
 
 ##### section 4.4
 
-calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
-calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
+round(calc_credible_intervals(bart_machine_cv, X[100, ], ci_conf = 0.95), 2)
+round(calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95), 2)
 
 #Figure 5a
 plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
@@ -99,16 +99,14 @@ X = automobile; X$log_price = NULL
 bart_machine = bartMachine(X, y, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
 
-cov_importance_test(bart_machine, covariates = c("M_normalized_losses", "M_bore", "M_stroke", "M_horsepower", "M_peak_rpm"))
-
 #build the model without these dummies but still incorporating missing data
 bart_machine = bartMachine(X, y, use_missing_data = TRUE)
 bart_machine
 
 x_star = X[20, ]
-calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+round(calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95), 2)
 x_star[c("curb_weight", "symboling")] = NA
-calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+round(calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95), 2)
 
 
 ##### section 4.9

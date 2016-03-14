@@ -2,6 +2,7 @@ version 1.2.2
 * Created test of linearity convenience method
 * Created bartMachine model array convenience constructor and predicts method
 * Fixed inconsistent label bug. Y = 1 is now coded for the first element in levels(y). Thanks to Lars Kotthoff for pointing this out.
+* Added benchmark datasets and fixed replication code for JSS paper
 
 version 1.2.1
 

@@ -32,7 +32,7 @@ ytest = fr_data$y
 
 #build uninformed and informed models
 bart_machine = bartMachine(X, y)
-bart_machine_informed = bartMachine(X, y, cov_prior_vec = prior)
+bart_machine_informed = bartMachine(X, y, cov_prior_vec = prior, run_in_sample = FALSE)
 #test out of sample
 bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
 bart_predict_for_test_data(bart_machine_informed, Xtest, ytest)$rmse
@@ -46,7 +46,7 @@ X = fr_data[, 2 : 11]
 bart_machine = bartMachine(X, y)
 
 # Figure 10
-interaction_investigator(bart_machine, num_replicates_for_avg = 25, num_var_plot = 10)
+interaction_investigator(bart_machine, num_replicates_for_avg = 25, num_var_plot = 10, bottom_margin = 5)
 
 ##### section 4.12
 

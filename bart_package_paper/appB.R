@@ -1,10 +1,11 @@
-library(bartMachine)
 library(BayesTree)
 library(randomForest)
 
+#set bartMachine memory
+options(java.parameters = "-Xmx2500m")
+library(bartMachine)
 #set bartMachine computing parameters
 set_bart_machine_num_cores(4)
-set_bart_machine_memory(2500) #WARNING: a 64-bit machine with ample RAM is required for this setting
 
 #load up data
 data(benchmark_datasets)
@@ -180,7 +181,7 @@ run_time_results_avg = apply(run_time_results, c(1, 2), mean)
 library(xtable)
 xtable(oos_rmse_results_avg, digits = 3)
 xtable(run_time_results_avg, digits = 1)
-print(tab, digits = 5)
+#print(tab, digits = 5)
 
 
 #do naive comparisons
