@@ -47,6 +47,10 @@ Invisibly, returns a list with the following components:
 
 }
 \references{
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+with Bayesian Additive Regression Trees. Journal of Statistical
+Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+
 J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
 Additive Regression Trees. ArXiv e-prints, 2013.
 

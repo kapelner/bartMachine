@@ -1,8 +1,10 @@
 version 1.2.2
 * Created test of linearity convenience method
 * Created bartMachine model array convenience constructor and predicts method
-* Fixed inconsistent label bug. Y = 1 is now coded for the first element in levels(y). Thanks to Lars Kotthoff for pointing this out.
+* Fixed inconsistent label bug: Y = 1 is now coded for the first element in levels(y). Thanks to Lars Kotthoff for pointing this out.
+* Added warning message upon startup if less than 1GB RAM is allowed for bartMachine's java implementation
 * Added benchmark datasets and fixed replication code for JSS paper
+* Updated vignette and citation to reflect published paper in JSS 
 
 version 1.2.1
 

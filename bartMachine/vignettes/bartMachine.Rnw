@@ -1,78 +1,38 @@
- % \VignetteIndexEntry{bartMachine}
-% \VignetteKeywords{bartMachine}
-% \VignettePackage{bartMachine}
-
 \documentclass[article,nojss]{jss}
+\usepackage{amsmath,amssymb,enumerate,subcaption,algorithm,algorithmicx,algpseudocode,thumbpdf,lmodern}
+\graphicspath{{Figures/}}
 
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{enumerate}
-\usepackage{subcaption}
-\usepackage{algorithm}
-\usepackage{algorithmicx}
-\usepackage{algpseudocode}
+\author{Adam Kapelner\\Queens College,\\City University of New York \And 
+        Justin Bleich\\The Wharton School of the\\University of Pennsylvania}
+\Plainauthor{Adam Kapelner, Justin Bleich}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% almost as usual
-\author{Adam Kapelner \\ Queens College, \\  City University of New York \And 
-            Justin Bleich \\     The Wharton School of the \\ University of Pennsylvania}
 \title{\pkg{bartMachine}: Machine Learning with Bayesian Additive Regression Trees}
+\Plaintitle{bartMachine: Machine Learning with Bayesian Additive Regression Trees}
 
-%% for pretty printing and a nice hypersummary also set:
-\Plainauthor{Adam Kapelner, Justin Bleich} %% comma-separated
-\Plaintitle{bartMachine: Machine Learning with Bayesian Additive Regression Trees} %% without formatting
-\Shorttitle{\pkg{bartMachine}: Machine Learning with Bayesian Additive Regression Trees} %% a short title (if necessary)
-
-%% an abstract and keywords
 \Abstract{
-We present a new package in \proglang{R} implementing Bayesian additive regression trees (BART). The package introduces many new features for data analysis using BART such as variable selection, interaction detection, model diagnostic plots, incorporation of missing data and the ability to save trees for future prediction. It is significantly faster than the current \proglang{R} implementation, parallelized, and capable of handling both large sample sizes and high-dimensional data. 
+  We present a new package in \proglang{R} implementing
+  Bayesian additive regression trees (BART). The package introduces
+  many new features for data analysis using BART such as variable
+  selection, interaction detection, model diagnostic plots,
+  incorporation of missing data and the ability to save trees for
+  future prediction. It is significantly faster than the current
+  \proglang{R} implementation, parallelized, and capable of handling
+  both large sample sizes and high-dimensional data.
 }
+
 \Keywords{Bayesian, machine learning, statistical learning, non-parametric, \proglang{R}, \proglang{Java}}
-\Plainkeywords{Bayesian, machine learning, statistical learning, non-parametric, R, Java,} %% without formatting
-%% at least one keyword must be supplied
+\Plainkeywords{Bayesian, machine learning, statistical learning, non-parametric, R, Java,}
 
-%% publication information
-%% NOTE: Typically, this can be left commented and will be filled out by the technical editor
-%% \Volume{50}
-%% \Issue{9}
-%% \Month{June}
-%% \Year{2012}
-%% \Submitdate{2012-06-04}
-%% \Acceptdate{2012-06-04}
 
-%% The address of (at least) one author should be given
-%% in the following format:
 \Address{
   Adam Kapelner\\
   Department of Mathematics \\
   Queens College,  City University of New York \\
-  64-19 Kissena Blvd Room 325 \\
+  65-30 Kissena Blvd Room 604 \\
   Flushing, NY, 11367 \\
   E-mail: \email{kapelner@qc.cuny.edu}\\
-  URL: \url{http://scholar.google.com/citations?user=TzgMmnoAAAAJ}
+  URL: \url{http://kapelner.com/}
 }
-%\Address{
-%  Justin Bleich\\
-%  Department of Statistics \\
-%  The Wharton School of the University of Pennsylvania \\
-%  3730 Walnut Street \\
-%  Philadelphia, PA, 19104 \\
-%  E-mail: email{jbleich@wharton.upenn.edu}\\
-%  URL: \url{http://scholar.google.com/citations?user=JbpcbD8AAAAJ}
-%}
-%% It is also possible to add a telephone and fax number
-%% before the e-mail in the following format:
-%% Telephone: +43/512/507-7103
-%% Fax: +43/512/507-2851
-
-%% for those who use Sweave please include the following line (with % symbols):
-%% need no \usepackage{Sweave.sty}
-
-%% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\bv}[1]{\boldsymbol{#1}}
 \newcommand{\qu}[1]{``#1''}
@@ -112,7 +72,7 @@ We present a new package in \proglang{R} implementing Bayesian additive regressi
 \newcommand{\expe}[1]{\mathbb{E}\bracks{#1}}
 \newcommand{\expesub}[2]{\mathbb{E}_{#1}\bracks{#2}}
 \newcommand{\cexpe}[2]{\expe{#1 ~ | ~ #2}}
-\newcommand{\iid}{~{\buildrel iid \over \sim}~}
+\newcommand{\iid}{~{\buildrel \text{iid} \over \sim}~}
 \newcommand{\mathand}{~~\text{and}~~}
 \newcommand{\yhat}{\hat{y}}
 \newcommand{\oneover}[1]{\frac{1}{#1}}
@@ -154,35 +114,35 @@ We present a new package in \proglang{R} implementing Bayesian additive regressi
 
 \section{Introduction}
 
-Ensemble-of-trees methods have become popular choices for forecasting in both regression and classification problems. Algorithms such as random forests \citep{Breiman2001} and stochastic gradient boosting \citep{Friedman2002} are two well-established and widely employed procedures. Recent advances in ensemble methods include dynamic trees \citep{Taddy2011} and Bayesian additive regression trees \citep[BART,][]{Chipman2010}, which depart from predecessors in that they rely on an underlying Bayesian probability model rather than a pure algorithm. BART has demonstrated substantial promise in a wide variety of simulations and real world applications such as predicting avalanches on mountain roads \citep{Blattenberger2014}, predicting how transcription factors interact with DNA \citep{Zhou2008} and predicting movie box office revenues \citep{Eliashberg2010}. This paper introduces \pkg{bartMachine}, a new \proglang{R} \citep{Rlang} package available from the Comprehensive \proglang{R} Archive Network at \url{http://CRAN.R-project.org/package=bartMachine} that significantly expands the capabilities of using BART for data analysis. 
+Ensemble-of-trees methods have become popular choices for forecasting in both regression and classification problems. Algorithms such as random forests \citep{Breiman2001} and stochastic gradient boosting \citep{Friedman2002} are two well-established and widely employed procedures. Recent advances in ensemble methods include dynamic trees \citep{Taddy2011} and Bayesian additive regression trees \citep[BART;][]{Chipman2010}, which depart from predecessors in that they rely on an underlying Bayesian probability model rather than a pure algorithm. BART has demonstrated substantial promise in a wide variety of simulations and real world applications such as predicting avalanches on mountain roads \citep{Blattenberger2014}, predicting how transcription factors interact with DNA \citep{Zhou2008} and predicting movie box office revenues \citep{Eliashberg2010}. This paper introduces \pkg{bartMachine} \citep{bartMachine}, a new \proglang{R} \citep{Rlang} package available from the Comprehensive \proglang{R} Archive Network (CRAN) at \url{http://CRAN.R-project.org/package=bartMachine} that significantly expands the capabilities of using BART for data analysis. 
 
-Currently, there exists one other implementation of BART on CRAN: \pkg{BayesTree} \citep{BayesTree}, the package developed by the algorithm's original authors. One of the major drawbacks of this implementation is its lack of a \code{predict} function. Test data must be provided as an argument during the training phase of the model. Hence it is impossible to generate forecasts on future data without re-fitting withe entire model. Since the run time is not trivial, forecasting becomes an arduous exercise. A significantly faster implementation of BART that contains master-slave parallelization was introduced in \citet{Pratola2013}, but this is only available as standalone C++ source code and not integrated with \proglang{R}. Additionally, a recent package \pkg{dbarts} allows updating of BART with new predictors and response values to incorporate BART into a larger Bayesian model. \pkg{dbarts} relies on \proglang{BayesTree} as it's BART engine.
+Currently, there exists one other implementation of BART on CRAN: \pkg{BayesTree} \citep{BayesTree}, the package developed by the algorithm's original authors. One of the major drawbacks of this implementation is its lack of a \code{predict} function. Test data must be provided as an argument during the training phase of the model. Hence it is impossible to generate forecasts on future data without re-fitting the entire model. Since the run time is not trivial, forecasting becomes an arduous exercise. A significantly faster implementation of BART that contains master-slave parallelization was introduced in \citet{Pratola2013}, but this is only available as standalone \proglang{C++} source code and not integrated with \proglang{R}. Additionally, a recent package \pkg{dbarts} \citep{dbarts} allows updating of BART with new predictors and response values to incorporate BART into a larger Bayesian model. \pkg{dbarts} relies on \pkg{BayesTree} as its BART engine.
 
-The goal of \pkg{bartMachine} is to provide a fast, easy-to-use, visualization-rich machine learning package for \proglang{R} users. Our implementation of BART is in \proglang{Java} and is integrated into \proglang{R} via \pkg{rJava} \citep{rJava}. From a runtime perspective, our algorithm is significantly faster and is parallelized, allowing computation on as many cores as desired. Not only is the model construction itself parallelized, but the additional features such as prediction, variable selection, and many others can be divided across cores as well.  
+The goal of \pkg{bartMachine} is to provide a fast, easy-to-use, visualization-rich machine learning package for \proglang{R} users. Our implementation of BART is in \proglang{Java} and is integrated into \proglang{R} via \pkg{rJava} \citep{rJava}. From a run time perspective, our algorithm is significantly faster and is parallelized, allowing computation on as many cores as desired. Not only is the model construction itself parallelized, but the additional features such as prediction, variable selection, and many others can be divided across cores as well.  
 
 Additionally, we include a variety of expanded and new features. We implement the ability to save trees in memory and provide convenience functions for prediction on test data as well as the ability to save models across \proglang{R} sessions. We also include plotting functions for both posterior credible and predictive intervals and plots for visually inspecting the convergence of BART's MCMC chain. We expand variable importance exploration to include permutation tests and interaction detection. We implement recently developed features for BART including a formal approach to variable selection and the ability to incorporate prior information for covariates \citep{Bleich2014}. We also implement the strategy found in \citet{Kapelner2013} to incorporate missing data during training and handle missingness during prediction.  Table~\ref{tab:bartcomp} emphasizes the differences in features between \pkg{bartMachine} and \pkg{BayesTree}, the two existing \proglang{R} implementations of BART.
 
-\begin{table}[htp]
+\begin{table}[t!]
 \centering
-\begin{tabular}{rcc}
+\begin{tabular}{lll}
   \hline
 Feature & \pkg{bartMachine} & \pkg{BayesTree} \\ 
   \hline
-Implementation Language &  \proglang{Java} &  C++ \\
-External Predict Function & Yes & No \\
-Model Persistance Across Sessions & Yes & No \\ 
+Implementation language &  \proglang{Java} &  \proglang{C++} \\
+External predict function & Yes & No \\
+Model persistence across sessions & Yes & No \\ 
 Parallelization & Yes & No \\ 
-Native Missing Data Mechanism & Yes & No \\
-Built-in Cross-Validation & Yes & No \\
-Variable Importance & Statistical Tests & Exploratory \\
-Tree Proposal Types & 3 Types & 4 Types \\
-Partial Dependence Plots & Yes & Yes \\
-Convergence Plots & Assess trees and $\sigsq$ & Assess $\sigsq$ \\
-Model Diagnostics & Yes & No \\
-Incorporation into Larger Model & No & Through \proglang{dbarts} \\ 
+Native missing data mechanism & Yes & No \\
+Built-in cross-validation & Yes & No \\
+Variable importance & Statistical tests & Exploratory \\
+Tree proposal types & 3 types & 4 types \\
+Partial dependence plots & Yes & Yes \\
+Convergence plots & Assess trees and $\sigsq$ & Assess $\sigsq$ \\
+Model diagnostics & Yes & No \\
+Incorporation into larger model & No & Through \pkg{dbarts} \\ 
 \hline
 \end{tabular}
-\caption{Comparison of features between \proglang{bartMachine} and \proglang{BayesTree}.}
+\caption{Comparison of features between \pkg{bartMachine} and \pkg{BayesTree}.}
 \label{tab:bartcomp}
 \end{table}
 
@@ -190,17 +150,15 @@ In Section~\ref{sec:background}, we provide an overview of BART with a special e
 
 \section{Overview of BART}\label{sec:background}
 
-BART is a Bayesian approach to nonparametric function estimation using regression trees. Regression trees rely on recursive binary partitioning of predictor space into a set of hyperrectangles in order to approximate some unknown function $f$. Predictor space has dimension equal to the number of variables, which we denote $p$. Tree-based regression models have an ability to flexibly fit interactions and nonlinearities. Models composed of sums of regression trees have an even greater ability than single trees to capture interactions and non-linearities as well as additive effects in $f$. 
+BART is a Bayesian approach to nonparametric function estimation using regression trees. Regression trees rely on recursive binary partitioning of predictor space into a set of hyperrectangles in order to approximate some unknown function $f$. The predictor space has dimension equal to the number of variables, which we denote $p$. Tree-based regression models have an ability to flexibly fit interactions and nonlinearities. Models composed of sums of regression trees have an even greater ability than single trees to capture interactions and non-linearities as well as additive effects in $f$. 
 
 BART can be considered a sum-of-trees ensemble, with a novel estimation approach relying on a fully Bayesian probability model.  Specifically, the BART model can be expressed as:
-
 \bneqn\label{eq:bart}
-\Y = f(\X) + \berrorrv \approx \treeleaft{1}(\X) + \treeleaft{2}(\X) + \ldots + \treeleaft{m}(\X) + \berrorrv, \quad\quad \berrorrv \sim \multnormnot{n}{\zerovec}{\sigsq\I_n}
+\Y = f(\X) + \berrorrv \approx \treeleaft{1}(\X) + \treeleaft{2}(\X) + \ldots + \treeleaft{m}(\X) + \berrorrv, \quad\quad \berrorrv \sim \multnormnot{n}{\zerovec}{\sigsq\I_n},
 \eneqn
-
 where $\Y$ is the $n \times 1$ vector of responses, $\X$ is the $n \times p$ design matrix (the predictors column-joined) and $\berrorrv$ is the $n \times 1$ vector of noise. Here we have $m$ distinct regression trees, each composed of a tree structure, denoted by $\treet{}$, and the parameters at the terminal nodes (also called leaves), denoted by $\leaf$. The two together, denoted as $\treeleaft{}$ represents an entire tree with both its structure and set of leaf parameters.
 
-The structure of a given tree $\treet{t}$ includes information on how any observation recurses down the tree. For each nonterminal (internal) node of the tree, there is a \qu{splitting rule} taking the form $\x_j < c$, which consists of the \qu{splitting variable} $\x_j$ and the \qu{splitting value} $c$. An observation moves to the left child node if the condition set by the splitting rule is satisfied (and it moves to the right child node otherwise). The process continues until a terminal node is reached. Then, the observation receives the leaf value of the terminal node. We denote the set of tree's leaf parameters as  $\leaf_t = \{\mu_{t,1}, \mu_{t,2}, \ldots, \mu_{t_{b_t}}\}$ where $b_t$ is the number of terminal nodes for a given tree. The observation's predicted value is then the sum of the $m$ leaf values arrived at by recursing down all $m$ trees. 
+The structure of a given tree $\treet{t}$ includes information on how any observation recurses down the tree. For each nonterminal (internal) node of the tree, there is a \qu{splitting rule} taking the form $\x_j < c$, which consists of the \qu{splitting variable} $\x_j$ and the \qu{splitting value} $c$. An observation moves to the left child node if the condition set by the splitting rule is satisfied (and it moves to the right child node otherwise). The process continues until a terminal node is reached. Then, the observation receives the leaf value of the terminal node. We denote the set of the tree's leaf parameters as  $\leaf_t = \{\mu_{t,1}, \mu_{t,2}, \ldots, \mu_{t_{b_t}}\}$ where $b_t$ is the number of terminal nodes for a given tree. The observation's predicted value is then the sum of the $m$ leaf values arrived at by recursing down all $m$ trees. 
 
 BART can be distinguished from other ensemble-of-trees models due to its underlying probability model. As a Bayesian model, BART consists of a set of priors for the structure and the leaf parameters and a likelihood for data in the terminal nodes. The aim of the priors is to provide regularization, preventing any single regression tree from dominating the total fit. 
 
@@ -209,39 +167,37 @@ We provide an overview of the BART priors and likelihood and then discuss how dr
 \subsection{Priors and likelihood}\label{subsec:prior_likelihood}
 
 The prior for the BART model has three components: (1) the tree structure itself, (2) the leaf parameters given the tree structure, and (3) the error variance $\sigsq$ which is independent of the tree structure and leaf parameters
-
 \beqn 
 \prob{\treeleaft{1},\ldots,\treeleaft{m}, \sigsq} &=& \bracks{\prod_{t}\prob{\treeleaft{t}}}\prob{\sigsq} 
    = \bracks{\prod_{t}\cprob{\leaf_t}{\treet{t}}\prob{\treet{t}}}\prob{\sigsq}  \\
-&=& \bracks{\prod_{t}\prod_{\ell}\cprob{ \mu_{t,\ell}}{\treet{t}}\prob{\treet{t}}}\prob{\sigsq}
+&=& \bracks{\prod_{t}\prod_{\ell}\cprob{ \mu_{t,\ell}}{\treet{t}}\prob{\treet{t}}}\prob{\sigsq},
 \eeqn
+\noindent where the last equality follows from an additional assumption of conditional independence of the leaf parameters given the tree's structure. 
 
-\noindent where the last euality follows from an additional assumption of conditional independence of the leaf parameters given the tree's structure. 
+We first describe $\prob{\treet{t}}$, the component of the prior which affects the locations of nodes within the tree. Node depth is defined as distance from the root. Thus, the root itself has depth 0, its first child node has depth 1, etc. Nodes at depth $d$ are nonterminal with prior probability $\alpha(1+d)^{-\beta}$ where $\alpha \in (0,1)$ and $\beta \in [0, \infty]$. This component of the tree structure prior has the ability to enforce shallow tree structures, thereby limiting complexity of any single tree and resulting in more model regularization. Default values for these hyperparameters of $\alpha = 0.95$ and $\beta = 2$ are recommended by \citet{Chipman2010}. 
 
-We first describe $\prob{\treet{t}}$, the component of the prior which affects the locations of nodes within the tree. Node depth is defined as distance from the root. Thus, the root itself has depth 0, its first child node has depth 1, etc. Nodes at depth $d$ are nonterminal with prior probability $\alpha(1+d)^{-\beta}$ where $\alpha \in (0,1)$ and $\beta \in [0, \infty]$. $\prob{\treet{t}}$ is then the product of all terminal nodes' probabilities. This tree structure prior has the ability to enforce shallow tree structures, thereby limiting complexity of any single tree and resulting in more model regularization. Default values for these hyperparameters of $\alpha = 0.95$ and $\beta = 2$ are recommended by \citet{Chipman2010}. 
-
-For nonterminal nodes, splitting rules occur in two parts. First, the predictor is randomly selected to serve as the splitting variable. In the original formulation, each available predictor is equally likely to be chosen from a discrete uniform distribution with probability that each varible selected is $1/p$. This is relaxed in our implementation to allow for a generalized Bernoulli distribution where the user specifies $p_1, p_2, \ldots, p_p$ (such that $\sum_{j=1}^p p_j = 1$), where each denotes the probability of the $j$th variable bein selected a priori. See Section~\ref{subsec:cov_prior} on the covariate prior feature for further details. Additionally, note that \qu{structural zeroes,} variables that do not have any valid split values, are assigned probability zero in the implementation (see Appendix \ref{subapp:grow_step} for details). Once the splitting variable is chosen, the splitting value is chosen from the multiset (the non-unique set) of available values at the node via the discrete uniform distribution. 
+For nonterminal nodes, splitting rules occur in two parts. First, the predictor is randomly selected to serve as the splitting variable. In the original formulation, each available predictor is equally likely to be chosen from a discrete uniform distribution with probability that each variable is selected with probability $1/p$. This is relaxed in our implementation to allow for a generalized Bernoulli distribution where the user specifies $p_1, p_2, \ldots, p_p$ (such that $\sum_{j=1}^p p_j = 1$), where each denotes the probability of the $j$th variable being selected a priori. See Section~\ref{subsec:cov_prior} on the covariate prior feature for further details. Additionally, note that \qu{structural zeroes,} variables that do not have any valid split values, are assigned probability zero in the implementation (see Appendix \ref{subapp:grow_step} for details). Once the splitting variable is chosen, the splitting value is chosen from the multiset (the non-unique set) of available values at the node via the discrete uniform distribution. 
 
 We now describe the prior component $\cprob{\leaf_t}{\treet{t}}$ which controls the leaf parameters. Given a tree with a set of terminal nodes, each terminal node (or leaf) has a continuous parameter (the leaf parameter) representing the \qu{best guess} of the response in this partition of predictor space. This parameter is the fitted value assigned to any observation that lands in that node. The prior on each of the leaf parameters is given as: $\mu_\ell \iid \normnot{\mu_\mu / m}{\sigsq_\mu}$. The expectation, $\mu_\mu$, is picked to be the range center, $(y_{\text{min}} + y_{\text{max}}) / 2$. The range center can be affected by outliers. If this is a concern, the user can log-transform or windsorize the response before model construction. 
 
-The variance hyperparameter $\sigsq_\mu$ is empirically chosen so that the range center plus or minus $k = 2$ variances cover 95\% of the provided response values in the training set (where $k=2$ corresponding to 95\% coverage is only by default and can be customized). Thus, since there are $m$ trees, we then choose $\sigma_\mu$ such that $m \mu_\mu - k\sqrt{m} \sigma_\mu = y_{\text{min}}$ and  $m \mu_\mu + k\sqrt{m} \sigma_\mu = y_{\text{max}}$. The aim of this prior is to provide model regularization by shrinking the leaf parameters towards the center of the distribution of the response. The smaller the value of $k$, the smaller the value of $\sigsq_\mu$ resulting in more model regularization.
+The variance hyperparameter $\sigsq_\mu$ is empirically chosen so that the range center plus or minus $k = 2$ variances cover 95\% of the provided response values in the training set (where $k=2$ corresponding to 95\% coverage is only by default and can be customized). Thus, since there are $m$ trees, we then choose $\sigma_\mu$ such that $m \mu_\mu - k\sqrt{m} \sigma_\mu = y_{\text{min}}$ and  $m \mu_\mu + k\sqrt{m} \sigma_\mu = y_{\text{max}}$. The aim of this prior is to provide model regularization by shrinking the leaf parameters towards the center of the distribution of the response. The larger the value of $k$, the smaller the value of $\sigsq_\mu$, resulting in more model regularization.
 
-The final prior is on the error variance and is chosen to be $\sigsq \sim \invgammanot{\nu / 2}{\nu\lambda / 2}$. $\lambda$ is determined from the data so that there is a $q = 90\%$ a priori chance (by default) that the BART model will improve upon the RMSE from an ordinary least squares regression. Therefore, the majority of the prior probability mass lies below the RMSE from least squares regression. Additionally, this prior limits the probability mass placed on small values of $\sigsq$ to prevent overfitting. Thus, the higher the value of $q$, the larger the values of the sampled $\sigsq$'s resulting in more model regularization.
+The final prior is on the error variance and is chosen to be $\sigsq \sim \invgammanot{\nu / 2}{\nu\lambda / 2}$. $\lambda$ is determined from the data so that there is a $q = 90\%$ a priori chance (by default) that the BART model will improve upon the RMSE from an ordinary least squares regression. Therefore, the majority of the prior probability mass lies below the RMSE from least squares regression. Additionally, this prior limits the probability mass placed on small values of $\sigsq$ to prevent overfitting. Thus, the higher the value of $q$, the larger the values of the sampled $\sigsq$'s, resulting in more model regularization.
 
 Note that the adjustable hyperparameters are $\alpha$, $\beta$, $k$, $\nu$ and $q$. Additionally, $m$, the number of trees, must be chosen. Default values generally provide good performance, but optimal tuning can be achieved automatically via cross-validation, a feature implemented and described in Section~\ref{subsec:model_building}.
 
-Along with a set of priors, BART specifies the likelihood of responses in the terminal nodes. They are assumed a priori normal with the mean being the \qu{best guess} in the leaf at the moment (i.e. in the current MCMC iteration) and variance being the best guess of the variance at the moment, $\y_\ell \sim \normnot{\mu_\ell}{\sigsq}$.
+Along with a set of priors, BART specifies the likelihood of responses in the terminal nodes. They are assumed a priori normal with the mean being the \qu{best guess} in the leaf at the moment (i.e., in the current MCMC iteration) and variance being the best guess of the variance at the moment, $y_\ell \sim \normnot{\mu_\ell}{\sigsq}$.
 
 \subsection{Posterior distribution and prediction} \label{subsec:posterior}
 
 A Metropolis-within-Gibbs sampler \citep{Geman1984, Hastings1970} is employed to generate draws from the posterior distribution of $\mathbb{P}(\treeleaft{1}, \ldots, \treeleaft{m}, \sigsq ~|~\y)$. A key feature of this sampler for BART is to employ a form of ``Bayesian backfitting'' \citep{Hastie2000} where the $j$th tree is fit iteratively, holding all other $m-1$ trees constant by exposing only the residual response that remains unfitted: 
-
+%
 \bneqn\label{eq:response_unfitted}
 \R_{-j} := \y - \sum_{t \neq j} \treeleaft{t}(\X).
 \eneqn
-
+%
 The sampler,
-
+%
 \bneqn\label{eq:gibbs_sampler}
 1: && \treet{1} ~|~ \R_{-1}, \sigsq \\ \nonumber
 2: && \leaf_1 ~|~ \treet{1}, \R_{-1}, \sigsq \\ \nonumber
@@ -252,97 +208,147 @@ The sampler,
 2m: && \leaf_m ~|~ \treet{m}, \R_{-m}, \sigsq \\ \nonumber
 2m + 1: && ~\,\sigsq ~|~ \treet{1}, \leaf_1, \ldots, \treet{m}, \leaf_m, \berrorrv, \nonumber
 \eneqn
-
-\noindent proceeds by first proposing a change to the first tree's structure $\treet{}$ which are accepted or rejected via a Metropolis-Hastings step. Note that sampling from the posterior of the tree structure does not depend on the leaf parameters, as they can be analytically integrated out of the computation (see Appendix ~\ref{subapp:grow_step}). Given the tree structure, samples from the posterior of the $b$ leaf parameters $\leaf_1 := \braces{\mu_1, \ldots, \mu_b}$  are then drawn. This procedure progresses iteratively for each tree, using the updated set of partial residuals $\R_{-j}$. Finally, conditional on the updated set of tree structures and leaf parameters, a draw from the posterior of $\sigsq$ is made based on the full model residuals $\berrorrv := \y - \sum_{t = 1}^m \treeleaft{t}(\X)$.
+%
+\noindent proceeds by first proposing a change to the first tree's structure $\treet{}$ which is accepted or rejected via a Metropolis-Hastings step. Note that sampling from the posterior of the tree structure does not depend on the leaf parameters, as they can be analytically integrated out of the computation (see Appendix ~\ref{subapp:grow_step}). Given the tree structure, samples from the posterior of the $b$ leaf parameters $\leaf_1 := \braces{\mu_1, \ldots, \mu_b}$  are then drawn. This procedure progresses iteratively for each tree, using the updated set of partial residuals $\R_{-j}$. Finally, conditional on the updated set of tree structures and leaf parameters, a draw from the posterior of $\sigsq$ is made based on the full model residuals $\berrorrv := \y - \sum_{t = 1}^m \treeleaft{t}(\X)$.
 
 Within a given terminal node, since both the prior and likelihood are normally distributed, the posterior of each of the leaf parameters in $\leaf$ is conjugate normal with its mean being a weighted combination of the likelihood and prior parameters (lines $2,~4, \ldots, 2m$ in Equation set~\ref{eq:gibbs_sampler}). Due to the normal-inverse-gamma conjugacy, the posterior of $\sigsq$ is inverse gamma as well (line $2m+1$ in Equation set~\ref{eq:gibbs_sampler}). The complete expressions for these posteriors can be found in \citet{Gelman2004}. 
 
 Lines $1,~3,\ldots,~2m-1$ in Equation set~\ref{eq:gibbs_sampler} rely on Metropolis-Hastings draws from the posterior of the tree distributions. These involve introducing small perturbations to the tree structure: growing a terminal node by adding two child nodes, pruning two child nodes (rendering their parent node terminal), or changing a split rule. We denote the three possible tree alterations as: GROW, PRUNE, and CHANGE.\footnote{In the original formulation, \citet{Chipman2010} include an additional alteration called SWAP. Due to the complexity of the bookkeeping associated with this alteration, we do not implement it.} The mathematics associated with the Metropolis-Hastings step are tedious. Appendix~\ref{app:implementation} contains the explicit calculations. Once again, over many MCMC iterations, trees evolve to capture the fit left currently unexplained.
 
-%%up to here
-\citet{Pratola2013} argue that a CHANGE step is unnecessary for sufficient mixing of the Gibbs sampler. While we too observed this to be true for estimates of the posterior means, we found that omitting CHANGE can negatively impact the variable inclusion proportions (the feature introduced in Section~\ref{subsec:variable_importance}). As a result, we implement a modified CHANGE where we only propose new splits for nodes that are singly internal: both children nodes  are terminal nodes (details are given in Appendix~\ref{subapp:change_step}). After a singly internal node is selected we (1) select a new split attribute from the set of available predictors and (2) select a new split value from the multiset of avilable values (these two uniform splitting rules were explained in detail previously). We emphasize that the CHANGE step does not alter tree structure.
+\citet{Pratola2013} argue that a CHANGE step is unnecessary for sufficient mixing of the Gibbs sampler. While we too observed this to be true for estimates of the posterior means, we found that omitting CHANGE can negatively impact the variable inclusion proportions (the feature introduced in Section~\ref{subsec:variable_importance}). As a result, we implement a modified CHANGE step where we only propose new splits for nodes that are singly internal. These are nodes where both children nodes are terminal nodes (details are given in Appendix~\ref{subapp:change_step}). After a singly internal node is selected we (1) select a new split attribute from the set of available predictors and (2) select a new split value from the multiset of available values (these two uniform splitting rules were explained in detail previously). We emphasize that the CHANGE step does not alter the tree structure.
 
-All $2m+1$ steps represent a \textit{single} Gibbs iteration. We have observed that generally no more than 1,000 iterations are needed as ``burn-in'' (see Section~\ref{subsec:assumption_checking} for convergence diagnostics). An additional 1,000 iterations are usually sufficient to serve as draws from the posterior for $f(\x)$. A single predicted value $\hat{f}(\x)$ can be obtained by taking the average of the posterior values and a quantile estimate can be obtained by computing the appropriate quantile of the posterior values. Additional features of the posterior distribution will be discussed in Section~\ref{sec:regression_features}.
+All $2m+1$ steps represent a \textit{single} Gibbs iteration. We have observed that generally no more than 1,000 iterations are needed as ``burn-in'' (the default package setting is 250). See Section~\ref{subsec:assumption_checking} for the use of convergence diagnostics. An additional 1,000 iterations are usually sufficient to serve as draws from the posterior for $f(\x)$. A single predicted value $\hat{f}(\x)$ can be obtained by taking the average of the posterior values and a quantile estimate can be obtained by computing the appropriate quantile of the posterior values. Additional features of the posterior distribution will be discussed in Section~\ref{sec:regression_features}.
 
 \subsection{BART for classification} \label{subsec:probit_bart}
 
-BART can easily be modified to handle classification problems for categorical response variables. In \citet{Chipman2010},  only binary outcomes were explored but recent work has extended BART to the multiclass problem \citep{Kindo2013}. Our implementation handles binary classification and we plan to implement multiclass outcomes in a future release.
+BART can easily be modified to handle classification problems for categorical response variables. In \citet{Chipman2010}, only binary outcomes were explored but recent work has extended BART to the multiclass problem \citep{Kindo2013}. Our implementation handles binary classification and we plan to implement multiclass outcomes in a future release.
 
 For the binary classification problem (coded with outcomes ``0'' and ``1''), we assume a probit model,
-
 \beqn
-\cprob{\Y = 1}{\X} = \Phi\parens{\treeleaft{1}(\X) + \treeleaft{2}(\X) + \ldots + \treeleaft{m}(\X)},
+\cprob{Y = 1}{\X} = \Phi\parens{\treeleaft{1}(\X) + \treeleaft{2}(\X) + \ldots + \treeleaft{m}(\X)},
 \eeqn
-
 \noindent where $\Phi$ denotes the cumulative density function of the standard normal distribution. In this formulation, the sum-of-trees model serves as an estimate of the conditional probit at $\x$ which can be easily transformed into a conditional probability estimate of $Y=1$. 
 
 In the classification setting, the prior on $\sigsq$ is not needed as the model assumes $\sigsq=1$. The prior on the tree structure remains the same as in the regression setting and a few minor modifications are required for the prior on the leaf parameters. 
 
-Sampling from the posterior distribution is again obtained via Gibbs sampling with a Metropolis-Hastings step outlined in Section~\ref{subsec:posterior}. Following the data augmentation approach of \citet{Albert1993}, an additional vector of latent variables $\Z$ is introduced into the Gibbs sampler. Then, a new step is created in the Gibbs sampler where draws of $\Z\,|\,\y$ are obtained by conditioning on the sum-of-trees model:
-
+Sampling from the posterior distribution is again obtained via Gibbs sampling in combination with a Metropolis-Hastings step outlined in Section~\ref{subsec:posterior}. Following the data augmentation approach of \citet{Albert1993}, an additional vector of latent variables $\Z$ is introduced into the Gibbs sampler. Then, a new step is created in the Gibbs sampler where draws of $\Z\,|\,\y$ are obtained by conditioning on the sum-of-trees model:
+%
 \beqn
 Z_i~|~y_i=1 &\sim& \max{N\parens{\sum_t \treeleaft{t}\parens{\X},1}, \,0} \mathand \\
 Z_i~|~y_i = 0  &\sim& \min{N\parens{\sum_t \treeleaft{t}\parens{\X},1}, \,0}.
 \eeqn
-
+%
 \noindent Next, $\Z$ is used as the response vector instead of $\y$ in all steps of  Equation~\ref{eq:gibbs_sampler}.
 
-Upon obtaining a sufficient number of samples from the posterior, inferences can be made using the the posterior distribution of conditional probabilities and classification can be undertaken by applying a threshold to the to the means (or another summary) of these posterior probabilities. The relevant classification features of \pkg{bartMachine} are discussed in Section~\ref{sec:classification_features}.
+Upon obtaining a sufficient number of samples from the posterior, inferences can be made using the posterior distribution of conditional probabilities and classification can be undertaken by applying a threshold to the averages (or another summary) of these posterior probabilities. The relevant classification features of \pkg{bartMachine} are discussed in Section~\ref{sec:classification_features}.
 
 
 
 \section[The bartMachine package]{The \pkg{bartMachine} package}\label{sec:package}
 
-The package \pkg{bartMachine} provides a novel implementation of Bayesian additive regression trees in \proglang{R}. The algorithm is substantially faster than the current \proglang{R} package \pkg{BayesTree} and our implementation is parallelized at the MCMC iteration level during prediction.  Additionally, the interface with \pkg{rJava} allows for the entire posterior distribution of tree ensembles to persist throughout the \proglang{R} session, allowing for prediction and other calls to the trees without having to re-run the Gibbs sampler (a limitation in the current \pkg{BayesTree} implementation). The \pkg{bartMachine} object can persist across \proglang{R} sessions as well, a feature discussed in Section~\ref{subsec:persistence}. Since our implementation is different from \pkg{BayesTree}, we provide a predictive accuracy bakeoff on different datasets in Appendix~\ref{app:bakeoff} which illustrates that the two are about equal.
+The package \pkg{bartMachine} provides a novel implementation of Bayesian additive regression trees in \proglang{R}. The algorithm is substantially faster than the current \proglang{R} package \pkg{BayesTree} and our implementation is parallelized at the MCMC iteration level during prediction.  Additionally, the interface with \pkg{rJava} allows for the entire posterior distribution of tree ensembles to persist throughout the \proglang{R} session, allowing for prediction and other calls to the trees without having to re-run the Gibbs sampler (a limitation in the current \pkg{BayesTree} implementation). The \pkg{bartMachine} object can be serialized, thereby persisting across \proglang{R} sessions as well (a feature discussed in Section~\ref{subsec:persistence}). Since our implementation is different from \pkg{BayesTree}, we provide a predictive accuracy bakeoff on different datasets in Appendix~\ref{app:bakeoff} which illustrates that the two exhibit similar performance.
 
 \subsection{Speed improvements and parallelization}\label{subsec:speed_and_parallelization}
 
 We make a number of significant speed improvements over the original implementation. 
 
-First, \pkg{bartMachine} is fully parallelized (with the number of cores customizable) during model creation, prediction, and many of the other features. During model creation, we chose to parallelize by creating one independent Gibbs chain per core. Thus, if we employ the deafult 250 burn-in samples and 1,000 post burn-in samples and four cores, each core would sample 500 samples: 250 for a burn-in and 250 post burn-in samples. The final model will aggregate the post burn-in samples for the four cores yielding the desired 1,000 total burn-in samples. This has the drawback of effectively running the burn-in serially (which suffers from Amdahl's Law), but has the added benefit of reducing auto-correlation of the sum-of-trees samples in the posterior samples since the chains are independent which may provide greater predictive performance. Parallelization at the level of likelihood calculations is left for a future release as we were unable to address the costs of thread overhead. Parallelization for prediction and other features scale linearly in the number of cores.
+First, \pkg{bartMachine} is fully parallelized (with the number of
+cores customizable) during model creation, prediction, and many of the
+other features. During model creation, we chose to parallelize by
+creating one independent Gibbs chain per core. Thus, if we employ the
+default 250 burn-in samples and 1,000 post-burn-in samples and four
+cores, each core would sample 500 samples: 250 for a burn-in and 250
+post-burn-in samples. The final model will aggregate the four post
+burn-in chains for the four cores yielding the desired 1,000 total
+post-burn-in samples. This has the drawback of effectively running the
+burn-in serially (which suffers from Amdahl's Law), but has the added
+benefit of reducing auto-correlation of the sum-of-trees samples in
+the posterior samples since the chains are independent which may
+provide greater predictive performance. Parallelization at the level
+of likelihood calculations is left for a future release as we were
+unable to address the costs of thread overhead. Parallelization for
+prediction and other features scale linearly in the number of cores
+without Amdahl's diminishing returns.
 
 Additionally, we take advantage of a number of additional computational shortcuts:
-
+%
 \begin{enumerate}[1.]
-\item Computing the unfitted responses for each tree (Equation~\ref{eq:response_unfitted}) can be accomplished by keeping a running vector and making entry-wise updates as the Gibbs sampler (Equation~\ref{eq:gibbs_sampler}) progresses from step 1 to $2m$. Additionally, during the $\sigsq$ sampling (step $2m + 1$), the residuals do not have to be computed by dropping the data down all the trees.
-\item Each node caches its acceptable variables for split rules and the acceptable unique split values so they do not need to be calculated at each tree sampling step. Recall from the discussion concerning uniform splitting rules in Section~\ref{subsec:prior_likelihood} that acceptable predictors and values change based on the data available at an arbitrary location in the tree structure. This speed enhancement, which we call \textit{memcache} comes at the expense of memory and may cause issues for large data sets. We include a toggle in our implementation defaulted to ``on.''
-\item Careful calculations in Appendix~\ref{app:implementation} eliminate many unnecessary computations. For instance, the likelihood ratios are only functions of the squared sum of responses and no longer require computing the sum of the responses squared.
+\item Computing the unfitted responses for each tree
+  (Equation~\ref{eq:response_unfitted}) can be accomplished by keeping
+  a running vector and making entry-wise updates as the Gibbs sampler
+  (Equation~\ref{eq:gibbs_sampler}) progresses from step 1 to
+  $2m$. Additionally, during the $\sigsq$ sampling (step $2m + 1$),
+  the residuals do not have to be computed by dropping the data down
+  all the trees.
+\item Each node caches its acceptable variables for split rules and
+  the acceptable unique split values so they do not need to be
+  calculated at each tree sampling step. Recall from the discussion
+  concerning uniform splitting rules in
+  Section~\ref{subsec:prior_likelihood} that acceptable predictors and
+  values change based on the data available at an arbitrary location
+  in the tree structure. This speed enhancement, which we call
+  \textit{memcache} comes at the expense of memory and may cause
+  issues for large data sets. We include a toggle in our
+  implementation defaulted to ``on.''
+\item Careful calculations in Appendix~\ref{app:implementation}
+  eliminate many unnecessary computations. For instance, the
+  likelihood ratios are only functions of the squared sum of responses
+  and no longer require computing the sum of the responses squared.
 \end{enumerate}
+%
+Figure~\ref{fig:time_plots} displays model creation speeds for
+different values of $n$ on a linear regression model with $p=20$,
+normally distributed covariates,
+$\beta_1, \ldots, \beta_{20} \iid \uniform{-1}{1}$, and standard
+normal noise. Note that we do not vary $p$ as it was already shown in
+\citet{Chipman2010} that BART's computation time is largely unaffected
+by the dimensionality of the problem. We include results for BART
+using \pkg{BayesTree}, \pkg{bartMachine} with one and four cores, the
+\textit{memcache} option on and off, as well as four cores,
+\textit{memcache} off and computation of in-sample statistics off (all
+with $m=50$ trees). In-sample statistics by default are computed consisting of 
+in-sample predictions ($\yhat$), residuals ($e := y - \yhat$), $L1$
+error which is defined as $\sum_{i=1}^{n_{\text{train}}} |e_i|$, $L2$
+error which is defined as $\sum_{i=1}^{n_{\text{train}}} e_i^2$,
+pseudo-$R^2$ which is defined as
+$1 - L2 / (\sum_{i=1}^{n_{\text{train}}} \squared{y_i - \bar{y}})$ and
+root mean squared error which is defined as
+$\sqrt{L2 / n_{\text{train}}}$. We also include random forests model
+creation times via the package \pkg{randomForest} \citep{Liaw2002}
+with its default settings.
 
-Figure~\ref{fig:time_plots} displays model creation speeds for different values of $n$ on a linear regression model with $p=20$, normally distributed covariates, $\beta_1, \ldots, \beta_{20} \iid \uniform{-1}{1}$, and standard normal noise. Note that we do not vary $p$ as it was already shown in \citet{Chipman2010} that BART's computation time is largely unaffected by the dimensionality of the problem (relative to the influence of sample size).  We include results for BART using \pkg{BayesTree}, \pkg{bartMachine} with one and four cores, the \textit{memcache} option on and off, as well as four cores, \textit{memcache} off and computation of in-sample statistics off (all with $m=50$ trees). In-sample statistics by default are computing in-sample predictions ($\yhat$), residuals ($e := y - \yhat$), $L1$ error which is defined as $\sum_{i=1}^{n_{\text{train}}} |e_i|$, $L2$ error which is defined as $\sum_{i=1}^{n_{\text{train}}} e_i^2$, pseudo-$R^2$ which is defined as $1 - L2 / (\sum_{i=1}^{n_{\text{train}}} \squared{y_i - \bar{y}})$ and root mean squared error which is defined as $\sqrt{L2 / n_{\text{train}}}$. We also include random forests model creation times via the package \pkg{randomForest} \citep{Liaw2002} with its default settings.
-
-\begin{figure}[htp]
+\begin{figure}[t!]
 \centering
 \begin{subfigure}[c]{.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/speed_full2}
+                \includegraphics[width=3.2in, trim = 0 10 0 50, clip]{speed_full4}
                 \caption{Large sample sizes}
                 \label{fig:time_plots_large_sample}
         \end{subfigure}
 \begin{subfigure}[c]{.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/speed_zoomed2}
+                \includegraphics[width=3.2in, trim = 0 10 0 50, clip]{speed_zoomed4}
                 \caption{Small sample sizes}
                 \label{fig:time_plots_small_sample}
         \end{subfigure}
-\caption{Model creation times as a function of sample size for a number of settings of \pkg{bartMachine}, \pkg{BayesTree} and \texttt{RandomForests}. Simulations were run on a quad-core 3.4GHz Intel i5 desktop with 24GB of RAM running the Windows 7 64bit operating system.}
+\caption{Model creation times as a function of sample size for a number of settings of \pkg{bartMachine}, \pkg{BayesTree} and \pkg{randomForest}. Simulations were run on a quad-core 3.4GHz Intel i5 desktop with 24GB of RAM running the Windows 7 64bit operating system.}
 \label{fig:time_plots}
 \end{figure}
 
-We first note that Figure~\ref{fig:time_plots_large_sample} demonstrates that the \pkg{bartMachine} model creation runtime is approximately linear in $n$ (without in-sample statistics computed). There is about a 30\% speed-up when using four cores instead of one. The \textit{memcache} enhancement should be turned off only with sample sizes larger than $n=20,000$. Noteworthy is the 50\% reduction in time of constructing the model when not computing in-sample statistics. In-sample statistics are computed by default because the user generally wishes to see them. Also, for the purposes of this comparison, \pkg{BayesTree} models compute the in-sample statistics by necessity since the trees are not saved. The \pkg{randomForest} implementation becomes slower just after $n=1,000$ due to its reliance on a greedy exhaustive search at each node.
+We first note that Figure~\ref{fig:time_plots_large_sample} demonstrates that the \pkg{bartMachine} model creation run time is approximately linear in $n$ (without in-sample statistics computed). There is about a 30\% speed-up when using four cores instead of one. The \textit{memcache} enhancement should only be turned off when regressing \qu{large} sample sizes. (We cannot give general advice here; the user should experiment on their specific dataset and specific hardware to find when the RAM requirement of this feature exceeds capacity). Noteworthy is the 50\% reduction in time of constructing the model when not computing in-sample statistics. In-sample statistics are computed by default because the user generally wishes to see them. Also, for the purposes of this comparison, \pkg{BayesTree} models compute the in-sample statistics by necessity since the trees are not saved. The \pkg{randomForest} implementation becomes slower just after $n=1,000$ due to its reliance on greedy exhaustive search at each node.
 
-Figure~\ref{fig:time_plots_small_sample} displays results for smaller sample sizes ($n \leq 2,000$) that are often encountered in practice. We observe the \textit{memcache} enhancement provides about a 10\% speed improvement. Thus, if memory is an issue, it can be turned off with little performance degradation. \pagebreak
+Figure~\ref{fig:time_plots_small_sample} displays results for smaller sample sizes ($n \leq 2,000$) that are often encountered in practice. We observe the \textit{memcache} enhancement provides about a 10\% speed improvement. Thus, if memory is an issue, it can be turned off with little performance degradation.
 
 \subsection[Missing data in bartMachine]{Missing data in \pkg{bartMachine}}\label{subsec:missing_data}
 
 \pkg{bartMachine} implements a native method for incorporating missing data into both model creation and future prediction with test data. The details are given in \citet{Kapelner2013} but we provide a brief summary here.
 
-There are a number of ways to incorporate missingness into tree-based methods (see \citealp{Ding2010} for a review). The method implemented here is known as \qu{Missing Incorporated in Attributes} \citep[MIA, ][section 2]{Twala2008} which natively incorporates missingness by augmenting the nodes' splitting rules to (a) also handle sorting the missing data to the left or right and (b) use missingness \textit{itself} as a variable to be considered in a splitting rule. Table \ref{tab:mia} summarizes these new splitting rules as they are implemented within the package.
+There are a number of ways to incorporate missingness into tree-based methods (see \citealp{Ding2010} for a review). The method implemented here is known as \qu{Missing Incorporated in Attributes} \citep[MIA;][Section 2]{Twala2008} which natively incorporates missingness by augmenting the nodes' splitting rules to (a) also handle sorting the missing data to the left or right and (b) use missingness \textit{itself} as a variable to be considered in a splitting rule. Table \ref{tab:mia} summarizes these new splitting rules as they are implemented within the package.
 
-Implementing MIA into the BART procedure is straightforward. These new splitting rules are sampled uniformly during the GROW or CHANGE steps. For example, a splitting rule might be \qu{$\x_j < c$ or $\x_j$ is missing.} To account for splitting on missingness itself, we create dummy vectors of length $n$ for each of the $p$ attributes, denoted $\M_1, \ldots, \M_p$, which assume the value 1 when the entry is missing and 0 when the entry is present. The original training matrix is then augmented with these dummies, giving the opportunity to select missingness \textit{itself} when choosing a new splitting rule during the grow or change steps. Note that this can increase the number of predictors by up to a factor of 2. We illustrate building a \pkg{bartMachine} model with missing data in Section~\ref{subsec:incorporating_missing_data}. As described in \citet[][Section 6]{Chipman2010}, BART's runtime increases negligibly in the number of covariates and this has been our experience using the augmented training matrix.
+Implementing MIA into the BART procedure is straightforward. These new splitting rules are sampled uniformly during the GROW or CHANGE steps. For example, a splitting rule might be \qu{$\x_j < c$ or $\x_j$ is missing.} To account for splitting on missingness itself, we create dummy vectors of length $n$ for each of the $p$ attributes, denoted $\M_1, \ldots, \M_p$, which assume the value 1 when the entry is missing and 0 when the entry is present. The original training matrix is then augmented with these dummies, giving the opportunity to select missingness \textit{itself} when choosing a new splitting rule during the grow or change steps. Note that this can increase the number of predictors by up to a factor of 2. We illustrate building a \pkg{bartMachine} model with missing data in Section~\ref{subsec:incorporating_missing_data}. As described in \citet[][Section 6]{Chipman2010}, BART's run time increases negligibly in the number of covariates and this has been our experience using the augmented training matrix.
 
-\begin{table}[htp]
-\caption{The MIA choices for all attributes $j \in \braces{1, \ldots, p}$ and all split points $x^*_{ij}$ where $i \in \braces{1,\ldots,n}$ during a GROW or CHANGE step in \pkg{bartMachine}.}
+\begin{table}[t!]
+\centering
 \begin{tabular}{ll}
 \hline
 1: & If $x_{ij}$ is missing, send it $\longleftarrow$; if it is present and $x_{ij} \leq x^*_{ij}$, send it $\longleftarrow$, otherwise $\longrightarrow$. \\
@@ -350,15 +356,16 @@ Implementing MIA into the BART procedure is straightforward. These new splitting
 3: & If $x_{ij}$ is missing, send it $\longleftarrow$; if it is present, send it $\longrightarrow$. \\
 \hline
 \end{tabular}
+\caption{The MIA choices for all attributes $j \in \braces{1, \ldots, p}$ and all split points $x^*_{ij}$ where $i \in \braces{1,\ldots,n}$ during a GROW or CHANGE step in \pkg{bartMachine}.}
 \label{tab:mia}
 \end{table}
 
 \subsection{Variable selection}\label{subsec:variable_selection}
 
-Our package also implements the variable selection procedures developed in \citet{Bleich2014}, which is best applied to data problems where the number of covariates influencing the response is small relative to the total number of covariates. We give a brief summary of the procedures here. 
+Our package also implements the variable selection procedures developed in \citet{Bleich2014}, which are best applied to data problems where the number of covariates influencing the response is small relative to the total number of covariates. We give a brief summary of the procedures here. 
 
- In order to select variables, we make use of the \qu{variable inclusion proportions,} the proportion of times each predictor is chosen as a splitting rule divided by the total number of splitting rules appearing in the model (see Section~\ref{subsec:variable_importance} for more details). The variable selection procedure can be outlined as follows: 
-
+ In order to select variables, we make use of the \qu{variable inclusion proportions:} the proportion of times each predictor is chosen as a splitting rule divided by the total number of splitting rules appearing in the model (see Section~\ref{subsec:variable_importance} for more details). The variable selection procedure can be outlined as follows: 
+%
 \begin{enumerate}[1.]
 \item Compute the model's variable inclusion proportions.
 \item Permute the response vector, thereby breaking the relationship between the covariates and the response. Rebuild the model and compute the \qu{null} variable inclusion proportions. Repeat this a number of times to create a null permutation distribution. 
@@ -368,272 +375,515 @@ Our package also implements the variable selection procedures developed in \cite
 \item Global Max Threshold: Include a predictor $\x_k$ if its variable inclusion proportion exceeds the $1-\alpha$ quantile of the distribution of the maximum of the null variable inclusion proportions from each permutation of the response.
 \item Global SE Threshold: Select $\x_k$ if its variable inclusion proportion exceeds a threshold based from its own null distribution mean and SD with a global multiplier shared by all predictors.
 \end{enumerate}
-
-
 \end{enumerate}
+%
+The Local procedure is the least stringent in terms of selection and the Global Max procedure the most. The Global SE procedure is a compromise, but behaves more similarly to the Global Max. \citet{Bleich2014} demonstrate that the best procedure depends on the underlying sparsity of the problem, which is often unknown. Therefore, the authors include an additional procedure that chooses the best of these thresholds via cross-validation and this method is also implemented in \pkg{bartMachine}.  As highlighted in \citet{Bleich2014}, this method performs favorably compared to variable selection using random forests' \qu{importance scores}, which rely on the reduction in out-of-bag forecasting accuracy that occurs from shuffling the values for a particular predictor and dropping the out-of-bag observations down each tree.  Examples of these procedures for variable selection are provided in Section~\ref{subsec:variable_selection_regression}.
 
-
-The Local procedure is the least stringent in terms of selection and the Global Max procedure the most. The Global SE procedure is a compromise, but behaves more similarly to the Global Max. \citet{Bleich2014} demonstrate that the best procedure depends on the underlying sparsity of the problem, which is often unknown. Therefore, the authors include an additional procedure that chooses the best of these thresholds via cross-validation and this method is also implemented in \pkg{bartMachine}.  As highlighted in \citet{Bleich2014}, this method performs favorably compared to variable selection using random forests \qu{importance scores}, which rely on the reduction in out-of-bag forecasting accuracy that occurs from shuffling the values for a particular predictor and dropping the out-of-bag observations down each tree.  Examples of these procedures for variable selection are provided in Section~\ref{subsec:variable_selection_regression}. \pagebreak
-
-\section{bartMachine Package Features for Regression}\label{sec:regression_features}
+\section[bartMachine package features for regression]{\pkg{bartMachine} package features for regression}\label{sec:regression_features}
 
 We illustrate the package features by using both real and simulated data, focusing first on regression problems.
 
 \subsection{Computing parameters}\label{subsec:computing_parameters}
 
-We first set some computing parameters. In this exploration, we allow up to 5GB of RAM for the Java heap\footnote{Note that the maximum amount of memory can be set only \textit{once} at the beginning of the \proglang{R} session (a limitation of \pkg{rJava} since only one Java Virtual Machine can be initiated per \proglang{R} session), but the number of cores can be respecified at any time.} and we set the number of computing cores available for use to 4.
-
-\begin{Code}
+We first set some computing parameters. In this exploration, we allow
+up to 5GB of RAM for the \proglang{Java} heap\footnote{Note that the maximum
+  amount of memory can be set only \textit{once} at the beginning of
+  the \proglang{R} session (a limitation of \pkg{rJava} since only one
+  \proglang{Java} Virtual Machine can be initiated per \proglang{R} session), but
+  the number of cores can be respecified at any time.} and we set the
+number of computing cores available for use to 4.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> options(java.parameters = "-Xmx5000m")
 R> library("bartMachine")
 R> set_bart_machine_num_cores(4)
-\end{Code}
-
-
-The following Sections~\ref{subsec:model_building} -- \ref{subsec:variable_selection_regression} use a dataset obtained from UCI \citep{Bache2013}. The $n=201$ observations are automobiles and the goal is to predict each automobile's price from 25 features (15 continuous and 10 nominal), first explored by \citet{Kibler1989}.\footnote{We first preprocess the data. We first drop one of the nominal predictors (car company) due to too many categories (22). We then coerce two of the of the nominal predictors to be continuous. Further, the response variable, price, was logged to reduce right skew in its distribution.} This dataset also contains missing data. The following code loads the data. We omit missing data for now and we create a variable for the design matrix $\X$ and the response $\y$ which has already been log-transformed.
-
-\begin{Code}
-R> data(automobile)
-R> automobile = na.omit(automobile)
+\end{CodeInput}
+\begin{CodeOutput}
+bartMachine now using 4 cores.
+\end{CodeOutput}
+\end{CodeChunk}
+%
+The following
+Sections~\ref{subsec:model_building}--\ref{subsec:variable_selection_regression}
+use a dataset obtained from the UCI Machine Learning Repository \citep{Bache2013}. The $n=201$
+observations are automobiles and the goal is to predict each
+automobile's price from 25 features (15 continuous and 10 nominal),
+first explored by \citet{Kibler1989}.\footnote{We first preprocess the
+  data. We first drop one of the nominal predictors (car company) due
+  to too many categories (22). We then coerce two of the of the
+  nominal predictors to be continuous. Further, the response variable,
+  price, was logged to reduce right skew in its distribution.} This
+dataset also contains missing data. We omit missing data for now (41
+observations that will later be retained in
+Section~\ref{subsec:incorporating_missing_data}) and we create a
+variable for the design matrix $\X$ and the response $\y$. The
+following code loads the data.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> data("automobile", package = "bartMachine")
+R> automobile <- na.omit(automobile)
 R> y <- automobile$log_price
 R> X <- automobile; X$log_price <- NULL
-\end{Code}
-
+\end{CodeInput}
+\end{CodeChunk}
+%
 \subsection{Model building}\label{subsec:model_building}
-
-We are now are ready to construct a \pkg{bartMachine} model. The default hyperparameters generally follow the recommendations of \citet{Chipman2010} and provide a ready-to-use algorithm for many data problems. Our hyperparameter settings are $m = 50$,\footnote{In contrast to \citet{Chipman2010}, we recommend this default as a good starting point rather than $m=200$ due to our experience experimenting with the \qu{RMSE by number of trees} feature found in later in this section. Performance is often similar and computational time and memory requirements are dramatically reduced.} $\alpha = 0.95$, $\beta = 2$, $k = 2$, $q = 0.9$, $\nu = 3$, and probabilities of the GROW / PRUNE / CHANGE steps is 28\% / 28\% /44\%. We set the number of burn-in Gibbs samples to 250 and number of post-burn-in samples to 1,000. We default the missing data feature to be off. We default the covariates to be equally important \textit{a priori}. Other parameters and their defaults can be found in the package's online manual. Below is a default \pkg{bartMachine} model. Here, $\X$ denotes automobile attributes and $\y$ denotes the log price of the automobile.
-
-\begin{Code}
+We are now ready to construct a \pkg{bartMachine} model. The default
+hyperparameters generally follow the recommendations of
+\citet{Chipman2010} and provide a ready-to-use algorithm for many data
+problems. Our hyperparameter settings are $m = 50$,\footnote{In
+  contrast to \citet{Chipman2010}, we recommend this default as a good
+  starting point rather than $m=200$ due to our experience
+  experimenting with the \qu{RMSE by number of trees} feature found
+  later in this section. Performance is often similar and
+  computational time and memory requirements are dramatically
+  reduced.} $\alpha = 0.95$, $\beta = 2$, $k = 2$, $q = 0.9$,
+$\nu = 3$, and probabilities of the GROW / PRUNE / CHANGE steps is
+28\% / 28\% /44\%. We retain the default number of burn-in Gibbs
+samples (250) as well as the default number of post-burn-in samples
+(1,000). We default the covariates to be equally important \textit{a
+  priori}. Other parameters and their defaults can be found in the
+package's online manual. Below is a default \pkg{bartMachine}
+model. Here, $\X$ denotes automobile attributes and $\y$ denotes the
+log price of the automobile.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine <- bartMachine(X, y)
+\end{CodeInput}
+\begin{CodeOutput}
 Building bartMachine for regression ... evaluating in sample data...done
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+If one wishes to see more information about the individual iterations
+of the Gibbs sampler of Equation~\ref{eq:gibbs_sampler}, the flag
+\texttt{verbose} can be set to \code{TRUE}. One can see more debug
+information from the \proglang{Java} program by setting the flag
+\texttt{debug\_log} to \code{TRUE} and the program will print to
+\texttt{unnamed.log} in the current working directory.
 
-If one wishes to see more information about the individual iterations of the Gibbs sampler of Equation~\ref{eq:gibbs_sampler}, the flag \texttt{verbose} can be set to ``TRUE.'' One can see more debug information from the \proglang{Java} program by setting the flag \texttt{debug\_log} to true and the program will print to \texttt{unnamed.log} in the current working directory. In Figure~\ref{code:default_bart_summary} we inspect the model object to query its in-sample performance and to be reminded of the input data and model hyperparameters.
-
-\begin{figure}[htp]
-\centering
-\begin{Code}
+Below we inspect the model object to query its in-sample performance
+and to be reminded of the input data and model hyperparameters.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine
-bartMachine v1.1.1 for regression
+\end{CodeInput}
+\begin{CodeOutput}
+bartMachine v1.2.1 for regression
 
 training data n = 160 and p = 41 
-built in 1.7 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
+built in 0.5 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
 
 sigsq est for y beforehand: 0.014 
-avg sigsq estimate after burn-in: 0.00794 
+avg sigsq estimate after burn-in: 0.00751 
 
 in-sample statistics:
- L1 = 8.01 
- L2 = 0.65 
+ L1 = 7.86 
+ L2 = 0.62 
  rmse = 0.06 
- Pseudo-Rsq = 0.979
-p-val for shapiro-wilk test of normality of residuals: 0.04584 
-p-val for zero-mean noise: 0.97575
-\end{Code}
-\caption{The summary for the default \pkg{bartMachine} model built with the automobile data. Note that the \qu{p-val for shapiro-wilk test of normality of residuals} is marginally less than 5\%. Thus we conclude that the noise of Equation~\ref{eq:bart} is not normally distributed. Just as when interpreting the results from a linear model, non-normality implies we should be circumspect concerning \pkg{bartMachine} output that relies on this distributional assumption such as the credible and prediction intervals of Section~\ref{subsec:credible_and_prediction_intervals}.}
+ Pseudo-Rsq = 0.9798
+p-val for shapiro-wilk test of normality of residuals: 0.06781 
+p-val for zero-mean noise: 0.95335
+\end{CodeOutput}
+\end{CodeChunk}
+%
 \label{code:default_bart_summary}
-\end{figure}
 
-Since the response was considered continuous, we employ \pkg{bartMachine} for regression. The dimensions of the design matrix are given. Note that we dropped 41 observations that contained missing data (which we will retain in Section~\ref{subsec:incorporating_missing_data}).  We then have a recording of the MSE for the OLS model and our average estimate of $\sigsq_e$. We are then given in-sample statistics on error. Pseudo-$R^2$ is calculated via $1 - SSE/SST$. Also provided are outputs from tests of the error distribution being mean centered and normal. In this case, we reject the normality of the residuals using the Shapiro-Wilk test.
+Since the response was continuous, \pkg{bartMachine} for regression
+was employed automatically (line 1). Line 3 prints the dimensions of
+the design matrix. Line 4 records the creation time along with other
+model parameters. Line 6 records the MSE for the OLS model and Line 7
+displays the \pkg{bartMachine} model's estimate of $\sigsq_e$. We are
+then given in-sample statistics on error in lines 10--13. The
+pseudo-$R^2$ is calculated via $1 - SSE/SST$. Also provided are
+outputs from tests of the error distribution being normal (line 14)
+and mean centered (line 15). Note that the \qu{p-val for shapiro-wilk
+  test of normality of residuals} is marginally less than 5\%. Thus we
+conclude that the noise of Equation~\ref{eq:bart} is not normally
+distributed. Just as when interpreting the results from a linear
+model, non-normality implies we should be circumspect concerning
+\pkg{bartMachine} output that relies on this distributional assumption
+such as the credible and prediction intervals of
+Section~\ref{subsec:credible_and_prediction_intervals}.
 
-We can also obtain out-of-sample statistics to assess level of overfitting by using k-fold cross-validation. Using 10 randomized folds we find:
-
-\begin{Code}
+We can also obtain out-of-sample statistics to assess level of
+overfitting by using $k$-fold cross-validation. Using 10 randomized
+folds we find:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> k_fold_cv(X, y, k_folds = 10)
+\end{CodeInput}
+\begin{CodeOutput}
 ..........
 $L1_err
-[1] 21.64303
+[1] 15.96878
 
 $L2_err
-[1] 4.742511
+[1] 2.682349
 
 $rmse
-[1] 0.1721647
+[1] 0.1294785
 
 $PseudoRsq
-[1] 0.8467881
-\end{Code}
+[1] 0.9133438
+\end{CodeOutput}
+\end{CodeChunk}
+%
+The code provides the out-of-sample statistics for the model built
+above. This function also returns the $\yhat$ predictions as well as
+the vector of the fold indices (which are omitted in the output shown
+above).
 
-The Pseudo-$R^2$ being lower out-of-sample versus in-sample suggests evidence that \pkg{bartMachine} is slightly overfitting (note also that the training sample during cross-validation is 10\% smaller). This function also returns the $\yhat$ predictions as well as the vector of the fold indices (which are omitted above). 
+The Pseudo-$R^2$
+being lower out-of-sample (above) versus in-sample suggests that
+\pkg{bartMachine} is slightly overfitting (note also that the training
+sample during cross-validation is 10\% smaller).
 
-It may also be of interest how the number of trees $m$ affects performance. One can examine how out-of-sample predictions vary by the number of trees via 
-
-\begin{Code}
+It may also be of interest how the number of trees $m$ affects
+performance. One can examine how out-of-sample predictions vary by the
+number of trees via
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> rmse_by_num_trees(bart_machine, num_replicates = 20)
-\end{Code}
+\end{CodeInput}
+\end{CodeChunk}
+%
+\noindent and the output is shown in
+Figure~\ref{fig:rmse_by_trees}. This illustration suggests that
+predictive performance levels off around $m=50$. We observe similar
+illustrations across a wide variety of datasets and hyperparameter
+choices which is the reason we have set $m=50$ as the default value in
+the package.
 
-\noindent and the output is shown in Figure~\ref{fig:rmse_by_trees}.
-
-\begin{figure}[htp]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=3.5in]{images/rmse_num_trees_2}
-\caption{Out-of-sample predictive performance by number of trees}
+\includegraphics[width=3.5in]{rmse_num_trees_3}
+\caption{Out-of-sample predictive performance by number of trees.}
 \label{fig:rmse_by_trees}
 \end{figure}
 
-Figure~\ref{fig:rmse_by_trees} suggests that predictive performance levels off around $m=50$, indicating this choice represents a reasonable default value. Note that some improvement for this data, however, is observed at $m=200$. We can now try to build a better \pkg{bartMachine} by grid-searching over a set of hyperparameter combinations, including $m$ \citep[for more details, see BART-cv in][]{Chipman2010}. The default grid search is small and it can be customized by the user.
-
-\begin{Code}
+Note that there is nominal improvement at $m=200$. There may also be
+improvement if other hyperparameters are varied. We can attempt to
+build a better \pkg{bartMachine} model using the procedure
+\code{bartMachineCV} by grid-searching over a set of hyperparameter
+combinations, including $m$ \citep[for more details, see BART-cv
+in][]{Chipman2010}. The grid of interest can be customized by the user
+and defaults to a small grid.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine_cv <- bartMachineCV(X, y)
+\end{CodeInput}
+\begin{CodeOutput}
 ...
 bartMachine CV win: k: 2 nu, q: 3, 0.9 m: 200
-\end{Code}
-
-This function returns the \qu{winning} model, which is the one with lowest out-of-sample RMSE over a 5-fold cross-validation. Here, the cross-validated \pkg{bartMachine} model has slightly better in-sample performance (L1 = 8.18, L2 = 0.68 and Pseudo-$R^2 = 0.978$) as well as slightly better out-of-sample performance (L1 = 21.05, L2 = 4.40 and Pseudo-$R^2 = 0.858$) as given by:
-
-\begin{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+This function returns the \qu{winning} model, which is the one with
+lowest out-of-sample RMSE over a 5-fold (by default)
+cross-validation. Here, the cross-validated \pkg{bartMachine} model
+has slightly better in-sample performance (L1 = 8.18, L2 = 0.68 and
+Pseudo-$R^2 = 0.978$) in comparison to the default model (output in
+this section, page~\pageref{code:default_bart_summary}) as well as
+slightly better out-of-sample performance (L1 = 21.05, L2 = 4.40 and
+Pseudo-$R^2 = 0.858$) in comparison to the vanilla BART performance
+above when assessed via:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> k_fold_cv(X, y, k_folds = 10, k = 2, nu = 3, q = 0.9, num_trees = 200)
-\end{Code}
-
-\noindent Predictions are handled with the \texttt{predict} function. Fits for the first seven rows are:
-
-\begin{Code}
-R> predict(bart_machine_cv, X[1 : 7, ])
+\end{CodeInput}
+\end{CodeChunk}
+%
+\noindent Predictions are handled with the \texttt{predict} function. Below are fits for the first seven observations.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> predict(bart_machine_cv, X[1:7, ])
+\end{CodeInput}
+\begin{CodeOutput}
 [1]  9.494941  9.780791  9.795532 10.058445  9.670211  9.702682  9.911394
-\end{Code}
-
-\noindent We also include a convenience method \texttt{bart\_predict\_for\_test\_data} that will predict and return out-of-sample error metrics when the test outcomes are known.
-
+\end{CodeOutput}
+\end{CodeChunk}
+%
+\noindent We also include a convenience method
+\texttt{bart\_predict\_for\_test\_data} that will predict and return
+out-of-sample error metrics when the test outcomes are known.
 
 \subsection{Assumption checking}\label{subsec:assumption_checking}
 
-The package includes features that assess the plausibility of the BART model assumptions. Checking the mean-centeredness of the noise is addressed in the summary output of Figure~\ref{code:default_bart_summary} and is simply a one-sample $t$-test of the average residual value against a null hypothesis of true mean zero. We assess both normality and heteroskedasticity via:
-
-\begin{Code}
+The package includes features that assess the plausibility of the BART
+model assumptions. Checking the mean-centeredness of the noise is
+addressed in the summary output of
+Section~\ref{subsec:model_building},
+page~\pageref{code:default_bart_summary} and is simply a one-sample
+$t$-test of the average residual value against a null hypothesis of
+true mean zero. We assess both normality and heteroskedasticity via:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> check_bart_error_assumptions(bart_machine_cv)
-\end{Code}
+\end{CodeInput}
+\end{CodeChunk}
+%
+This will display a plot similar to
+Figure~\ref{fig:bart_normality_heteroskedasticity} which contains a
+QQ-plot (to assess normality) as well as a residual-by-predicted plot
+(to assess homoskedasticity). There is little evidence of the errors
+violating normality and homoskedasticity.
 
-This will display a plot similar to Figure~\ref{fig:bart_normality_heteroskedasticity} which contains a QQ-plot (to assess normality) as well as a residual-by-predicted plot (to assess homoskedasticity). There is little evidence of the  errors violating normality and homoskedasticity.
-
-\begin{figure}[h]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=5in]{images/bart_normality_heteroskedasticity.pdf}
+\includegraphics[width=0.8\textwidth, trim = 0 10 0 10, clip]{bart_normality_heteroskedasticity_2.pdf}
 \caption{Test of normality of errors using QQ-plot and the Shapiro-Wilk test (top), residual plot to assess heteroskedasticity (bottom).}
 \label{fig:bart_normality_heteroskedasticity}
 \end{figure}
 
-In addition to the model assumptions, BART requires convergence of its Gibbs sampler which can be investigated via:
-
-\begin{Code}
+In addition to the model assumptions, BART requires convergence of its
+Gibbs sampler which can be investigated via:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> plot_convergence_diagnostics(bart_machine_cv)
-\end{Code}
+\end{CodeInput}
+\end{CodeChunk}
+%
+Figure~\ref{fig:convergence_diagnostics} displays the plot which
+features four types of convergence diagnostics (each one is detailed in
+the figure caption). It appears via visual inspection that the
+\pkg{bartMachine} model has been sufficiently burned-in as each of the
+plots seems to exhibit a stationary process.
 
-Figure~\ref{fig:convergence_diagnostics} displays the plot which features four types of convergence diagnostics (each are detailed in the figure caption). It appears that the \pkg{bartMachine} model has been sufficiently burned-in.
-
-\begin{figure}[htp]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=6.1in]{images/convergence_diagnostics_2.pdf}
-\caption{Convergence diagnostics for the cross-validated \pkg{bartMachine} model. Top left: $\sigsq$ by MCMC iteration. Samples to the left of the first vertical grey line are burn-in from the first computing core's MCMC chain. The four subsequent plots separated by grey lines are the post-burn-in iterations from each of the four computing cores employed during model construction. Top right: percent acceptance of Metropolis-Hastings proposals across the $m$ trees where each point plots one iteration. Points before the grey vertical line illustrate burn-in iterations and points after illustrate post burn-in iterations. Each computing core is colored differently. Bottom left: average number of leaves across the $m$ trees by iteration (post burn-in only where computing cores separated by vertical grey lines). Bottom right: average tree depth across the $m$ trees by iteration (post burn-in only where computing cores separated by vertical grey lines).}
+\includegraphics[width=0.98\textwidth, trim = 0 10 0 10, clip]{convergence_diagnostics4.pdf}
+\caption{Convergence diagnostics for the cross-validated
+  \pkg{bartMachine} model. Top left: $\sigsq$ by MCMC
+  iteration. Samples to the left of the first vertical gray line are
+  burn-in from the first computing core's MCMC chain. The four
+  subsequent plots separated by gray lines are the post-burn-in
+  iterations from each of the four computing cores employed during
+  model construction. Top right: percent acceptance of
+  Metropolis-Hastings proposals across the $m$ trees where each point
+  plots one iteration. Points before the gray vertical line illustrate
+  burn-in iterations and points after illustrate post-burn-in
+  iterations. Each computing core is colored differently. Bottom left:
+  average number of leaves across the $m$ trees by iteration (post
+  burn-in only where computing cores are separated by vertical gray
+  lines). Bottom right: average tree depth across the $m$ trees by
+  iteration (post-burn-in only where computing cores are separated by
+  vertical gray lines).}
 \label{fig:convergence_diagnostics}
 \end{figure}
 
+\pagebreak
+
 \subsection{Credible intervals and prediction intervals}\label{subsec:credible_and_prediction_intervals}
 
-An advantage of BART is that if we believe the priors and model assumptions, the Bayesian probability model and corresponding burned-in MCMC iterations provide the approximate posterior distribution of $f\parens{\x}$. Thus, one can compute uncertainty estimates via quantiles of the posterior samples. These provide Bayesian \qu{credible intervals} which are intervals for the conditional expectation function, $\cexpe{\y}{\X}$.
+An advantage of BART is that if we believe the priors and model
+assumptions, the Bayesian probability model and corresponding
+burned-in MCMC iterations provide the approximate posterior
+distribution of $f\parens{\x}$. Thus, one can compute uncertainty
+estimates via quantiles of the posterior samples. These provide
+Bayesian \qu{credible intervals} which are intervals for the
+conditional expectation function, $\cexpe{\y}{\X}$.
 
-Another useful uncertainty interval can be computed for individual predictions by combining uncertainty from the conditional expectation function with the systematic, homoskedastic normal noise produced by $\errorrv$. This is accomplished by generating 1,000 samples (by defauilt) from the posterior predictive distribution and then reporting the appropriate quantiles.
+Another useful uncertainty interval can be computed for individual
+predictions by combining uncertainty from the conditional expectation
+function with the systematic, homoskedastic normal noise produced by
+$\errorrv$. This is accomplished by generating 1,000 samples (by
+default) from the posterior predictive distribution and then reporting
+the appropriate quantiles.
 
-Below is an example of how both types of intervals are computed in the package (for the 100th observation of the training data):
-
-\begin{Code}
-R> calc_credible_intervals(bart_machine_cv, X[100, ], ci_conf = 0.95)
+Below is an example of how both types of intervals are computed in the
+package (for the 100th observation of the training data):
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> round(calc_credible_intervals(bart_machine_cv, X[100, ], 
++    ci_conf = 0.95), 2)
+\end{CodeInput}
+\begin{CodeOutput}
      ci_lower_bd ci_upper_bd
-[1,]    8.725202    8.971687
-R> calc_prediction_intervals(bart_machine_cv, X[100, ], pi_conf = 0.95)
+[1,]        8.74        8.98
+\end{CodeOutput}
+\begin{CodeInput}
+R> round(calc_prediction_intervals(bart_machine_cv, X[100, ], 
++    pi_conf = 0.95), 2)
+\end{CodeInput}
+\begin{CodeOutput}
      pi_lower_bd pi_upper_bd
-[1,]    8.631243     9.06353
-\end{Code}
- 
-Note that the prediction intervals are wider than the credible intervals because they reflect the uncertainty from the error term.
-
-We can then plot these intervals in sample:
-
-\begin{Code}
-R> plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
-R> plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
-\end{Code}
-
-Figure~\ref{fig:plot_y_vs_y_hat_with_credible_intervals} shows how our prediction fared against the original response (in-sample) with 95\% credible intervals.  Figure~\ref{fig:plot_y_vs_y_hat_with_prediction_intervals} shows the same prediction versus the original response plot now with 95\% prediction intervals. 
-
-
-\begin{figure}[htp]
+[1,]        8.65        9.07
+\end{CodeOutput}
+\end{CodeChunk}
+%
+Note that the prediction intervals are wider than the credible
+intervals because they reflect the uncertainty from the error term.
+%
+\begin{figure}[t!]
 \centering
 \begin{subfigure}[c]{\textwidth}
                 \centering
-                \includegraphics[width=3.5in]{images/plot_y_vs_y_hat_cred_ints.pdf}
-                \caption{Segments illlustrate credible intervals}
+                \includegraphics[width=3.5in, trim = 0 10 0 10, clip]{plot_y_vs_y_hat_cred_ints2.pdf}
+                \caption{Segments illustrate credible intervals}
                 \label{fig:plot_y_vs_y_hat_with_credible_intervals}
         \end{subfigure}\\
 \begin{subfigure}[c]{\textwidth}
                 \centering
-                \includegraphics[width=3.5in]{images/plot_y_vs_y_hat_pred_ints.pdf}
-                \caption{Segments illlustrate prediction intervals}
+                \includegraphics[width=3.5in, trim = 0 10 0 10, clip]{plot_y_vs_y_hat_pred_ints2.pdf}
+                \caption{Segments illustrate prediction intervals}
                 \label{fig:plot_y_vs_y_hat_with_prediction_intervals}
         \end{subfigure}
-\caption{Fitted versus actual response values for the automobile dataset. Segments are 95\% credible intervals (a) or 95\% prediction intervals (b). Green dots indicate the true response is within the stated interval and red dots indicate otherwise. Note that the percent coverage in (a) is not expected to be 95\% because the response includes a noise term.}
+        \caption{Fitted versus actual response values for the
+          automobile dataset. Segments are 95\% credible intervals (a)
+          or 95\% prediction intervals (b). Green dots indicate the
+          true response is within the stated interval and red dots
+          indicate otherwise. Note that the percent coverage in (a) is
+          not expected to be 95\% because the response includes a
+          noise term.}
 \label{fig:plot_y_vs_y_hat}
 \end{figure}
-
+%
+We can then plot these intervals in-sample:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
+R> plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
+\end{CodeInput}
+\end{CodeChunk}
+%
+Figure~\ref{fig:plot_y_vs_y_hat_with_credible_intervals} shows how our
+prediction fared against the original response (in-sample) with 95\%
+credible intervals.
+Figure~\ref{fig:plot_y_vs_y_hat_with_prediction_intervals} shows the
+same prediction versus the original response plot now with 95\%
+prediction intervals.
 
 \subsection{Variable importance}\label{subsec:variable_importance}
 
-After a \pkg{bartMachine} model is built, it is natural to ask the question: which variables are most important? This is assessed by examining the splitting rules in the $m$ trees across the post burn-in MCMC iterations which are known as \qu{inclusion proportions} \citep{Chipman2010}. The inclusion proportion for any given predictor represents the proportion of times that variable is chosen as a spliting rule out of all splitting rules among the posterior draws of the sum-of-trees model. Figure~\ref{fig:var_imp_automobile_cc} illustrates the inclusion proportions for all variables obtained via:
-
-\begin{Code}
+After a \pkg{bartMachine} model is built, it is natural to ask the
+question: which variables are most important? This is assessed by
+examining the splitting rules in the $m$ trees across the post-burn-in
+MCMC iterations which are known as \qu{inclusion proportions}
+\citep{Chipman2010}. The inclusion proportion for any given predictor
+represents the proportion of times that variable is chosen as a
+splitting rule out of all splitting rules among the posterior draws of
+the sum-of-trees model. Figure~\ref{fig:var_imp_automobile_cc}
+illustrates the inclusion proportions for all variables obtained via:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
-\end{Code}
-
-\begin{figure}[htp]
+\end{CodeInput}
+\end{CodeChunk}
+%
+\begin{figure}[t!]
 \centering
-\includegraphics[width=5.9in]{images/var_imp_automobile_cc.pdf}
-\caption{Average variable inclusion proportions in the cross-validated \pkg{bartMachine} model for the automobile data averaged over 100 model constructions to obtain stable estimates across many posterior modes in the sum-of-trees distribution (as recommended in \citealp{Bleich2014}). The segments atop the bars represent 95\% confidence intervals. The eight predictors with inclusion proportions of zero feature identically one value (after missing data was dropped).}
+\includegraphics[width=5.9in, trim = 0 0 0 20, clip]{var_imp_automobile_cc2.pdf}
+\caption{Average variable inclusion proportions in the cross-validated
+  \pkg{bartMachine} model for the automobile data averaged over 100
+  model constructions to obtain stable estimates across many posterior
+  modes in the sum-of-trees distribution (as recommended in
+  \citealp{Bleich2014}). The segments atop the bars represent 95\%
+  confidence intervals. The eight predictors with inclusion
+  proportions of zero are predictors with identically one value (after
+  missing data was dropped).}
 \label{fig:var_imp_automobile_cc}
 \end{figure}
 
-Selection of variables which \textit{significantly} affect the response is addressed briefly in Section~\ref{subsec:variable_selection}, examples are provided in Section~\ref{subsec:variable_selection_regression} but for full treatment of this feature, please see \citet{Bleich2014}. 
+Selection of variables which \textit{significantly} affect the
+response is addressed briefly in
+Section~\ref{subsec:variable_selection}, examples are provided in
+Section~\ref{subsec:variable_selection_regression} but for full
+treatment of this feature, please see \citet{Bleich2014}.
 
 \subsection{Variable effects}\label{subsec:variable_effects}
 
-It is also natural to ask: does $\x_j$ affect the response, controlling for other variables in the model? This is roughly analogous to the $t$-test in ordinary least squares regression of no linear effect of $\x_j$ on $\y$ while controlling for $\x_{-j}$. The null hypothesis here is the same but the linearity constraint is relaxed. To test this, we employ a permutation approach where we record the observed Pseudo-$R^2$ from the \pkg{bartMachine} model built with the original data. Then we permute the $\x_j$th column, thereby destroying any relationship between $\x_j$ and $\y$, construct a new duplicate \pkg{bartMachine} model from this permuted design matrix and record a ``null'' Pseudo-$R^2$. We then repeat this  process to obtain a null distribution of Pseudo-$R^2$'s. Since the alternative hypothesis is that $\x_j$ has an effect on $\y$ in terms of predictive power, our $p$ value is the proportion of null Pseudo-$R^2$'s greater than the observed Pseudo-$R^2$, making our procedure a natural one-sided test. Note, however, that this test is conditional on the BART model and its selected priors being true, similar to the assumptions of the linear model. 
+It is also natural to ask: does $\x_j$ affect the response,
+controlling for other variables in the model? This is roughly
+analogous to the $t$-test in ordinary least squares regression of no
+linear effect of $\x_j$ on $\y$ while controlling for all other
+variables, $\x_{-j}$. The null hypothesis here is the same but the
+linearity constraint is relaxed. To test this, we employ a permutation
+approach where we record the observed Pseudo-$R^2$ from the
+\pkg{bartMachine} model built with the original data. Then we permute
+the $\x_j$th column, thereby destroying any relationship between
+$\x_j$ and $\y$, construct a new duplicate \pkg{bartMachine} model
+from this permuted design matrix and record a ``null''
+Pseudo-$R^2$. We then repeat this process to obtain a null
+distribution of Pseudo-$R^2$'s. Since the alternative hypothesis is
+that $\x_j$ has an effect on $\y$ in terms of predictive power, our
+$p$ value is the proportion of null Pseudo-$R^2$'s greater than the
+observed Pseudo-$R^2$, making our procedure a natural one-sided
+test. Note, however, that this test is conditional on the BART model
+and its selected priors being true, similar to the assumptions of the
+linear model.
 
-If we wish to test if a set of covariates $A \subset \braces{\x_{1}, \ldots, \x_{p}}$ affect the response after controlling for other variables, we repeat the procedure outlined in the above paragraph by permuting the columns of $A$ in every null sample. We do not permute each column separately, but instead permute as a unit in order to perserve collinearity structure. This is roughly analogous to the partial $F$-test in ordinary least squares regression. 
+If we wish to test if a set of covariates
+$A \subset \braces{\x_{1}, \ldots, \x_{p}}$ affect the response after
+controlling for other variables, we repeat the procedure outlined in
+the above paragraph by permuting the predictors in $A$ in every null
+sample. We do not permute each column separately, but instead permute the rows
+as a unit in order to preserve collinearity structure. This is roughly
+analogous to the partial $F$-test in ordinary least squares
+regression.
 
-If we wish to test if \textit{any} of the covariates matter in predicting $\y$, we simply permute $\y$ during the null sampling. This procedure breaks the relationship between the response and the predictors but does not alter the existing associations between predictors. This is roughly analogous to the omnibus $F$-test in ordinary least squares regression.
+If we wish to test if \textit{any} of the covariates matter in
+predicting $\y$, we simply permute $\y$ during the null sampling. This
+procedure breaks the relationship between the response and the
+predictors but does not alter the existing associations between
+predictors. This is roughly analogous to the omnibus $F$-test in
+ordinary least squares regression.
 
-At $\alpha = 0.05$, Figure~\ref{fig:cov_test_width} demonstrates an insignificant effect of the variable \texttt{width} of car on price. Even though \texttt{width} is putatively the \qu{most important} variable as measured by proportions of splits in the posterior sum-of-trees model (Figure~\ref{fig:var_imp_automobile_cc}), note that this is largely an easy prediction problem with many collinear predictors. Figure~\ref{fig:cov_test_body_style} shows the results of a test of the putatively most important categorical variable, \texttt{body style} (which involves permuting the categories, then dummifying the levels to preserve the structure of the variable). We find a marginally significant effect ($p = 0.0495$). A test of the top ten most important variables is convincingly significant (Figure~\ref{fig:cov_test_top_10}). For the omnibus test, Figure~\ref{fig:cov_test_omnibus} illustrates an extremely statistically significant result, as would be expected. The code to run these tests is shown below (output suppressed).
+At $\alpha = 0.05$, Figure~\ref{fig:cov_test_width} demonstrates an
+insignificant effect of the variable \texttt{width} of car on
+price. Even though \texttt{width} is putatively the \qu{most
+  important} variable as measured by proportions of splits in the
+posterior sum-of-trees model (Figure~\ref{fig:var_imp_automobile_cc}),
+note that this is largely an easy prediction problem with many
+collinear predictors. Figure~\ref{fig:cov_test_body_style} shows the
+results of a test of the putatively most important categorical
+variable, \texttt{body style} (which involves permuting the
+categories, then dummifying the levels to preserve the structure of
+the variable). We find a marginally significant effect ($p =
+0.0495$).
+A test of the top ten most important variables is convincingly
+significant (Figure~\ref{fig:cov_test_top_10}). For the omnibus test,
+Figure~\ref{fig:cov_test_omnibus} illustrates an extremely
+statistically significant result, as would be expected. The code to
+run these tests is shown below (output suppressed).
 
-\begin{Code}
-R> cov_importance_test(bart_machine_cv, covariates = c("width"))
-R> cov_importance_test(bart_machine_cv, covariates = c("body_style"))
-R> cov_importance_test(bart_machine_cv, covariates = c("width",
-  "curb_weight", "city_mpg", "length", "horsepower", "body_style", 
-  "engine_size", "highway_mpg", "peak_rpm", "normalized_losses"))
-R> cov_importance_test(bart_machine_cv)
-\end{Code}
-
-\begin{figure}[h]
+\begin{figure}[t!]
 \centering
 \begin{subfigure}[c]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/cov_test_width.pdf}
+                \includegraphics[width=3.2in]{cov_test_width2.pdf}
                 \caption{\texttt{width}}
                 \label{fig:cov_test_width}
         \end{subfigure}~~
 \begin{subfigure}[c]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/cov_test_body_style.pdf}
+                \includegraphics[width=3.2in]{cov_test_body_style2.pdf}
                 \caption{\texttt{body style}}
                 \label{fig:cov_test_body_style}
         \end{subfigure}\\
 \begin{subfigure}[b]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/cov_test_top_10.pdf}
+                \includegraphics[width=3.2in]{cov_test_top_10_2.pdf}
                 \caption{The 10 most split-on variables}
                 \label{fig:cov_test_top_10}
         \end{subfigure}~~
 \begin{subfigure}[b]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/cov_test_omnibus.pdf}
+                \includegraphics[width=3.2in]{cov_test_omnibus2.pdf}
                 \caption{All covariates}
                 \label{fig:cov_test_omnibus}
         \end{subfigure}
@@ -641,61 +891,112 @@ R> cov_importance_test(bart_machine_cv)
 \label{fig:cov_tests}
 \end{figure}
 
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> cov_importance_test(bart_machine_cv, covariates = "width")
+R> cov_importance_test(bart_machine_cv, covariates = "body_style")
+R> cov_importance_test(bart_machine_cv, covariates = c("width",
++    "curb_weight", "city_mpg", "length", "horsepower", "body_style", 
++    "engine_size", "highway_mpg", "peak_rpm", "normalized_losses"))
+R> cov_importance_test(bart_machine_cv)
+\end{CodeInput}
+\end{CodeChunk}
+
 \subsection{Partial dependence}\label{subsec:partial_dependence}
 
-A data analyst may also be interested in understanding how $\x_j$ affects the response on average, after controlling for other predictors. This can be examined using \citet{Friedman2001}'s Partial Dependence Function (PDP),
+A data analyst may also be interested in understanding how $\x_j$
+affects the response on average, after controlling for other
+predictors. This can be examined using \citet{Friedman2001}'s partial
+dependence function (PDP),
 
-\bneqn\label{eq:true_pdp}
-f_j(\x_j) = \expesub{\x_{-j}}{f(\x_j,\x_{-j})} = \int f(\x_j,\x_{-j}) \mathrm{dP}\parens{\x_{-j}},
-\eneqn
+\bneqn\label{eq:true_pdp} f_j(\x_j) =
+\expesub{\x_{-j}}{f(\x_j,\x_{-j})} := \int f(\x_j,\x_{-j})
+\mathrm{dP}\parens{\x_{-j}}.  \eneqn
 
-\noindent where $\x_{-j}$ denotes all variables except $\x_j$. The PDP of predictor $\x_j$ gives the average value of $f$ when $\x_j$ is fixed and $\x_{-j}$ varies over its marginal distribution, $\mathrm{dP}\parens{\x_{-j}}$. As neither the true model $f$ nor the distribution of the predictors $\mathrm{dP}\parens{\x_{-j}}$ are known, we estimate Equation~\ref{eq:true_pdp} by computing
-
-\bneqn\label{eq:est_pdp}
-\hat{f}_j(\x_j) = \frac{1}{n}\sum\limits_{i=1}^n \hat{f}(\x_{j},\x_{-j,i})
-\eneqn
-
-\noindent where $n$ is the number of observations in the training data and $\hat{f}$ denotes the \pkg{bartMachine} model. Since BART provides an estimated posterior distribution, we can plot credible bands for the PDP function. In Equation~\ref{eq:est_pdp}, the $\hat{f}$ can be replaced with a function that calculates the $q$th quantile of the post-burned-in MCMC iterations for $\yhat$. Figure~\ref{fig:pdp_horsepower} plots the PDP along with the 2.5\%ile and the 97.5\%ile for the variable \texttt{horsepower}. By varying over most of the range of \texttt{horsepower}, the price is predicted to increase by about \$1000, holding all else constant. Figure~\ref{fig:pdp_stroke} plots the PDP along with the 2.5\%ile and the 97.5\%ile for the variable \texttt{stroke}. This predictor seemed to be relatively unimportant according to Figure~\ref{fig:var_imp_automobile_cc} and the PDP confirms this, with a very small, yet nonlinear average partial effect. The code for both plots is below.
-
-\begin{Code}
-R> pd_plot(bart_machine_cv, j = "horsepower")
-R> pd_plot(bart_machine_cv, j = "stroke")
-\end{Code}
-
-\begin{figure}[htp]
+\noindent The PDP of predictor $\x_j$ gives the average value of $f$
+when $\x_j$ is fixed and $\x_{-j}$ varies over its marginal
+distribution, $\mathrm{dP}\parens{\x_{-j}}$. As neither the true model
+$f$ nor the distribution of the predictors
+$\mathrm{dP}\parens{\x_{-j}}$ are known, we estimate
+Equation~\ref{eq:true_pdp} by computing
+%
+\begin{figure}[t!]
 \centering
 \begin{subfigure}[c]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/pdp_horsepower.pdf}
+                \includegraphics[width=3.2in, trim = 0 10 0 20, clip]{pdp_horsepower2.pdf}
                 \caption{\texttt{horsepower}}
                 \label{fig:pdp_horsepower}
         \end{subfigure}~~
 \begin{subfigure}[c]{0.48\textwidth}
                 \centering
-                \includegraphics[width=3.2in]{images/pdp_stroke.pdf}
+                \includegraphics[width=3.2in, trim = 0 10 0 20, clip]{pdp_stroke2.pdf}
                 \caption{\texttt{stroke}}
                 \label{fig:pdp_stroke}
         \end{subfigure}
-\caption{PDPs plotted in black and 95\% credible intervals plotted in blue for variables in the automobile dataset. Points plotted are at the 5\%ile, 10\%ile, 20\%ile, \ldots, 90\%ile and 95\%ile of the values of the predictor. Lines plotted between the points approximate the PDP by linear interpolation.}
+        \caption{PDPs plotted in black and 95\% credible intervals
+          plotted in blue for variables in the automobile
+          dataset. Points plotted are at the 5\%ile, 10\%ile, 20\%ile,
+          \ldots, 90\%ile and 95\%ile of the values of the
+          predictor. Lines plotted between the points approximate the
+          PDP by linear interpolation.}
 \label{fig:pdps}
 \end{figure}
-
-
-
-
-
+%
+\bneqn\label{eq:est_pdp}
+\hat{f}_j(\x_j) = \frac{1}{n}\sum\limits_{i=1}^n \hat{f}(\x_{j},\x_{-j,i})
+\eneqn
+%
+\noindent where $n$ is the number of observations in the training data
+and $\hat{f}$ denotes predictions via the \pkg{bartMachine}
+model. Since BART provides an estimated posterior distribution, we can
+plot credible bands for the PDP function. Credible bands are computed
+as follows: in Equation~\ref{eq:est_pdp}, $\hat{f}$ can be
+replaced with a function that calculates the $q$th quantile of the
+post-burn-in MCMC iterations for
+$\yhat$. Figure~\ref{fig:pdp_horsepower} plots the PDP along with the
+2.5\%ile and the 97.5\%ile for the variable \texttt{horsepower}. By
+varying over most of the range of \texttt{horsepower}, the price is
+predicted to increase by about \$1000, holding all else
+constant. Figure~\ref{fig:pdp_stroke} plots the PDP along with the
+2.5\%ile and the 97.5\%ile for the variable \texttt{stroke}. This
+predictor seemed to be relatively unimportant according to
+Figure~\ref{fig:var_imp_automobile_cc} and the PDP confirms this, with
+a very small, yet nonlinear average partial effect. The code for both
+plots is below.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> pd_plot(bart_machine_cv, j = "horsepower")
+R> pd_plot(bart_machine_cv, j = "stroke")
+\end{CodeInput}
+\end{CodeChunk}
 
 \subsection{Incorporating missing data}\label{subsec:incorporating_missing_data}
 
-The procedure for incorporating missing data was introduced in Section~\ref{subsec:missing_data}. We now build a \pkg{bartMachine} model using this procedure below:
-
-\begin{Code}
+The procedure for incorporating missing data was introduced in
+Section~\ref{subsec:missing_data}. We now build a \pkg{bartMachine}
+model using this procedure below:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> y <- automobile$log_price
 R> X <- automobile; X$log_price <- NULL
 R> bart_machine <- bartMachine(X, y, use_missing_data = TRUE, 
-      use_missing_data_dummies_as_covars = TRUE)
++    use_missing_data_dummies_as_covars = TRUE)
+\end{CodeInput}
+\end{CodeChunk}
+%
+The model output below parallels the model output with the missing
+rows omitted (Section~\ref{subsec:model_building}).
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine
-bartMachine v1.1.1 for regression
+\end{CodeInput}
+\begin{CodeOutput}
+bartMachine v1.2.1 for regression
 
 Missing data feature ON
 training data n = 201 and p = 50 
@@ -711,62 +1012,133 @@ in-sample statistics:
  Pseudo-Rsq = 0.9794
 p-val for shapiro-wilk test of normality of residuals: 0.69814 
 p-val for zero-mean noise: 0.96389 
-\end{Code}
-
-
-
-Note that we now use the complete data set including the 41 observations for which there were missing features. Also note that $p$ has now increased from 41 to 50. The nine \qu{new} predictors are:
-
-\begin{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+Note that the output reflects the use of the complete data set. There
+are 41 observations now included for which there are missing
+features. Also note that $p$ has now increased from 41 to 50. The nine
+\qu{new} predictors are:
+%
+\begin{CodeChunk}
+\begin{CodeOutput}
 [1] "engine_location_rear" "engine_type_rotor"    "fuel_system_4bbl"    
 [4] "fuel_system_spfi"     "M_normalized_losses"  "M_bore"              
 [7] "M_stroke"             "M_horsepower"         "M_peak_rpm"
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+The first two predictors are two new levels for the variable
+\texttt{engine\_location} which appear in the 41 rows with
+missingness. The next two predictors are two new levels for the
+variable \texttt{fuel\_system} which appear in the 41 rows with
+missingness as well. The last five new predictors are dummy variables
+which indicate missingness constructed from the predictors which
+exhibited missingness (due to the
+\texttt{use\_missing\_data\_dummies\_as\_covars} parameter being set
+to true).
 
-The first two predictors are two new levels for the variable \texttt{engine\_location} which appear in the 41 rows with missingness. The next two predictors are two new levels for the variable \texttt{fuel\_system} which appear in the 41 rows with missingness as well. The last five new predictors are dummy variables which indicate missingness constructed from the predictors which exhibited missingness (due to the \texttt{use\_missing\_data\_dummies\_as\_covars} parameter being set to true).
-
-The procedure of Section~\ref{subsec:missing_data} also natively incorporates missing data during prediction. Missingness will yield larger credible intervals. In the example below, we suppose that the \texttt{curb\_weight} and \texttt{symboling} values were suddenly unavailable for the 20th automobile and we observe their credible intervals widening as a result.
-
-\begin{Code}
+The procedure of Section~\ref{subsec:missing_data} also natively
+incorporates missing data during prediction. Missingness will yield
+larger credible intervals. In the example below, we suppose that the
+\texttt{curb\_weight} and \texttt{symboling} values were suddenly
+unavailable for the 20th automobile and we observe their credible
+intervals widening as a result.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> x_star <- X[20, ]
 R> calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+\end{CodeInput}
+\begin{CodeOutput}
      ci_lower_bd ci_upper_bd
 [1,]    8.650093    8.824515
-R> x_star[c("curb_weight", "symboling")] <- NA
+\end{CodeOutput}
+\begin{CodeInput}
+R> is.na(x_star[c("curb_weight", "symboling")]) <- TRUE
 R> calc_credible_intervals(bart_machine, x_star, ci_conf = 0.95)
+\end{CodeInput}
+\begin{CodeOutput}
      ci_lower_bd ci_upper_bd
 [1,]    8.622582    8.978313
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
 
 \subsection{Variable selection}\label{subsec:variable_selection_regression}
 
-In this section we demonstrate the variable selection procedures introduced in Section~\ref{subsec:variable_selection} and developed in detail in \citet{Bleich2014}. The following code will select variables based on the three thresholds and also displays the plot in Figure~\ref{fig:var_selection_plot}.\footnote{By default, variable selection is performed individually on dummy variables for a factor. The variable selection procedures return the permutation distribution and an aggregation of the dummy variables' inclusion proportions can allow for variable selection to be performed on an entire factor.}
-
-\begin{Code}
-R> vs <- var_selection_by_permute(bart_machine, 
-            bottom_margin = 10, num_permute_samples = 10)
-R> vs$important_vars_local_names
-  "curb_weight"  "city_mpg" "engine_size"   "horsepower"            
-  "length"       "width"    "num_cylinders" "body_style_convertible"
-  "wheel_base"   "peak_rpm" "highway_mpg"   "wheel_drive_fwd"       
-R> vs$important_vars_global_max_names
-  "curb_weight" "city_mpg"    "engine_size" "horsepower"  "length"     
-R> vs$important_vars_global_se_names
-  "curb_weight"   "city_mpg"      "engine_size" "horsepower" "length"           
-  "width"         "num_cylinders" "wheel_base"  "wheel_drive_fwd"
-\end{Code}
-
-\begin{figure}[htp]
+\begin{figure}[p!]
 \centering
-\includegraphics[width=5.6in]{images/var_selection_plot.pdf}
-\caption{Visualization of the three variable selection procedures outlined in Section~\ref{subsec:variable_selection} with $\alpha = 0.05$. The top plot illustrates the ``Local'' procedure. The green lines are the threshold levels determined from the permutation distributions that must be exceeded for a variable to be selected. The plotted points are the variable inclusion proportions for the observed data (averaged over five duplicate \pkg{bartMachine} models). If the observed value is higher than the green bar, the variable is included and is displayed as a solid dot; if not, it is not included and it is displayed as an open dot. The bottom plot illustrates both the ``Global SE'' and ``Global Max'' thresholds. The red line is the cutoff for ``Global Max'' and variables pass this threshold are displayed as solid dots. The blue lines represent the thresholds for the ``Global SE'' procedure. Variables that exceed this cutoff but not the ``Global Max'' threshold are displayed as asterisks. Open dots exceed neither threshold.}
+\includegraphics[width=5.6in, trim = 0 0 0 15, clip]{var_selection_plot2.pdf}
+\caption{Visualization of the three variable selection procedures
+  outlined in Section~\ref{subsec:variable_selection} with $\alpha
+  =
+  0.05$. The top plot illustrates the ``Local'' procedure. The green
+  lines are the threshold levels determined from the permutation
+  distributions that must be exceeded for a variable to be
+  selected. The plotted points are the variable inclusion proportions
+  for the observed data (averaged over five duplicate
+  \pkg{bartMachine} models). If the observed value is higher than the
+  green bar, the variable is included and is displayed as a solid dot;
+  if not, it is not included and it is displayed as an open dot. The
+  bottom plot illustrates both the ``Global SE'' and ``Global Max''
+  thresholds. The red line is the cutoff for ``Global Max'' and
+  variables passing this threshold are displayed as solid dots. The blue
+  lines represent the thresholds for the ``Global SE''
+  procedure. Variables that exceed this cutoff but not the ``Global
+  Max'' threshold are displayed as asterisks. Open dots exceed neither
+  threshold.}
 \label{fig:var_selection_plot}
 \end{figure}
 
-\pagebreak Usually,  ``Global Max'' and ``Global SE'' perform similarly, as they are both more stringent in selection. However, in many situations it will not be clear to the data analyst which threshold is most appropriate. The ``best'' procedure can be chosen via cross-validation on out-of-sample RMSE as follows: 
-
-\begin{Code}
+In this section we demonstrate the variable selection procedures
+introduced in Section~\ref{subsec:variable_selection} and developed in
+detail in \citet{Bleich2014}. The following code will select variables
+based on the three thresholds and also displays the plot in
+Figure~\ref{fig:var_selection_plot}.\footnote{By default, variable
+  selection is performed individually on dummy variables for a
+  factor. The variable selection procedures return the permutation
+  distribution and an aggregation of the dummy variables' inclusion
+  proportions can allow for variable selection to be performed on an
+  entire factor.}
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> vs <- var_selection_by_permute(bart_machine, 
++    bottom_margin = 10, num_permute_samples = 10)
+R> vs$important_vars_local_names
+\end{CodeInput}
+\begin{CodeOutput}
+  "curb_weight"  "city_mpg" "engine_size"   "horsepower"            
+  "length"       "width"    "num_cylinders" "body_style_convertible"
+  "wheel_base"   "peak_rpm" "highway_mpg"   "wheel_drive_fwd"       
+\end{CodeOutput}
+\begin{CodeInput}
+R> vs$important_vars_global_max_names
+\end{CodeInput}
+\begin{CodeOutput}
+  "curb_weight" "city_mpg"    "engine_size" "horsepower"  "length"     
+\end{CodeOutput}
+\begin{CodeInput}
+R> vs$important_vars_global_se_names
+\end{CodeInput}
+\begin{CodeOutput}
+  "curb_weight"   "city_mpg"      "engine_size" "horsepower" "length"           
+  "width"         "num_cylinders" "wheel_base"  "wheel_drive_fwd"
+\end{CodeOutput}
+\end{CodeChunk}
+%
+Usually, ``Global Max'' and ``Global SE'' perform similarly, as they
+are both more stringent in selection. However, in many situations it
+will not be clear to the data analyst which threshold is most
+appropriate. The ``best'' procedure can be chosen via cross-validation
+on out-of-sample RMSE as follows:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 var_selection_by_permute_response_cv(bart_machine)
+\end{CodeInput}
+\begin{CodeOutput}
 $best_method
 [1] "important_vars_local_names"
 
@@ -776,230 +1148,662 @@ $important_vars_cv
  [7] "length"                 "num_cylinders"          "peak_rpm"              
 [10] "wheel_base"             "wheel_drive_fwd"        "wheel_drive_rwd"       
 [13] "width" 
-\end{Code}
-
-On this dataset, the \qu{best} approach (as defined by out-of-sample prediction error) is the ``Local'' procedure.\\
+\end{CodeOutput}
+\end{CodeChunk}
+%
+On this dataset, the \qu{best} approach (as defined by out-of-sample
+prediction error) is the ``Local'' procedure.
 
 \subsection{Informed prior information on covariates}\label{subsec:cov_prior}
 
-\citet{Bleich2014} propose a method for incorporating informed prior information about the predictors into the BART model. This can be achieved by modifying the prior on the splitting rules as well as the corresponding calculations in the Metropolis-Hastings step. In particular, covariates believed to influence the response can be proposed more often as candidates for splitting rules. Useful prior information can aid in both variable selection and prediction tasks. We illustrate the impact of a correctly informed prior in the context of the \citet{Friedman1991} function (Equation~\ref{eq:friedman}). 
-
+\citet{Bleich2014} propose a method for incorporating informed prior
+information about the predictors into the BART model. This can be
+achieved by modifying the prior on the splitting rules as well as the
+corresponding calculations in the Metropolis-Hastings step. In
+particular, covariates believed to influence the response can a priori
+be proposed more often as candidates for splitting rules. Useful prior
+information can aid in both variable selection and prediction
+tasks. We demonstrate the impact of a correctly informed prior in the
+context of the \citet{Friedman1991} function
+(Equation~\ref{eq:friedman}).
+%
 \bneqn\label{eq:friedman}
-\y = 10\sin{\pi\x_1\x_2}+20(\x_3-.5)^2+10\x_4+5\x_5 + \berrorrv, \qquad \berrorrv \sim \multnormnot{n}{\0}{\sigsq\bv I}.
+\y = 10\sin\parens{\pi\x_1\x_2}+20(\x_3-.5)^2+10\x_4+5\x_5 + \berrorrv, \qquad \berrorrv \sim \multnormnot{n}{\0}{\sigsq\bv I}.
 \eneqn
+%
+To illustrate, we construct a design matrix $\X$ where the first five
+columns are predictors which influence the response
+($\x_1, \ldots, \x_5$ in Equation~\ref{eq:friedman}) and the next 95
+columns are predictors that do not affect the response.
 
-To illustrate, we construct a design matrix $\X$ where the first five columns are predictors which influence the response ($\x_1, \ldots, \x_5$ in Equation~\ref{eq:friedman}) and the next 95 columns are predictors that do not affect the response.
-
-All that is required is a specification of relative weights for each predictor. These are converted internally to probabilities. We assign 5 times the weight to the 5 true covariates of the model relative to the 95 useless covariates.
-
-\begin{Code}
-R> prior <- c(rep(5, times = 5), rep(1, times = 95))
-\end{Code}
-
-We now sample 500 observations from the Friedman function and construct a default \pkg{bartMachine} model as well as a \pkg{bartMachine} model with the informed prior and compare their performance on a test set of another 500 observations.
-
-\begin{Code}
+All that is required is a specification of relative weights for each
+predictor. These weights are normalized internally to become
+probabilities. As an example, we assign ten times the weight to the 5
+true covariates of the model relative to the 95 useless covariates.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> p <- 5
+R> p0 <- 95
+R> prior <- c(rep(10, times = p), rep(1, times = p0))
+\end{CodeInput}
+\end{CodeChunk}
+%
+We now sample 500 observations from the Friedman function with
+$\sigma = 1$ for training and another 500 observations for testing.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> gen_friedman_data = function(n, p, sigma){
++    if (p < 5){stop("p must be greater than or equal to 5")}
++    X <- matrix(runif(n * p), nrow = n, ncol = p)
++    y <- 10 * sin(pi * X[, 1] * X[, 2]) + 20 * (X[, 3] - .5)^2 + 
++      10 * X[, 4] + 5 * X[, 5] + rnorm(n, 0, sigma)
++    data.frame(y, X)
++  }
+R> ntrain <- 500
+R> sigma <- 1
+R> fr_data <- gen_friedman_data(ntrain, p + p0, sigma)
+R> y <- fr_data$y
+R> X <- fr_data[, 2:101]
+R> ntest <- 500
+R> fr_data <- gen_friedman_data(ntest, p + p0, sigma)
+R> Xtest <- fr_data[, 2:101]
+R> ytest <- fr_data$y
+\end{CodeInput}
+\end{CodeChunk}
+%
+We construct a default \pkg{bartMachine} model as well as a
+\pkg{bartMachine} model with the informed prior and compare their
+performance using the RMSE metric on a test set of another 500
+observations.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine <- bartMachine(X, y)
 R> bart_machine_informed <- bartMachine(X, y, cov_prior_vec = prior)
-
 R> bart_predict_for_test_data(bart_machine, Xtest, ytest)$rmse
+\end{CodeInput}
+\begin{CodeOutput}
 [1] 1.661159
+\end{CodeOutput}
+\begin{CodeInput}
 R> bart_predict_for_test_data(bart_machine_informed, Xtest, ytest)$rmse
+\end{CodeInput}
+\begin{CodeOutput}
 [1] 1.232925
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+There is a substantial improvement in out-of-sample predictive
+performance when a properly informed prior is used.
 
-There is a substantial improvement in out-of-sample predictive performance when a properly informed prior is used. 
-
-Note that by default the prior vector down-weights the indicator variables that result from dummifying factors so that the total set of dummy variables has the same weight as a continuous covariate.
+Note that by default the prior vector down-weights the indicator
+variables that result from dummifying factors so that the total set of
+dummy variables has the same weight as a continuous covariate.
 
 \subsection{Interaction effect detection}\label{subsec:interaction_detection}
 
-In Section~\ref{subsec:variable_importance}, we explored using variable inclusion proportions to understand the relative influences of different covariates. A similar procedure can be carried out for examining interaction effects within a BART model. This question was initially explored in \citet{Damien2013} where an interaction was considered to exist between two variables if they both appeared in at least one splitting rule in a given tree. We refine the definition of an interaction as follows. 
+In Section~\ref{subsec:variable_importance}, we explored using
+variable inclusion proportions to understand the relative influences
+of different covariates. A similar procedure can be carried out for
+examining interaction effects within a BART model. This question was
+initially explored in \citet{Damien2013} where an interaction was
+considered to exist between two variables if they both appeared in at
+least one splitting rule in a given tree. We refine the definition of
+an interaction as follows.
 
-We first begin with a $p \times p$ matrix of zeroes. Within a given tree, for each split rule variable $j$, we look at all split rule variables of child nodes, $k$, and we increment the $j, k$ element of the matrix. Hence variables are considered to interact in a given tree \textit{only if} they appear together in a contiguous downward path from the root node to a terminal node.  Note that a variable may interact with itself (when fitting a linear effect, for instance). Since there is no order between the parent and child, we then add the $j, k$ counts together with the $k, j$ counts (if $j \neq k$). Summing across trees and MCMC iterations gives the total number of interactions for each pair of variables from which relative importance can be assessed. 
+We first begin with a $p \times p$ matrix of zeroes. Within a given
+tree, for each split rule variable $j$, we look at all split rule
+variables of child nodes, $k$, and we increment the $j, k$ element of
+the matrix. Hence variables are considered to interact in a given tree
+\textit{only if} they appear together in a contiguous downward path
+from the root node to a terminal node.  Note that a variable may
+interact with itself (when fitting a linear effect, for
+instance). Since there is no order between the parent and child, we
+then add the $j, k$ counts together with the $k, j$ counts (if
+$j \neq k$). Summing across trees and MCMC iterations gives the total
+number of interactions for each pair of variables from which relative
+importance can be assessed.
 
-We demonstrate interaction detection on the Friedman function using 10 covariates using the code below: 
-
-\begin{Code}
+We demonstrate interaction detection on the Friedman function using 10
+covariates using the code below:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> interaction_investigator(bart_machine, num_replicates_for_avg = 25, 
-      num_var_plot = 10, bottom_margin = 5)
-\end{Code}
++    num_var_plot = 10, bottom_margin = 5)
+\end{CodeInput}
+\end{CodeChunk}
+%
+Figure~\ref{fig:friedman_function_interactions} shows the ten most
+important interactions in the model. The illustration is averaged over
+25 model constructions to obtain stable estimates across many
+posterior modes in the sum-of-trees distribution. Notice that the
+interaction between $\x_1$ and $\x_2$ dominates all other interaction
+terms, as \pkg{bartMachine} is correctly capturing the single true
+interaction effect: the $\sin\parens{\pi\x_1\x_2}$ term in
+Equation~\ref{eq:friedman}. Choosing which of these interactions
+\textit{significantly} affect the response is not addressed in this
+paper. The methods suggested in
+Section~\ref{subsec:variable_selection} may be applicable here and we
+consider this to be fruitful future work.
 
-Shown in Figure~\ref{fig:friedman_function_interactions} are the ten most important interactions in the model. The illustration is averaged over many model constructions to obtain stable estimates across many posterior modes in the sum-of-trees distribution. Notice that the interaction between $\x_1$ and $\x_2$ dominates all other terms, as \pkg{bartMachine} is correctly capturing the single true interaction effect in Equation~\ref{eq:friedman}. Choosing which of these interactions \textit{significantly} affect the response is not addressed in this paper. The methods suggested in Section~\ref{subsec:variable_selection} may be applicable here and we consider this to be fruitful future work. \pagebreak
-
-\begin{figure}[h]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=4.5in]{images/friedman_function_interactions.pdf}
-\caption{The top 10 average variable interaction counts (termed \qu{relative importance}) in the default \pkg{bartMachine} model for the Friedman function data averaged over 25 model constructions. The segments atop the bars represent 95\% confidence intervals.}
+\includegraphics[width=\textwidth, trim = 0 10 0 30, clip]{friedman_function_interactions2.pdf}
+\caption{The top 10 average variable interaction counts (termed
+  \qu{relative importance}) in the default \pkg{bartMachine} model for
+  the Friedman function data averaged over 25 model constructions. The
+  segments atop the bars represent 95\% confidence intervals.}
 \label{fig:friedman_function_interactions}
 \end{figure}
 
 
-\subsection{bartMachine Model Persistence Across R Sessions}\label{subsec:persistence}
+\subsection[bartMachine model persistence across R
+sessions]{\pkg{bartMachine} model persistence across \proglang{R}
+  sessions}\label{subsec:persistence}
 
-A convenient feature of \pkg{bartMachine} is its ability to \qu{serialize.} Serialization allows the user to construct models and have them persist across \code{R} sessions. The cost is time during model creation and hard drive space. Thus, the serialize feature is defaulted to \qu{off.} We demonstrate using the code below:
-
-\begin{Code}
+A convenient feature of \pkg{bartMachine} is its ability to
+\qu{serialize} the model. Serialization allows the user to construct
+models and have them persist across \proglang{R} sessions. The cost is
+time during model creation and hard drive space. Thus, the serialize
+feature is defaulted to \qu{off.} We demonstrate the serialize feature using the code below:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bart_machine <- bartMachine(X, y, serialize = TRUE)
 R> save.image("bart_demo.RData")
 R> q("no")
-> R
+\end{CodeInput}
+\end{CodeChunk}
+%
+Start a new \proglang{R} session:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> options(java.parameters = "-Xmx2500m")
 R> library(bartMachine)
 R> load("bart_demo.RData")
-R> predict(bart_machine, X[1 : 4, ])
+R> predict(bart_machine, X[1:4, ])
 [1] 20.0954617 14.8860727 10.9483889 11.4350277
-\end{Code}
+\end{CodeInput}
+\end{CodeChunk}
+%
+The training data is the same as in the previous section: $n=100$ and
+$p=10$. For the default \pkg{bartMachine} settings, $m=50$, number of
+burn-in MCMC iterations is 250 and number of posterior samples is
+1000. These settings yielded an almost instant serialization and a
+2.1MB RData image file. For a more realistic dataset with $n=5000$,
+$p=1000$, $m=100$ and 5000 posterior samples, the serialization and
+saving of the file took a few minutes and required 100MB.
 
-The training data is the same as in the previous section: $n=100$ and $p=10$. For the default \pkg{bartMachine} settings, $m=50$, number of burn-in MCMC iterations is 250 and number of posterior samples is 1000. These settings yielded an almost instant serialization, generating a 2.1MB RData file. For a more realistic dataset with $n=5000$, $p=1000$, $m=100$ and 5000 posterior samples, the serialization and saving of the file took a few minutes and requires 100MB.
-
-Note that the package throws an error if the user attempts to make use of a \pkg{bartMachine} object in another session which was not serialized:
-
-\begin{Code}
-R> bart_machine <- bartMachine(X, y)
+Note that the package throws an error if the user attempts to make use
+of a \pkg{bartMachine} object in another session which was not
+serialized:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> bart_machine <- bartMachine(X, y) #serialize is FALSE here
 R> save.image("bart_demo.RData")
 R> q("no")
-> R
+\end{CodeInput}
+\end{CodeChunk}
+%
+Start a new \proglang{R} session:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> options(java.parameters = "-Xmx2500m")
 R> library(bartMachine)
 R> load("bart_demo.RData")
-R> predict(bart_machine, X[1 : 4, ])
+R> predict(bart_machine, X[1:4, ])
+\end{CodeInput}
+\begin{CodeOutput}
 Error in check_serialization(object) : 
   This bartMachine object was loaded from an R image but was not serialized.
   Please build bartMachine using the option "serialize = TRUE" next time.
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
 
-\section{bartMachine Package Features for Classification}\label{sec:classification_features}
+\pagebreak
 
-In this section we highlight the features that differ from the regression case when the response is dichotomous. The illustrative dataset consists of 332 Pima Indians obtained from the UCI repository. Of the 332 subjects, 109 were diagnosed with diabetes, the binary response variable. There are seven continuous predictors which are body metrics such as blood pressure, glucose concentration, etc. and there is no missing data. 
-  
-Building a \pkg{bartMachine} model for classification has the same computing parameters except that $q, \nu$ cannot be specified since there is no longer a prior on $\sigsq$ (see Section~\ref{subsec:probit_bart}). We first build a cross-validated model below.
+\section[bartMachine package features for
+classification]{\pkg{bartMachine} package features for
+  classification}\label{sec:classification_features}
 
-\begin{Code}
+In this section we highlight the features that differ from
+\pkg{bartMachine} for regression when the response is dichotomous and
+\pkg{bartMachine} for classification is employed. The illustrative
+dataset consists of 332 Pima Indians obtained from the UCI Machine
+Learning Repository. Of the 332 subjects, 109 were diagnosed with
+diabetes, the binary response variable. There are seven continuous
+predictors which are body metrics such as blood pressure, glucose
+concentration, etc.~and there is no missing data.
+	
+Building a \pkg{bartMachine} model for classification has the same
+computing parameters except that $q, \nu$ cannot be specified since
+there is no longer a prior on $\sigsq$ (see
+Section~\ref{subsec:probit_bart}). We first build a cross-validated
+model below.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> data("Pima.te", package = "MASS")
+R> X <- data.frame(Pima.te[, -8])
+R> y <- Pima.te[, 8]
 R> bart_machine_cv <- bartMachineCV(X, y)
+\end{CodeInput}
+\begin{CodeOutput}
 ... bartMachine CV win: k: 3 m: 50
+\end{CodeOutput}
+\begin{CodeInput}
 R> bart_machine_cv
-Bart Machine v1.0b for classification
+\end{CodeInput}
+\begin{CodeOutput}
+bartMachine v1.2.1 for regression
 
 training data n = 332 and p = 7 
-built in 0.5 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
+built in 0.7 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
 
 confusion matrix:
 
            predicted No predicted Yes model errors
-actual No       211.000         12.00        0.054
-actual Yes       41.000         68.00        0.376
-use errors        0.163          0.15        0.160
-\end{Code}
-
-Classification models have an added hyperparameter, \texttt{prob\_rule\_class}, which is the rule for determining if the probability estimate is great enough to be classified into the positive category. We can see above that the \pkg{bartMachine} at times predicts ``NO'' for true ``YES'' outcomes and we suffer from a 37.6\% error rate for this outcome. We can try to mitigate this error by lowering the threshold to increase the number of ``YES'' labels predicted:\\
-
-\begin{Code}
+actual No       209.000        14.000        0.063
+actual Yes       35.000        74.000        0.321
+use errors        0.143         0.159        0.148
+\end{CodeOutput}
+\end{CodeChunk}
+%
+Classification models have an added hyperparameter,
+\texttt{prob\_rule\_class}, which is the rule for determining if the
+probability estimate is great enough to be classified into the
+positive category. We can see above that the \pkg{bartMachine} at
+times predicts ``NO'' for true ``YES'' outcomes and we suffer from a
+37.6\% error rate for this outcome. We can try to mitigate this error
+by lowering the threshold to increase the number of ``YES'' labels
+predicted:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
 R> bartMachine(X, y, prob_rule_class = 0.3)
-Bart Machine v1.0b for classification
+\end{CodeInput}
+\begin{CodeOutput}
+bartMachine v1.2.1 for classification
 
 training data n = 332 and p = 7 
-built in 0.5 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
+built in 0.7 secs on 4 cores, 50 trees, 250 burn-in and 1000 post. samples
 
 confusion matrix:
 
            predicted No predicted Yes model errors
-actual No       178.000        45.000        0.202
-actual Yes       12.000        97.000        0.110
-use errors        0.063         0.317        0.172
-\end{Code}
-
-This lowers the model error to 11\% for the ``YES'' class, but at the expense of increasing the error rate for the ``NO'' class. We encourage the user to cross-validate this rule based on the appropriate objective function for the problem at hand.
+actual No       176.000        47.000        0.211
+actual Yes       13.000        96.000        0.119
+use errors        0.069         0.329        0.181
+\end{CodeOutput}
+\end{CodeChunk}
+%
+This lowers the model error to 10\% for the ``YES'' class, but at the
+expense of increasing the error rate for the ``NO'' class. We
+encourage the user to cross-validate this rule based on an appropriate
+objective function for the problem at hand.
 
 We can also check out-of-sample statistics:
-
-\begin{Code}
-R> oos_stats = k_fold_cv(X, y, k_folds = 10)
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> oos_stats <- k_fold_cv(X, y, k_folds = 10)
 R> oos_stats$confusion_matrix
+\end{CodeInput}
+\begin{CodeOutput}
            predicted No predicted Yes model errors
-actual No       203.000        20.000        0.090
-actual Yes       47.000        62.000        0.431
-use errors        0.188         0.244        0.202
-\end{Code}
-
-\noindent Note that it is possible to predict both class labels and probability estimates for given observations:
-
-\begin{Code}
-R> predict(bart_machine_cv, X[1 : 2, ], type = "prob")
-[1] 0.6253160 0.1055975
-R> predict(bart_machine_cv, X[1 : 2, ], type = "class")
+actual No       197.000        26.000        0.117
+actual Yes       44.000        65.000        0.404
+use errors        0.183         0.286        0.211
+\end{CodeOutput}
+\end{CodeChunk}
+%
+\noindent Note that it is possible to predict both class labels and
+probability estimates for given observations:
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> round(predict(bart_machine_cv, X[1 : 2, ], type = "prob"), 3)
+\end{CodeInput}
+\begin{CodeOutput}
+[1] 0.599 0.100
+\end{CodeOutput}
+\begin{CodeInput}
+R> predict(bart_machine_cv, X[1:2, ], type = "class")
+\end{CodeInput}
+\begin{CodeOutput}
 [1] Yes No 
 Levels: No Yes
-\end{Code}
+\end{CodeOutput}
+\end{CodeChunk}
+%
+When using the covariate tests of
+Section~\ref{subsec:variable_effects}, total misclassification error
+becomes the statistic of interest instead of Pseudo-$R^2$.
+The $p$
+value is calculated now as the proportion of null samples with
+\textit{lower} misclassification
+error. Figure~\ref{fig:covariate_test_age} illustrates the test
+showing that predictor \texttt{age} seems to matter in the prediction
+of \texttt{Diabetes}, controlling for other predictors.
 
-When using the covariate tests of Section~\ref{subsec:variable_effects}, total misclassification error becomes the statistic of interest instead of Pseudo-$R^2$. The $p$ value is calculated now as the proportion of null samples with \textit{lower} misclassification error. Figure~\ref{fig:covariate_test_age} illustrates the test showing that predictor \texttt{age} seems to matter in the prediction of \texttt{Diabetes}, controlling for other predictors.
-
-\begin{figure}[htp]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=4.2in]{images/covariate_test_age.pdf}
+\includegraphics[width=3.9in, trim = 0 15 0 15, clip]{covariate_test_age3.pdf}
 \caption{Test of covariate importance for predictor \texttt{age} on whether or not the subject will contract \texttt{Diabetes}.}
 \label{fig:covariate_test_age}
 \end{figure}
 
-The partial dependence plots of Section~\ref{subsec:partial_dependence} are now scaled as probit of the probability estimate. Figure~\ref{fig:glucose_partial_dependence} illustrates that as glucose increases, the probability of contracting \texttt{Diabetes} increases linearly on a probit scale.
+The partial dependence plots of
+Section~\ref{subsec:partial_dependence} are now scaled as probit of
+the probability estimate. Figure~\ref{fig:glucose_partial_dependence} is
+generated via
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> pd_plot(bart_machine_cv, j = "glu")
+\end{CodeInput}
+\end{CodeChunk}
+%
+illustrates that as glucose increases, the probability of contracting
+\texttt{Diabetes} increases linearly on a probit scale.
 
-\begin{figure}[htp]
+\begin{figure}[t!]
 \centering
-\includegraphics[width=3.3in]{images/glucose_partial_dependence.pdf}
+\includegraphics[width=3.4in, trim = 0 10 0 20, clip]{glucose_partial_dependence2.pdf}
 \caption{PDP for predictor \texttt{glu}. The blue lines are 95\% credible intervals.}
 \label{fig:glucose_partial_dependence}
 \end{figure}
 
-Credible intervals are implemented for classification \pkg{bartMachine} and are displayed on the probit scale. Note that the prediction intervals of Section~\ref{subsec:credible_and_prediction_intervals} do not exist for classification.
-
-\begin{Code}
-R> calc_credible_intervals(bart_machine_cv, X[1 : 2, ])
+Credible intervals are implemented for classification
+\pkg{bartMachine} and are displayed on the probit scale. Note that the
+prediction intervals of
+Section~\ref{subsec:credible_and_prediction_intervals} do not exist
+for classification since $\berrorrv$ noise is not part of the probit
+model.
+%
+\begin{CodeChunk}
+\begin{CodeInput}
+R> round(calc_credible_intervals(bart_machine_cv, X[1:2, ]), 3)
+\end{CodeInput}
+\begin{CodeOutput}
      ci_lower_bd ci_upper_bd
-[1,]  0.34865355   0.8406097
-[2,]  0.01686486   0.2673171
-\end{Code}
-
-Other functions work similarly to regression except those that plot the responses and those that explicitly depend on RMSE as an error metric.
-
+[1,]       0.273       0.878
+[2,]       0.009       0.291
+\end{CodeOutput}
+\end{CodeChunk}
+%
+Other functions work similarly to regression except those that plot
+the responses and those that explicitly depend on RMSE as an error
+metric.
 
 \section{Discussion}\label{sec:discussion}
 
-This article introduced \pkg{bartMachine}, a new \proglang{R} package which implements Bayesian additive regression trees. The goal of this package is to provide a fast, extensive and user-friendly implementation accessible to a wide range of data analysts, and increase the visibility of BART to a broader statistical audience. We hope we have provided organized, well-documented open-source code and we encourage the community to make innovations on this package.
+This article introduced \pkg{bartMachine}, a new \proglang{R} package
+which implements Bayesian additive regression trees. The goal of this
+package is to provide a fast, extensive and user-friendly
+implementation accessible to a wide range of data analysts, and
+increase the visibility of BART to a broader statistical audience. We
+hope we have provided organized, well-documented open-source code and
+we encourage the community to make innovations on this package.
 
-\subsection*{Replication}
+\section*{Replication}
 
-The stable version of \pkg{bartMachine} is on CRAN and the development version is located at \url{http://github.com/kapelner/bartMachine}. The package code is under the GPL3 and MIT licenses. Results, tables, and figures found in this paper can be replicated via the scripts located in the \texttt{bart\_package\_paper} folder within the \texttt{git} repository.
+The stable version of \pkg{bartMachine} is on CRAN and the development
+version is located at
+\url{http://github.com/kapelner/bartMachine}. The package code is
+under the General Public License, version 3 (GPL-3). Results, tables, and figures found in this
+paper can be replicated via the scripts located in the
+\texttt{bart\_package\_paper} folder within the \texttt{git}
+repository.
 
-\subsection*{Acknowledgements}
+\section*{Acknowledgments}
 
-We thank Richard Berk, Andreas Buja, Zachary Cohen, Ed George, Alex Goldstein, Shane Jensen, Abba Krieger, and Robert DeRubeis for helpful discussions. We thank Simon Urbanek for his very generous help with \pkg{rJava} at many stages of this research. Adam Kapelner acknowledges support from the National Science Foundation's Graduate Research Fellowship Program.
+We thank Richard Berk, Andreas Buja, Zachary Cohen, Ed George, Alex
+Goldstein, Shane Jensen, Abba Krieger, and Robert DeRubeis for helpful
+discussions. We thank Simon Urbanek for his very generous help with
+\pkg{rJava} at many stages of this project. Adam Kapelner acknowledges
+support from the National Science Foundation's Graduate Research
+Fellowship Program.
+
+\begin{thebibliography}{29}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Albert and Chib(1993)}]{Albert1993}
+Albert JH, Chib S (1993).
+\newblock \enquote{{Bayesian Analysis of Binary and Polychotomous Response
+  Data}.}
+\newblock \emph{Journal of the American Statistical Association},
+  \textbf{88}(422), 669--679.
+\newblock \doi{10.1080/01621459.1993.10476321}.
+
+\bibitem[{Bache and Lichman(2013)}]{Bache2013}
+Bache K, Lichman M (2013).
+\newblock \enquote{{UCI} Machine Learning Repository.}
+\newblock \urlprefix\url{http://archive.ics.uci.edu/ml}.
+
+\bibitem[{Blattenberger and Fowles(2014)}]{Blattenberger2014}
+Blattenberger G, Fowles R (2014).
+\newblock \enquote{Avalanche Forecasting: Using Bayesian Additive Regression
+  Trees ({BART}).}
+\newblock In \emph{Demand for Communications Services -- Insights and
+  Perspectives}, pp. 211--227. Springer-Verlag.
+
+\bibitem[{Bleich \emph{et~al.}(2014)Bleich, Kapelner, Jensen, and
+  George}]{Bleich2014}
+Bleich J, Kapelner A, Jensen ST, George EI (2014).
+\newblock \enquote{Variable Selection for BART: An Application to Gene
+  Regulation.}
+\newblock \emph{The Annals of Applied Statistics}, \textbf{8}(3), 1750--1781.
+\newblock \doi{10.1214/14-aoas755}.
+
+\bibitem[{Breiman(2001)}]{Breiman2001}
+Breiman L (2001).
+\newblock \enquote{{Statistical Modeling: The Two Cultures}.}
+\newblock \emph{Statistical Science}, \textbf{16}(3), 199--231.
+\newblock \doi{10.1214/ss/1009213726}.
+
+\bibitem[{Chipman and McCulloch(2016)}]{BayesTree}
+Chipman H, McCulloch R (2016).
+\newblock \emph{\pkg{BayesTree}: Bayesian Additive Regression Trees}.
+\newblock \proglang{R} package version 0.3-1.3,
+  \urlprefix\url{https://CRAN.R-project.org/package=BayesTree}.
+
+\bibitem[{Chipman \emph{et~al.}(2014)Chipman, McCulloch, and Dorie}]{dbarts}
+Chipman H, McCulloch R, Dorie V (2014).
+\newblock \emph{\pkg{dbarts}: Discrete Bayesian Additive Regression Trees
+  Sampler}.
+\newblock \proglang{R} package version 0.8-5,
+  \urlprefix\url{https://CRAN.R-project.org/package=dbarts}.
+
+\bibitem[{Chipman \emph{et~al.}(2010)Chipman, George, and
+  McCulloch}]{Chipman2010}
+Chipman HA, George EI, McCulloch RE (2010).
+\newblock \enquote{{BART: Bayesian Additive Regressive Trees}.}
+\newblock \emph{The Annals of Applied Statistics}, \textbf{4}(1), 266--298.
+\newblock \doi{10.1214/09-aoas285}.
+
+\bibitem[{Damien \emph{et~al.}(2013)Damien, Dellaportas, Polson, and
+  Stephens}]{Damien2013}
+Damien P, Dellaportas P, Polson N, Stephens D (2013).
+\newblock \emph{Bayesian Theory and Applications}.
+\newblock 1st edition. Oxford University Press.
+
+\bibitem[{Ding and Simonoff(2010)}]{Ding2010}
+Ding Y, Simonoff JS (2010).
+\newblock \enquote{{An Investigation of Missing Data Methods for Classification
+  Trees Applied to Binary Response Data}.}
+\newblock \emph{Journal of Machine Learning Research}, \textbf{11}, 131--170.
+
+\bibitem[{Eliashberg(2010)}]{Eliashberg2010}
+Eliashberg J (2010).
+\newblock \emph{Green-Lighting Movie Scripts: Revenue Forecasting and Risk
+  Management}.
+\newblock Ph.D. thesis, University of Pennsylvania.
+
+\bibitem[{Friedman(2001)}]{Friedman2001}
+Friedman J (2001).
+\newblock \enquote{{Greedy Function Approximation: A Gradient Boosting
+  Machine}.}
+\newblock \emph{The Annals of Statistics}, \textbf{29}(5), 1189--1232.
+\newblock \doi{10.1214/aos/1013203451}.
+
+\bibitem[{Friedman(1991)}]{Friedman1991}
+Friedman JH (1991).
+\newblock \enquote{{Multivariate Adaptive Regression Splines}.}
+\newblock \emph{The Annals of Statistics}, \textbf{19}, 1--67.
+\newblock \doi{10.1214/aos/1176347963}.
+
+\bibitem[{Friedman(2002)}]{Friedman2002}
+Friedman JH (2002).
+\newblock \enquote{{Stochastic Gradient Boosting}.}
+\newblock \emph{Computational Statistics \& Data Analysis}, \textbf{38}(4),
+  367--378.
+\newblock \doi{10.1016/s0167-9473(01)00065-2}.
+
+\bibitem[{Gelman \emph{et~al.}(2004)Gelman, Carlin, Stern, and
+  Rubin}]{Gelman2004}
+Gelman A, Carlin JB, Stern HS, Rubin DB (2004).
+\newblock \emph{Bayesian Data Analysis}.
+\newblock 2nd edition. Chapman \& Hall / CRC.
+
+\bibitem[{Geman and Geman(1984)}]{Geman1984}
+Geman S, Geman D (1984).
+\newblock \enquote{Stochastic Relaxation, {G}ibbs Distributions, and the
+  {B}ayesian Restoration of Images.}
+\newblock \emph{IEEE Transaction on Pattern Analysis and Machine Intelligence},
+  \textbf{6}, 721--741.
+\newblock \doi{10.1109/tpami.1984.4767596}.
+
+\bibitem[{Hastie and Tibshirani(2000)}]{Hastie2000}
+Hastie T, Tibshirani R (2000).
+\newblock \enquote{{Bayesian Backfitting}.}
+\newblock \emph{Statistical Science}, \textbf{15}(3), 196--213.
+\newblock \doi{10.1214/ss/1009212815}.
+
+\bibitem[{Hastings(1970)}]{Hastings1970}
+Hastings WK (1970).
+\newblock \enquote{{Monte Carlo Sampling Methods Using Markov Chains and Their
+  Applications}.}
+\newblock \emph{Biometrika}, \textbf{57}(1), 97--109.
+\newblock \doi{10.2307/2334940}.
+
+\bibitem[{Kapelner and Bleich(2015)}]{Kapelner2013}
+Kapelner A, Bleich J (2015).
+\newblock \enquote{Prediction with Missing Data via Bayesian Additive
+  Regression Trees.}
+\newblock \emph{Canadian Journal of Statistics}, \textbf{43}(2), 224--239.
+\newblock \doi{10.1002/cjs.11248}.
+
+\bibitem[{Kapelner and Bleich(2016)}]{bartMachine}
+Kapelner A, Bleich J (2016).
+\newblock \enquote{{bartMachine}: Machine Learning with {B}ayesian Additive
+  Regression Trees.}
+\newblock \emph{Journal of Statistical Software}, \textbf{70}(4), 1--40.
+\newblock \doi{10.18637/jss.v070.i04}.
+
+\bibitem[{Kibler \emph{et~al.}(1989)Kibler, Aha, and Albert}]{Kibler1989}
+Kibler DF, Aha DW, Albert MK (1989).
+\newblock \enquote{Instance Based Prediction of Real Valued Attributes.}
+\newblock \emph{Computational Intelligence}, \textbf{5}, 51.
+\newblock \doi{10.1111/j.1467-8640.1989.tb00315.x}.
+
+\bibitem[{Kindo \emph{et~al.}(2013)Kindo, Wang, and Pe}]{Kindo2013}
+Kindo B, Wang H, Pe E (2013).
+\newblock \enquote{{MBACT -- Multiclass Bayesian Additive Classification
+  Trees}.}
+\newblock {arXiv}:1309.7821 [stat.ML],
+  \urlprefix\url{http://arxiv.org/abs/1309.7821v1}.
+
+\bibitem[{Liaw and Wiener(2002)}]{Liaw2002}
+Liaw A, Wiener M (2002).
+\newblock \enquote{Classification and Regression by \pkg{randomForest}.}
+\newblock \emph{\proglang{R} News}, \textbf{2}(3), 18--22.
+\newblock \urlprefix\url{https://CRAN.R-project.org/doc/Rnews/}.
+
+\bibitem[{Pratola \emph{et~al.}(2013)Pratola, Chipman, Higdon, McCulloch, and
+  Rust}]{Pratola2013}
+Pratola MT, Chipman H, Higdon D, McCulloch R, Rust W (2013).
+\newblock \enquote{Parallel Bayesian Additive Regression Trees.}
+\newblock \emph{Technical report}, University of Chicago.
+
+\bibitem[{{\proglang{R} Core Team}(2016)}]{Rlang}
+{\proglang{R} Core Team} (2016).
+\newblock \emph{\proglang{R}: A Language and Environment for Statistical
+  Computing}.
+\newblock \proglang{R} Foundation for Statistical Computing, Vienna, Austria.
+\newblock \urlprefix\url{https://www.R-project.org/}.
+
+\bibitem[{Taddy \emph{et~al.}(2011)Taddy, Gramacy, and Polson}]{Taddy2011}
+Taddy MA, Gramacy RB, Polson NG (2011).
+\newblock \enquote{{Dynamic Trees for Learning and Design}.}
+\newblock \emph{Journal of the American Statistical Association},
+  \textbf{106}(493), 109--123.
+\newblock \doi{10.1198/jasa.2011.ap09769}.
+
+\bibitem[{Twala \emph{et~al.}(2008)Twala, Jones, and Hand}]{Twala2008}
+Twala B, Jones M, Hand DJ (2008).
+\newblock \enquote{{Good Methods for Coping with Missing Data in Decision
+  Trees}.}
+\newblock \emph{Pattern Recognition Letters}, \textbf{29}(7), 950--956.
+\newblock \doi{10.1016/j.patrec.2008.01.010}.
+
+\bibitem[{Urbanek(2013)}]{rJava}
+Urbanek S (2013).
+\newblock \emph{\pkg{rJava}: Low-Level \proglang{R} to \proglang{Java}
+  Interface}.
+\newblock \proglang{R} package version 0.9-6,
+  \urlprefix\url{https://CRAN.R-project.org/package=rJava}.
+
+\bibitem[{Zhou and Liu(2008)}]{Zhou2008}
+Zhou Q, Liu J (2008).
+\newblock \enquote{Extracting Sequence Features to Predict Protein-{DNA}
+  Interactions: A Comparative Study.}
+\newblock \emph{Nucleic Acids Research}, \textbf{36}(12), 4137--4148.
+\newblock \doi{10.1093/nar/gkn361}.
+
+\end{thebibliography}
 
 
-\bibliography{bart_package_paper}
+\newpage
 
-\appendix
-\section{Sampling to Modify Tree Structure}\label{app:implementation}
+\begin{appendix}
+
+\section{Sampling to modify tree structure}\label{app:implementation}
 
 This section provides details on the implementation of Equation~\ref{eq:gibbs_sampler} (steps 1, 3, \ldots, $2m-1$), the Metropolis-Hastings step for sampling new trees.  Recall from Section~\ref{subsec:posterior} that trees can be altered via growing new child nodes from an existing terminal node, pruning two terminal nodes such that their parent becomes terminal, or changing the splitting rule in a node. 
 
-Below is the Metropolis ratio \citep[p.291]{Gelman2004} where the parameter sampled is the tree and the data is the responses unexplained by other trees denoted by $\R$. We denote the new, proposal tree with an asterisk and the original tree without the asterisk.
-
+Below is the Metropolis ratio \citep[p.~291]{Gelman2004} where the parameter sampled is the tree and the data are the responses unexplained by other trees denoted by $\R$. We denote the new, proposal tree with an asterisk and the original tree without the asterisk.
+%
 \bneqn\label{eq:naive_metropolis}
-r = \frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} \frac{\cprob{\treet{*}}{\R, \sigsq}}{\cprob{\treet{}}{\R, \sigsq}}
+r = \frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} \frac{\cprob{\treet{*}}{\R, \sigsq}}{\cprob{\treet{}}{\R, \sigsq}}.
 \eneqn
-
-We accept a draw from the posterior distribution of trees if a draw from a standard uniform distribution is less than the value of $r$. Immediately we note that it is difficult (if not impossible) to calculate the posterior probabilities for the trees themselves. Instead, we employ Bayes' Rule, 
-
+%
+We accept a draw from the posterior distribution of trees if a draw from a standard uniform distribution is less than the value of $r$. Immediately we note that it is difficult (if not impossible) to calculate the posterior probabilities for the trees themselves. Instead, we employ Bayes' rule, 
+%
 \beqn
 \cprob{\treet{}}{\R, \sigsq} = \frac{\cprob{\R}{\treet{}, \sigsq} \cprob{\treet{}}{\sigsq}}{\cprob{\R}{\sigsq}},
 \eeqn
-
+%
 and plug the result into Equation~\ref{eq:naive_metropolis} to obtain:
-
+%
 \beqn
 r &=& \underbrace{\frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}}}_{\text{transition ratio}} ~~~\times~~~ \underbrace{\frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}}}_{\text{likelihood ratio}} ~~~\times \underbrace{\frac{\prob{\treet{*}}}{\prob{\treet{}}}}_{\text{tree structure ratio}}.
 \eeqn
-
+%
 \noindent Note that the probability of the tree structure is independent of $\sigsq$. 
 
 The goal of this section is to explicitly calculate $r$ for all possible tree proposals --- GROW, PRUNE and CHANGE. For each proposal, the calculations are organized into separate sections detailing each of the three ratios --- transition, likelihood and tree structure. Note that our actual implementation uses the following expressions in log form for numerical accuracy.
@@ -1009,92 +1813,94 @@ The goal of this section is to explicitly calculate $r$ for all possible tree pr
 \subsubsection*{Transition ratio}
 
 Transitioning from the original tree to a new tree involves growing two child nodes from a current terminal node:
-
+%
 \bneqn\label{eq:grow_transition}
 \prob{\treet{} \rightarrow \treet{*}} &=& \prob{\text{GROW}} \prob{\text{selecting $\eta$ to grow from}} \times \\ \nonumber
 && \prob{\text{selecting the $j$th attribute to split on}} \times \\ \nonumber
 && \prob{\text{selecting the $i$th value to split on}} \\ \nonumber
 &=& \prob{\text{GROW}} \oneover{b} \oneover{\padjeta} \frac{1}{\nadjeta}.
 \eneqn
-
+%
 We chose one of the current $b$ terminal nodes which we denote the $\eta$th node, and then we pick an attribute and split point. $\padjeta$ denotes the number of predictors left available to split on. This can be less than $p$ if certain predictors do not have two or more unique values once the data reaches the $\eta$th node. For example, this regularly occurs if a dummy variable was split on in some node higher up in the lineage. $\nadjeta$ denotes the number of \textit{unique} values left in the $p$th attribute after adjusting for parents' splits.
 
 Transitioning from the new tree back to the original tree involves pruning that node:
-
+%
 \beqn
-\prob{\treet{*} \rightarrow \treet{}} = \prob{\text{PRUNE}} \prob{\text{selecting $\eta$ to prune from}} =  \prob{\text{PRUNE}}\oneover{w_2^*}
+\prob{\treet{*} \rightarrow \treet{}} = \prob{\text{PRUNE}} \prob{\text{selecting $\eta$ to prune from}} =  \prob{\text{PRUNE}}\oneover{w_2^*},
 \eeqn
-
+%
 \noindent where $w_2^*$ denotes the number of second generation internal nodes (nodes with two terminal child nodes) in the new tree. Thus, the full transition ratio is:
-
+%
 \beqn
 \frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} = \frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}} \frac{b ~ \padjeta ~ \nadjeta}{w_2^*}.
 \eeqn
-
-Note that when there are no variables with more two or more unique values, the probability of GROW is set to zero and the step will be automatically rejected.
+%
+Note that when there are no variables with more than two or more unique values, the probability of GROW is set to zero and the step will be automatically rejected.
 
 \subsubsection*{Likelihood ratio}
 
 To calculate the likelihood, the tree structure determines which responses fall into which of the $b$ terminal nodes. Thus,
-
+%
 \beqn
-\cprob{\Roneton}{\treet{}, \sigsq} = \prod_{\ell=1}^{b} \cprob{\Rlonetonl}{\sigsq}
+\cprob{\Roneton}{\treet{}, \sigsq} = \prod_{\ell=1}^{b} \cprob{\Rlonetonl}{\sigsq},
 \eeqn
-
+%
 \noindent where each term on the right hand side is the probability of responses in one of the $b$ terminal nodes, which are independent by assumption. The $R_\ell$'s denote the data in the $\ell$th terminal node and where $n_\ell$ denotes how many observations are in each terminal node and $n = \sum_{\ell=1}^b n_\ell$. 
 
-We now find an analytic expression for the node likelihood term. Remember, if the mean in each terminal node, which we denote $\mu_\ell$, was known, then we would have \\ $\Rlonetonl \,|\, \mu_\ell, \sigsq ~\iid~ \normnot{\mu_\ell}{\sigsq}$. BART requires $\mu_\ell$ to be integrated out, allowing the Gibbs sampler in Equation~\ref{eq:gibbs_sampler} to avoid dealing with jumping between continuous spaces of varying dimensions \citep[page 275]{Chipman2010}. Recall that one of the BART model assumptions is a prior on the average value of $\mu \sim \normnot{0}{\sigsq_\mu}$ and thus,
-
+We now find an analytic expression for the node likelihood term. Remember, if the mean in each terminal node, which we denote $\mu_\ell$, was known, then we would have $\Rlonetonl \,|\, \mu_\ell \sigsq ~\iid$ $\normnot{\mu_\ell}{\sigsq}$. BART requires $\mu_\ell$ to be integrated out, allowing the Gibbs sampler in Equation~\ref{eq:gibbs_sampler} to avoid dealing with jumping between continuous spaces of varying dimensions \citep[p.~275]{Chipman2010}. Recall that one of the BART model assumptions is a prior on the average value of $\mu \sim \normnot{0}{\sigsq_\mu}$ and thus,
+%
 \beqn
-\cprob{\Rlonetonl}{\sigsq} = \int_\reals \cprob{\Rlonetonl}{\mu_\ell, \sigsq} \prob{\mu_\ell; \sigsq_\mu} d\mu_\ell
+\cprob{\Rlonetonl}{\sigsq} = \int_\reals \cprob{\Rlonetonl}{\mu_\ell, \sigsq} \prob{\mu_\ell; \sigsq_\mu} d\mu_\ell,
 \eeqn
-
+%
 \noindent which can be shown via completion of the square or convolution to be
-
+%
 \bneqn\label{eq:likelihood_margined}
 \cprob{\Rlonetonl}{\sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} \sqrt{ \frac{\sigsq}{\sigsq + n_\ell \sigsqmu}}  \times \\ 
-&& \exp{-\oneover{2\sigsq} \parens{\sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell} - \frac{\Rbar_\ell^2 n_\ell^2}{n_\ell + \frac{\sigsq}{\sigsqmu}}+ n_\ell \Rbar_\ell^2}} \nonumber
+&& \exp{-\oneover{2\sigsq} \parens{\sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell} - \frac{\Rbar_\ell^2 n_\ell^2}{n_\ell + \frac{\sigsq}{\sigsqmu}}+ n_\ell \Rbar_\ell^2}}, \nonumber
 \eneqn
-
+%
 \noindent where $\Rbar_\ell$ denotes the mean response in the node and $R_{\ell_i}$ denotes the observations $i=1\ldots n_\ell$ in the node.
 
 Since the likelihoods are solely determined by the terminal nodes, the proposal tree differs from the original tree by only the selected node to be grown, denoted by $\ell$, which becomes two children after the GROW step denoted by $\ell_L$ and $\ell_R$. Hence, the likelihood ratio becomes:
-
+%
 \bneqn\label{eq:grow_likelihood_ratio}
-&& \frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}} = \frac{\cprob{\RLlonetonlL}{\sigsq} \cprob{\RRlonetonlR}{\sigsq}}{\cprob{\Rlonetonl}{\sigsq}} 
+&& \frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}} = \frac{\cprob{\RLlonetonlL}{\sigsq} \cprob{\RRlonetonlR}{\sigsq}}{\cprob{\Rlonetonl}{\sigsq}}.
 \eneqn
-
+%
 Plugging Equation~\ref{eq:likelihood_margined} into Equation~\ref{eq:grow_likelihood_ratio} three times yields the ratio for the GROW step:
-
+%
 \small
 \beqn
- \sqrt{\frac{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}}~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}} \\
+ \sqrt{\frac{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}}~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}},
 \eeqn
 \normalsize
-
+%
 \noindent where $n_{\ell_L}$ and $n_{\ell_R}$ denote the number of data points in the newly grown left and right child nodes.
 
 \subsubsection*{Tree structure ratio}
 
 In Section~\ref{subsec:prior_likelihood} we discussed the prior on the tree structure (where the splits occur) as well as the tree rules. For the entire tree,
-
+%
 \beqn
-\prob{\treet{}} &=& \prod_{\eta \in \Hterminals} \parens{1 - \probsplit{\eta}}  \prod_{\eta \in \Hint} \probsplit{\eta} \prod_{\eta \in \Hint} \probrule{\eta} \\
+\prob{\treet{}} &=& \prod_{\eta \in \Hterminals} \parens{1 - \probsplit{\eta}}  \prod_{\eta \in \Hint} \probsplit{\eta} \prod_{\eta \in \Hint} \probrule{\eta},
 \eeqn
-
+%
 \noindent where $\Hterminals$ denotes the set of terminal nodes and $\Hint$ denotes the internal nodes.
 
 Recall that the probability of splitting on a given node $\eta$ is $\probsplit{\eta} = \alpha / \tothepow{1 + d_\eta}{\beta}$. The probability is controlled by two hyperparameters, $\alpha$ and $\beta$, and $d_\eta$ is the depth (number of parent generations) of node $\eta$. When assigning a rule, recall that BART picks from all available attributes and then from all available unique split points. Using the notation from the transition ratio section, $\probrule{\eta} = 1 / \padjeta \times 1 / \nadjeta$.
 
 Once again, the original tree features a node $\eta$ that was selected to be grown. The proposal tree differs with two child nodes denoted $\eta_L$ and $\eta_R$. We can now form the ratio:
-
+%
 \beqn
 \frac{\prob{\treet{*}}}{\prob{\treet{}}} &=& \frac{\parens{1 - \probsplit{\eta_L}} \parens{1 - \probsplit{\eta_R}} \probsplit{\eta} \probrule{\eta}}{\parens{1 - \probsplit{\eta}}}\\
 &=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{\padjeta}\dfrac{1}{\nadjeta}}{1 -\frac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
-&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjeta \nadjeta}
+&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjeta \nadjeta}.
 \eeqn
+%
+The last line follows from some algebra and using the fact that the depth of the grown nodes is the depth of the parent node incremented by one ($d_{\eta_L} = d_{\eta_R} = d_{\eta} + 1$).
 
-The last line follows from algebra and using the fact that the depth of the grown nodes is the depth of the parent node incremented by one ($d_{\eta_L} = d_{\eta_R} = d_{\eta} + 1$).
+\pagebreak
 
 \subsection{Prune proposal}\label{subapp:prune_step}
 
@@ -1103,19 +1909,19 @@ A prune proposal is the \qu{opposite} of a grow proposal. Prune selects a singly
 \subsubsection*{Transition ratio}
 
 We begin with transitioning from the original tree to the proposal tree:
-
+%
 \beqn
-\prob{\treet{} \rightarrow \treet{*}} = \prob{\text{PRUNE}} \prob{\text{selecting $\eta$ to prune from}} =  \prob{\text{PRUNE}}\oneover{w_2}
+\prob{\treet{} \rightarrow \treet{*}} = \prob{\text{PRUNE}} \prob{\text{selecting $\eta$ to prune from}} =  \prob{\text{PRUNE}}\oneover{w_2},
 \eeqn
-
+%
 \noindent where $w_2$ denotes the number of singly internal parent nodes which have two terminal children (thus no grandchildren). To transition in the opposite direction, we are obligated to grow from node $\eta$. This is similar to Equation~\ref{eq:grow_transition} except the proposed tree has one less terminal node due to the pruning of the original tree, resulting in a  $1 / (b-1)$ term:
-
+%
 \beqn
 \prob{\treet{*} \rightarrow \treet{}} &=&  \prob{\text{GROW}} \oneover{b-1} \oneover{\padjetastar} \frac{1}{\nadjetastar}.
 \eeqn
-
+%
 Thus, the transition ratio is:
-
+%
 \beqn
 \frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} = \frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}} \frac{w_2 }{(b-1) \padjetastar \nadjetastar}.
 \eeqn
@@ -1123,7 +1929,7 @@ Thus, the transition ratio is:
 \subsubsection*{Likelihood ratio}
 
 This is simply the inverse of the likelihood ratio for the grow proposal:
-
+%
 \beqn
 \frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}} &=&  \sqrt{\frac{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}} \times \\
 && \exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_{~}}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu}}}. \\
@@ -1132,10 +1938,12 @@ This is simply the inverse of the likelihood ratio for the grow proposal:
 \subsubsection*{Tree structure ratio}
 
 This is also simply the inverse of the tree structure ratio for the grow proposal:
-
+%
 \beqn
 \frac{\prob{\treet{*}}}{\prob{\treet{}}}  &=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjetastar \nadjetastar}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}.
 \eeqn
+
+\pagebreak
 
 \subsection{Change proposal}\label{subapp:change_step}
 
@@ -1144,96 +1952,92 @@ A change proposal involves picking an internal node and changing its rule by pic
 \subsubsection*{Transition ratio}
 
 The transition to a proposal tree is below:
-
+%
 \beqn
 \prob{\treet{} \rightarrow \treet{*}} &=& \prob{\text{CHANGE}} \prob{\text{selecting node $\eta$ to change}} \times \\
 && \prob{\text{selecting the new attribute to split on}} \times \\
-&& \prob{\text{selecting the new value to split on}}
+&& \prob{\text{selecting the new value to split on}}.
 \eeqn
-
+%
 When calculating the ratio, the first three terms are shared in both numerator and denominator. The probability of selecting the new value to split on will differ as different split features have different numbers of unique values available. Thus we are left with
-
+%
 \beqn
-\frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} = \frac{\nadjetastar}{\nadjeta}
+\frac{\prob{\treet{*} \rightarrow \treet{}}}{\prob{\treet{} \rightarrow \treet{*}}} = \frac{\nadjetastar}{\nadjeta},
 \eeqn
-
+%
 \noindent where $\nadjetastar$ is the number of split values available under the proposal tree's splitting rule and $\nadjeta$ is the number of split values available under the original tree's splitting rule.
 
 
 \subsubsection*{Likelihood ratio}
 
 The proposal tree differs from the original tree only in the two child nodes of the selected change node. These two terminal nodes have the unexplained responses apportioned differently. Denote $R_{1\cdot}$ as the residuals of the first child node and $R_{2\cdot}$ as the unexplained responses in the second child node. Thus we begin with:
-
+%
 \beqn
-\frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}} &=& \frac{\cprob{\Ronestars}{\sigsq}\cprob{\Rtwostars}{\sigsq}}{\cprob{\Rones}{\sigsq}\cprob{\Rtwos}{\sigsq}}
+\frac{\cprob{\R}{\treet{*}, \sigsq}}{\cprob{\R}{\treet{}, \sigsq}} &=& \frac{\cprob{\Ronestars}{\sigsq}\cprob{\Rtwostars}{\sigsq}}{\cprob{\Rones}{\sigsq}\cprob{\Rtwos}{\sigsq}},
 \eeqn
-
+%
 \noindent where the responses denoted with an asterisk are the responses in the proposal tree's child nodes.
 
-Substituting Equation~\ref{eq:likelihood_margined} four times and using algebra, the following expression is obtained for the ratio:
-
+Substituting Equation~\ref{eq:likelihood_margined} four times and using some algebra, the following expression is obtained for the ratio:
+%
 \beqn
 && \sqrt{\frac{\parens{\frac{\sigsq}{\sigsqmu} + n_1} \parens{\frac{\sigsq}{\sigsqmu} + n_2}}{\parens{\frac{\sigsq}{\sigsqmu} + n_1^*} \parens{\frac{\sigsq}{\sigsqmu} + n_2^*}}} \times \\
-&&  \exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}}
+&&  \exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}},
 \eeqn
-
+%
 \noindent which simplifies to
-
+%
 \beqn
-\exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}} - \squared{\sum_{i=1}^{\nonestar} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\nonestar} R_{2^*, i}} - \squared{\sum_{i=1}^{\nonestar} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}}
+\exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}} - \squared{\sum_{i=1}^{\nonestar} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\nonestar} R_{2^*, i}} - \squared{\sum_{i=1}^{\nonestar} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}},
 \eeqn
-
+%
 \noindent if the number of responses in the children do not change in the proposal ($n_1 = n_1^*$ and $n_2 = n_2^*$).
 
 \subsubsection*{Tree structure ratio}
 
 The proposal tree has the same structure as the original tree. Thus we only need to take into account the changed node's children:
-
+%
 \beqn
 \frac{\prob{\treet{*}}}{\prob{\treet{}}} = \frac{\parens{1 - \probsplit{\etaonestar}} \parens{1 - \probsplit{\etatwostar}} \probsplit{\etastar} \probrule{\etastar}}{\parens{1 - \probsplit{\etaone} \parens{1 - \probsplit{\etatwo}}} \probsplit{\eta} \probrule{\eta}}.
 \eeqn
-
-The probability of splits remain the same because the child nodes are at the same depths. Thus we only need to consider the ratio of the probability of the rules. Once again, the probability of selecting the new value to split on will differ as different split features have different numbers of unique values available. We are left with $\mathbb{P}(\treet{*}) / \mathbb{P}(\treet{}) = \nadjeta / \nadjetastar$.
+%
+The probability of splits remains the same because the child nodes are at the same depths. Thus we only need to consider the ratio of the probability of the rules. Once again, the probability of selecting the new value to split on will differ as different split features have different numbers of unique values available. We are left with $\mathbb{P}(\treet{*}) / \mathbb{P}(\treet{}) = \nadjeta / \nadjetastar$.
 
 Note that this is the inverse of the transition ratio. Hence, for the change step, only the likelihood ratio needs to be computed to determine the Metropolis-Hastings ratio $r$.
 
 \section{Bakeoff}\label{app:bakeoff}
 
-We baked off nine regression data sets and assessed out-of-fold RMSE using 10-fold cross-validation. We average the results across 20 replications of cross-validation. The results are displayed in Table~\ref{tab:bakeoff}.
-
-
-\begin{table}[htp]
+We baked off nine regression data sets and assessed out-of-sample RMSE using 10-fold cross-validation. We average the results across 20 replications of cross-validation. The results are displayed in Table~\ref{tab:bakeoff}.
+\begin{table}[t!]
 \centering
 \begin{tabular}{rrrr}
   \hline
- & bartMachine & BayesTree & RF \\ 
+ & \pkg{bartMachine} & \pkg{BayesTree} & \pkg{randomForest} \\ 
   \hline
-boston & 4.451~\, & 4.503~\, & 4.582 \\ 
-  triazine & 0.128* & 0.130~\, & 0.119 \\ 
-  ozone & 4.147~\, & 4.144~\, & 4.064 \\ 
-  baseball & 709.197~\, & 709.437~\, & 729.188 \\ 
-  wine.red & 0.656~\, & 0.651* & 0.642 \\ 
-  ankara & 1.348* & 1.461~\, & 1.574 \\ 
-  wine.white & 0.759* & 0.766~\, & 0.746 \\ 
-  pole & 11.713* & 12.755~\, & 10.691 \\ 
-  compactiv & 3.262~\, & 2.795* & 2.957 \\ 
+boston & 3.003* & 4.506~ & 4.581 \\ 
+  triazine & 0.130~ & 0.130~ & 0.119 \\ 
+  ozone & 4.105~ & 4.129~ & 4.068 \\ 
+  baseball & 700.453* & 713.488~ & 730.359 \\ 
+  wine.red & 0.627* & 0.653~ & 0.641 \\ 
+  ankara & 1.303* & 1.462~ & 1.571 \\ 
+  wine.white & 0.715* & 0.764~ & 0.745 \\ 
+  pole & 11.731* & 12.764~ & 10.699 \\ 
+  compactiv & 3.261~ & 2.820* & 2.994 \\ 
    \hline
 \end{tabular}
 \caption{RMSE values for three machine learning algorithms averaged across 20 replicates. Asterisks indicate a significant difference between \pkg{bartMachine} and \pkg{BayesTree} at a significance level of 5\% with a Bonferroni correction. Comparisons with \pkg{randomForest}'s performance were not conducted.}
 \label{tab:bakeoff}
 \end{table}
+We conclude that the implementation outlined in this paper performs
+approximately the same as the previous implementation with regards to
+predictive accuracy.  Table~\ref{tab:times} shows the average run time
+for each algorithm. Note that \pkg{bartMachine} is run using 4 cores.
 
-We conclude that the implementation outlined in this paper performs approximately the same as the previous implementation with regards to predictive accuracy.
-
-Table~\ref{tab:times} shows the average run-time for each algorithm. Note that \proglang{bartMachine} is run using 4 cores. 
-
-% latex table generated in R 3.0.2 by xtable 1.7-1 package
-% Sat Nov 08 17:01:03 2014
-\begin{table}[htp]
+\begin{table}[t!]
 \centering
 \begin{tabular}{rrrr}
   \hline
- & bartMachine & BayesTree & RF \\ 
+ & \pkg{bartMachine} & \pkg{BayesTree} & \pkg{randomForest} \\ 
   \hline
 boston & 7.8 & 28.5 & 5.1 \\ 
   triazine & 5.7 & 10.7 & 2.6 \\ 
@@ -1246,8 +2050,10 @@ boston & 7.8 & 28.5 & 5.1 \\
   compactiv & 16.3 & 18.4 & 19.2 \\ 
    \hline
 \end{tabular}
-\caption{Average run-times (in seconds) for each complete k-fold estimation for three machine learning algorithms.}
+\caption{Average run times (in seconds) for each complete $k$-fold estimation for three machine learning algorithms on a Windows 7 desktop with four cores at 3.4GHz, 24GB RAM, running \proglang{R} 3.3.0 development build.}
 \label{tab:times}
 \end{table}
+
+\end{appendix}
 
 \end{document}

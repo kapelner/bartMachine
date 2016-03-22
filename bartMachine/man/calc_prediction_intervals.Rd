@@ -39,7 +39,9 @@ appropriate quantiles are taken based on the confidence level, \code{pi_conf}.
 Returns a matrix of the lower and upper bounds of the prediction intervals for each observation in \code{new_data}.
 }
 \references{
-Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+with Bayesian Additive Regression Trees. Journal of Statistical
+Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
 }
 \author{
 Adam Kapelner and Justin Bleich

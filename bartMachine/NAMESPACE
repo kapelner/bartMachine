@@ -11,6 +11,7 @@ import(stats)
 export(bartMachine)
 export(build_bart_machine)
 export(bartMachineArr)
+export(predict_bartMachineArr)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
@@ -48,6 +49,5 @@ export(destroy_bart_machine) #deprecated... do not use!
 
 
 S3method(predict, bartMachine)
-S3method(predict, bartMarchineArr)
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print

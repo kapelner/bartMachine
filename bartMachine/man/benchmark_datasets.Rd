@@ -19,7 +19,4 @@ data(benchmark_datasets)
 \source{
 See vignette for details.
 }
-\references{
-A Kapelner and J Bleich. bartMachine: Machine Learning with Bayesian Additive Regression Trees. ArXiv e-prints, 2013.
-}
 \keyword{datasets}

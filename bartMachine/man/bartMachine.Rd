@@ -173,11 +173,15 @@ Returns an object of class ``bartMachine''. The ``bartMachine'' object contains 
 Additionally, the parameters passed to the function \code{bartMachine} are also components of the list. 
 }
 \references{
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+with Bayesian Additive Regression Trees. Journal of Statistical
+Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+  
 HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
 The Annals of Applied Statistics, 4(1): 266--298, 2010.
 
 A Kapelner and J Bleich. Prediction with Missing Data via Bayesian Additive Regression
-Trees. ArXiv e-prints, 2013.
+Trees. Canadian Journal of Statistics, 43(2): 224-239, 2015
 
 J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
 Additive Regression Trees. ArXiv e-prints, 2013.

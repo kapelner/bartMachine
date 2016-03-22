@@ -1,11 +1,22 @@
-citHeader("")
+bibentry(bibtype = "Article",
+  title        = "{bartMachine}: Machine Learning with {B}ayesian Additive Regression Trees",
+  author       = c(person(given = "Adam",
+                          family = "Kapelner",
+                          email = "kapelner@qc.cuny.edu"),
+                   person(given = "Justin",
+                          family = "Bleich")),
+  journal      = "Journal of Statistical Software",
+  year         = "2016",
+  volume       = "70",
+  number       = "4",
+  pages        = "1--40",
+  doi          = "10.18637/jss.v070.i04",
 
-citEntry(
-     entry       = "Article",
-	 title       = "bart{M}achine: Machine Learning With Bayesian Additive Regression Trees",
-	 author      = personList(as.person("Adam Kapelner"), as.person("Justin Bleich")),
-	 journal     = "Ar{X}iv e-prints",
-	 year        = "2014", 
-	 textVersion = "Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning. ArXiv e-prints, 2014",
-	 header      = "To cite bartMachine in publications, please use:"
+  header       = "To cite bartMachine/bartMachineJARs in publications use:",
+  textVersion  =
+  paste("Adam Kapelner, Justin Bleich (2016).",
+        "bartMachine: Machine Learning with Bayesian Additive Regression Trees.",
+        "Journal of Statistical Software, 70(4), 1-40.",
+        "doi:10.18637/jss.v070.i04")
 )
+

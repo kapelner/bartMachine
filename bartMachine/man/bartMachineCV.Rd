@@ -53,8 +53,9 @@ Returns an object of class ``bartMachine'' with the set of hyperparameters chose
 which contains the out-of-sample RMSE for each hyperparameter set tried and ``folds'' which gives the fold in which each observation fell across the k-folds.
 }
 \references{
-HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
-The Annals of Applied Statistics, 4(1): 266--298, 2010.
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+with Bayesian Additive Regression Trees. Journal of Statistical
+Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
 }
 \author{
 Adam Kapelner and Justin Bleich

@@ -53,7 +53,9 @@ BART model replicates' post burn-in Gibbs samples in all trees.}
 BART models replicates.}
 }
 \references{
-A Kapelner and J Bleich. bartMachine: Machine Learning with Bayesian Additive Regression Trees, arXiv preprints, 2013
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+with Bayesian Additive Regression Trees. Journal of Statistical
+Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
 }
 \author{
 Adam Kapelner and Justin Bleich

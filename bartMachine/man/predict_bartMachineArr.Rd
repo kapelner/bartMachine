@@ -1,5 +1,5 @@
-\name{predict.bartMachineArr}
-\alias{predict.bartMachineArr}
+\name{predict_bartMachineArr}
+\alias{predict_bartMachineArr}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Make a prediction on data using a BART array object
@@ -12,7 +12,7 @@ Gibbs sampler gets locked into local modes at times. This is a way
 to average over many chains.
 }
 \usage{
-predict(object, new_data, ...)
+predict_bartMachineArr(object, new_data, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -70,7 +70,7 @@ bart_machine = bartMachine(iris2[ ,1:4], iris2$Species)
 bart_machine_arr = bartMachineArr(bart_machine)
 
 ##make probability predictions on the training data
-p_hat = predict(bart_machine_arr, iris2[ ,1:4])
+p_hat = predict_bartMachineArr(bart_machine_arr, iris2[ ,1:4])
 }
 
 

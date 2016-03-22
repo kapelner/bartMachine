@@ -43,9 +43,6 @@ Default is \code{NULL} which should be used if you pass in \code{lin_mode}.
 \item{pval}{The approximate p-value for this test. See the documentation at \code{\link{cov_importance_test}}.
 }
 }
-\references{
-A Kapelner and J Bleich. bartMachine: Machine Learning with Bayesian Additive Regression Trees, arXiv preprints, 2013
-}
 \author{
 Adam Kapelner
 }

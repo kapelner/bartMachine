@@ -8,8 +8,8 @@ bartMachineArr = function(bart_machine, R = 10){
 	class(arr) = "bartMarchineArr"
 	arr
 }
-#S3 predict method
-predict.bartMarchineArr = function(object, new_data, ...){
+
+predict_bartMachineArr = function(object, new_data, ...){
 	R = length(object)
 	n_star = nrow(new_data)
 	predicts = matrix(NA, nrow = n_star, ncol = R)
