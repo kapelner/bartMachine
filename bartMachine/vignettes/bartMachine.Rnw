@@ -110,6 +110,8 @@
 \newcommand{\etatwostar}{\eta_{2^*}}
 \renewcommand{\exp}[1]{\text{exp}\parens{#1}}
 
+%\VignetteIndexEntry{bartMachine}
+
 \begin{document}
 
 \section{Introduction}
