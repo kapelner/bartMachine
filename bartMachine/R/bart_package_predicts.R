@@ -21,7 +21,7 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 
 ##private function
 labels_to_y_levels = function(bart_machine, labels){
-	factor(ifelse(labels == 1, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)
+	factor(ifelse(labels == TRUE, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)
 }
 
 ##utility function for predicting when test outcomes are known
