@@ -406,7 +406,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = factor(ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1]), levels = y_levels)
+			y_hat_train = labels_to_y_levels(bart_machine, p_hat_train > prob_rule_class)
 			#return a bunch more stuff
 			bart_machine$p_hat_train = p_hat_train
 			bart_machine$y_hat_train = y_hat_train

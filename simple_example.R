@@ -70,3 +70,16 @@ plot_y_vs_yhat(bart_machine)
 
 yhat = predict(bart_machine, Xtest)
 q("no")
+
+
+library(bartMachine)
+data("Pima.te", package = "MASS")
+X <- data.frame(Pima.te[, -8])
+y <- Pima.te[, 8]
+bart_machine = bartMachine(X, y)
+bart_machine
+table(y, predict(bart_machine, X, type = "class"))
+
+
+
+
