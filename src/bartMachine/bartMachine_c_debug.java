@@ -14,21 +14,19 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 	protected boolean tree_illust = false;
 	
 	/** the hook that gets called to save the tree illustrations when the Gibbs sampler begins */
-	protected void DebugInitialization() {
+	protected void InitTreeIllustrations() {
 		bartMachineTreeNode[] initial_trees = gibbs_samples_of_bart_trees[0];
-			
-		if (tree_illust){
-			TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0, unique_name);
-			for (bartMachineTreeNode tree : initial_trees){
-				tree_array_illustration.AddTree(tree);
-				tree_array_illustration.addLikelihood(0);			
-			}
-			tree_array_illustration.CreateIllustrationAndSaveImage();
+		TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0, unique_name);
+		
+		for (bartMachineTreeNode tree : initial_trees){
+			tree_array_illustration.AddTree(tree);
+			tree_array_illustration.addLikelihood(0);			
 		}
+		tree_array_illustration.CreateIllustrationAndSaveImage();
 	}
 	
 	/** the hook that gets called to save the tree illustrations for each Gibbs sample */
-	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
+	protected void illustrate(TreeArrayIllustration tree_array_illustration) {
 		if (tree_illust){ //
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}
@@ -80,9 +78,6 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 		}
 		return all_new_nodes;
 	}	
-	
-	public void printTreeIllustations(){
-		tree_illust = true;
-	}
+
 
 }

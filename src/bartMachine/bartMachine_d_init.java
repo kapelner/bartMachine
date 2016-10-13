@@ -21,7 +21,10 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		InitGibbsSamplingData();	
 		InitizializeSigsq();
 		InitializeTrees();
-		InitializeMus();	
+		InitializeMus();
+		if (tree_illust){
+			InitTreeIllustrations();
+		}
 		//the zeroth gibbs sample is the initialization we just did; now we're onto the first in the chain
 		gibbs_sample_num = 1;
 		

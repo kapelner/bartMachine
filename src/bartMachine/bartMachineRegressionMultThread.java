@@ -64,6 +64,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
+	private boolean tree_illust;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -133,6 +134,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		}
 		//once the params are set, now you can set the data
 		bart.setData(X_y);
+		bart.tree_illust = tree_illust;
 		bart_gibbs_chain_threads[t] = bart;
 	}
 	
@@ -507,6 +509,11 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		this.X_y = X_y;
 	 	n = X_y.size();
 	 	p = X_y.get(0).length - 1;
+	}
+	
+	
+	public void printTreeIllustations(){
+		tree_illust = true;
 	}
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
