@@ -179,5 +179,5 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num
 		pi_upper_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 + pi_conf) / 2)
 	}
 	#put them together and return
-	cbind(pi_lower_bd, pi_upper_bd)
+	list(interval = cbind(pi_lower_bd, pi_upper_bd), all_prediction_samples = all_prediction_samples)
 }
