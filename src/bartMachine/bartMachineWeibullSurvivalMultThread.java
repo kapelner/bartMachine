@@ -18,7 +18,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
-public class bartMachineRegressionMultThread extends Classifier implements Serializable {
+public class bartMachineWeibullSurvivalMultThread extends Classifier implements Serializable {
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1; //default
@@ -68,7 +68,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
-	public bartMachineRegressionMultThread(){	
+	public bartMachineWeibullSurvivalMultThread(){	
 		setNumGibbsTotalIterations(num_gibbs_total_iterations);
 	}
 	

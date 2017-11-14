@@ -62,7 +62,7 @@ public class DataAnalysis {
 		}
 		else {
 			//regression problem
-			machine = new bartMachineRegressionMultThread();
+			machine = new bartMachineWeibullSurvivalMultThread();
 			machine.setData(data.getX_y());
 			machine.Build();
 			long L2 = Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4));
@@ -86,9 +86,9 @@ public class DataAnalysis {
 		
 		try {
 			ObjectInputStream reader = new ObjectInputStream(new FileInputStream("bartMachine.bin")); 
-			machine = new bartMachineRegressionMultThread(); 
+			machine = new bartMachineWeibullSurvivalMultThread(); 
 			try {
-				machine = (bartMachineRegressionMultThread) reader.readObject();
+				machine = (bartMachineWeibullSurvivalMultThread) reader.readObject();
 			} catch (ClassNotFoundException e) {e.printStackTrace();} 
 			reader.close();
 		} catch (IOException e){e.printStackTrace();}

@@ -4,6 +4,6 @@
 	<classpathentry kind="lib" path="junit-4.10.jar"/>
 	<classpathentry kind="lib" path="trove-3.0.3.jar"/>
 	<classpathentry kind="lib" path="commons-math-2.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.7.0_09"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
