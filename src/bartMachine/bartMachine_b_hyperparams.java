@@ -19,17 +19,18 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 
 	/** The static field that controls the bounds on the transformed y variable which is between negative and positive this value */
 	protected static final double YminAndYmaxHalfDiff = 0.5;
-	
 	/** A cached library of chi-squared with degrees of freedom nu plus n (used for Gibbs sampling the variance) */
 	protected static double[] samps_chi_sq_df_eq_nu_plus_n = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY	
 	/** The number of samples in the cached library of chi-squared values */
 	protected static int samps_chi_sq_df_eq_nu_plus_n_length;
 	/** A cached library of standard normal values (used for Gibbs sampling the posterior means of the terminal nodes) */
+//ES(need to change the standard normal dist for posterior values; weibull) 
 	protected static double[] samps_std_normal = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY
 	/** The number of samples in the cached library of standard normal values */
 	protected static int samps_std_normal_length;
 	
 	/** the center of the prior of the terminal node prediction distribution */
+//ES(Change to appropriate hyperparameters a, b, d, \alpha, \beta   
 	protected double hyper_mu_mu;
 	/** the variance of the prior of the terminal node prediction distribution */
 	protected double hyper_sigsq_mu;
@@ -55,13 +56,14 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	/** the sample variance of the response variable on its original scale */
 	protected Double sample_var_y;
 		
-	/** A wrapper to set data which also calculates hyperparameters and statistics about the repsonse variable */
+	/** A wrapper to set data which also calculates hyperparameters and statistics about the response variable */
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		calculateHyperparameters();	
 	}
 	
 	/** Computes <code>hyper_sigsq_mu</code> and <code>hyper_lambda</code>. */
+//ES(hyperparameters again, but these correspond to k?) 
 	protected void calculateHyperparameters() {
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
@@ -70,7 +72,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 			sample_var_y = StatToolbox.sample_variance(y_trans);
 		}
 
-		//calculate lambda from q
+		 
 		double ten_pctile_chisq_df_hyper_nu = 0;		
 		ChiSquaredDistributionImpl chi_sq_dist = new ChiSquaredDistributionImpl(hyper_nu);
 		try {
@@ -79,7 +81,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu + " with q = " + hyper_q);
 			System.exit(0);
 		}
-
+//ES(change the lambda here; note: this was determined by data)
 		hyper_lambda = ten_pctile_chisq_df_hyper_nu / hyper_nu * sample_var_y;
 	}	
 	
@@ -92,12 +94,13 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		y_min = StatToolbox.sample_minimum(y_orig);
 		y_max = StatToolbox.sample_maximum(y_orig);
 		y_range_sq = Math.pow(y_max - y_min, 2);
-	
+	 //ES(how can we standardize?)
 		for (int i = 0; i < n; i++){
 			y_trans[i] = transform_y(y_orig[i]);
 		}
 	}
-
+//ES(We need to worry about scaling here, as weibull does not have pretty property to scale easily like the norm)
+//ES(If we somehow scale, we need to worry about the interval in which to scale... 0 to 1? etc) 
 	/**
 	 * Transforms a response value on the original scale to the transformed scale
 	 * 
@@ -204,7 +207,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	public double[] un_transform_y_and_round(TDoubleArrayList yt){
 		return un_transform_y_and_round(yt.toArray());
 	}	
-	
+//ES(change hyperparameters to reflect for weibull i.e., a, b, d and \alpha, \beta) 	
 	public void setK(double hyper_k) {
 		this.hyper_k = hyper_k;
 	}

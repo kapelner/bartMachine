@@ -42,7 +42,7 @@ public abstract class bartMachine_h_eval extends bartMachine_g_mh implements Ser
 	}
 
 	/**
-	 * For each sum-of-trees in each psoterior of the Gibbs samples, evaluate / predict these new records by summing over
+	 * For each sum-of-trees in each posterior of the Gibbs samples, evaluate / predict these new records by summing over
 	 * the prediction for each tree
 	 * 
 	 * @param record				The observation to be evaluated / predicted
@@ -64,7 +64,7 @@ public abstract class bartMachine_h_eval extends bartMachine_g_mh implements Ser
 	}
 	
 	/**
-	 * For each sum-of-trees in each psoterior of the Gibbs samples, evaluate / predict these new records by summing over
+	 * For each sum-of-trees in each posterior of the Gibbs samples, evaluate / predict these new records by summing over
 	 * the prediction for each tree then order these by value and create an uncertainty interval
 	 * 
 	 * @param record				The observation for which to create an uncertainty interval		

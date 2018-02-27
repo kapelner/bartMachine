@@ -138,7 +138,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	protected double doMHPruneAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star) {
 		//first select a node that can be pruned
 		bartMachineTreeNode prune_node = pickPruneNodeOrChangeNode(T_star);
-		//if we didn't find one to prune, then we can't prunce, so reject offhand
+		//if we didn't find one to prune, then we can't prune, so reject offhand
 		if (prune_node == null){
 			return Double.NEGATIVE_INFINITY;
 		}
@@ -166,7 +166,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * node that is "singly internal" (ie it has two children and its children are both terminal nodes)
 	 * 
 	 * @param T					The root of the tree we wish to find singly internal nodes	
-	 * @return					A singly internal node selected at random from all candididates or null if none exist
+	 * @return					A singly internal node selected at random from all candidates or null if none exist
 	 */
 	protected bartMachineTreeNode pickPruneNodeOrChangeNode(bartMachineTreeNode T) {
 		
@@ -216,7 +216,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
-
+//ES(change)
 		//now go ahead and calculate it out	in an organized fashion:
 		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
 		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;

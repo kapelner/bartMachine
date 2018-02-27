@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * This portion of the code performs the evaluation / prediction on the BART model
  * 
- * @author Adam Kapelner and ES
+ * @author Adam Kapelner 
  */
 public class bartMachineWeibullSurvival implements Serializable{
 	

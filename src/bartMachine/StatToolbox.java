@@ -41,7 +41,7 @@ public class StatToolbox {
 	/** A flag that indicates an illegal value or failed operation */
 	public static final double ILLEGAL_FLAG = -999999999;	
 
-
+//ES(below needs to be changed to the big blob)
 	/**
 	 * Draws a sample from an inverse gamma distribution.
 	 * 
@@ -52,7 +52,7 @@ public class StatToolbox {
 	public static double sample_from_inv_gamma(double k, double theta){
 		return (1 / (theta / 2)) / bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_chi_sq_df_eq_nu_plus_n_length)];
 	}
-	
+//ES(change to re: weibull, and below as well)	
 	/**
 	 * Draws a sample from a normal distribution.
 	 * 
@@ -81,7 +81,8 @@ public class StatToolbox {
      * 
      * @see {@link http://www.johndcook.com/cpp_phi.html}
      */
-	public static double normal_cdf(double x) {
+//ES(normal cdf -> w cdf)	
+    public static double normal_cdf(double x) {
 	    // Save the sign of x
 	    int sign = 1;
 	    if (x < 0){
