@@ -498,7 +498,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
-		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
+		nu_q_cvs = NULL,
 		k_folds = 5, 
 		verbose = FALSE,
 		...){
@@ -526,7 +526,14 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	if (pred_type == "classification"){
+		if (!is.null(nu_q_cvs)){
+			stop("For classification, \"nu_q_cvs\" must be set to NULL (the default).")
+		}
 		nu_q_cvs = list(c(3, 0.9)) #ensure we only do this once, the 3 and the 0.9 don't actually matter, they just need to be valid numbers for the hyperparameters
+	} else { #i.e. regression... 
+		if (is.null(nu_q_cvs)){ #set it equal to a good default if user didn't specify
+			nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75))
+		}
 	}
 	
 	min_rmse_num_tree = NULL

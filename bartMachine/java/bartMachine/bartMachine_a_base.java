@@ -11,7 +11,7 @@ import java.io.Serializable;
 public abstract class bartMachine_a_base extends Classifier implements Serializable {
 
 	/** all Gibbs samples for burn-in and post burn-in where each entry is a vector of pointers to the <code>num_trees</code> trees in the sum-of-trees model */
-	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees;
+//	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees;
 	/** Gibbs samples post burn-in where each entry is a vector of pointers to the <code>num_trees</code> trees in the sum-of-trees model */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
 	/** Gibbs samples for burn-in and post burn-in of the variances */
