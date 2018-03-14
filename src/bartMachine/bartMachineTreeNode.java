@@ -46,12 +46,12 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** send missing data to the right? */ 
 	public boolean sendMissingDataRight;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
-	public double y_pred = BAD_FLAG_double;
+	public double lambda_comp_pred = BAD_FLAG_double;
 	
 	/** the number of data points in this node */
 	public transient int n_eta;
 	/** these are the yhats in the correct order */
-	public transient double[] yhats;
+	public transient double[] lambda_comp_hats;
 
 	/** the indices in {0, 1, ..., n-1} of the data records in this node */
 	protected transient int[] indicies;	
@@ -81,7 +81,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 */
 	public bartMachineTreeNode(bartMachineTreeNode parent, bartMachine_b_hyperparams bart){
 		this.parent = parent;
-		this.yhats = parent.yhats;
+		this.lambda_comp_hats = parent.lambda_comp_hats;
 		this.bart = bart;
 		
 		if (parent != null){
@@ -130,7 +130,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		copy.responses = responses;
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
-		copy.yhats = yhats;
+		copy.lambda_comp_hats = lambda_comp_hats;
 		
 		if (left != null){ //we need to clone the child and mark parent correctly
 			copy.left = left.clone();
@@ -272,7 +272,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		bartMachineTreeNode evalNode = this;
 		while (true){
 			if (evalNode.isLeaf){
-				return evalNode.y_pred;
+				return evalNode.lambda_comp_pred;
 			}
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
@@ -292,7 +292,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 
 	/** Remove all the data in this node and its children recursively to save memory */
 	public void flushNodeData() {
-		yhats = null;
+		lambda_comp_hats = null;
 		indicies = null;	
 		responses = null;
 		possible_rule_variables = null;
@@ -431,7 +431,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * @return	The untransformed prediction
 	 */
 	public double prediction_untransformed(){
-		return y_pred == BAD_FLAG_double ? BAD_FLAG_double : bart.un_transform_y(y_pred);
+		return lambda_comp_pred == BAD_FLAG_double ? BAD_FLAG_double : bart.un_transform_y(lambda_comp_pred);
 	}
 	
 	/**
@@ -628,7 +628,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}	
 
 		//initialize the yhats
-		yhats = new double[n_eta];
+		lambda_comp_hats = new double[n_eta];
 		//initialize sendMissing
 		sendMissingDataRight = pickRandomDirectionForMissingData();
 		
@@ -640,7 +640,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** Given new yhat predictions, update them for this node */
 	public void updateYHatsWithPrediction() {		
 		for (int i = 0; i < indicies.length; i++){
-			yhats[indicies[i]] = y_pred;
+			lambda_comp_hats[indicies[i]] = lambda_comp_pred;
 		}
 		if (DEBUG_NODES){
 			printNodeDebugInfo("updateYHatsWithPrediction");
@@ -754,7 +754,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	public void printNodeDebugInfo(String title) {		
 		System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
 		System.out.println("-----------------------------------------");
-		System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : bart.un_transform_y_and_round(y_pred)));
+		System.out.println("n_eta = " + n_eta + " y_pred = " + (lambda_comp_pred == BAD_FLAG_double ? "BLANK" : bart.un_transform_y_and_round(lambda_comp_pred)));
 		System.out.println("parent = " + parent + " left = " + left + " right = " + right);
 		
 		if (this.parent != null){
@@ -802,11 +802,11 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		
 		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(responses)) + "]");
 		System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
-		if (Arrays.equals(yhats, new double[yhats.length])){
-			System.out.println("y_hat_vec: (size " + yhats.length + ") [ BLANK ]");
+		if (Arrays.equals(lambda_comp_hats, new double[lambda_comp_hats.length])){
+			System.out.println("y_hat_vec: (size " + lambda_comp_hats.length + ") [ BLANK ]");
 		}
 		else {
-			System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(yhats)) + "]");
+			System.out.println("y_hat_vec: (size " + lambda_comp_hats.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(lambda_comp_hats)) + "]");
 		}
 		System.out.println("-----------------------------------------\n\n\n");
 	}

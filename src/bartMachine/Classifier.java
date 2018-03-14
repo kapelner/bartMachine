@@ -42,9 +42,7 @@ public abstract class Classifier implements Serializable{
 	/** an array of the raw training data by COLUMN i.e. consisting of xj = [x1j, ..., xnj] with the last entry being [y1, ..., yn] */ 
 	protected transient ArrayList<double[]> X_y_by_col;
 	/** the raw responses */
-	protected transient double[] y_orig;
-	/** the responses transformed (only if necessary) */
-	protected transient double[] y_trans;
+	protected transient double[] y;
 	/** the number of records in the training set */
 	protected int n;
 	/** the number of features / predictors in the training set */
@@ -106,12 +104,8 @@ public abstract class Classifier implements Serializable{
 		n = X_y.size();
 		p = X_y.get(0).length - 1;
 //		System.out.println("setData n:" + n + " p:" + p);
-		y_orig = extractResponseFromRawData(X_y);
-//		for (int i = 0; i < n; i++){
-//			System.out.println("i:" + i + " yi:" + y[i]);
-//		}
-		transformResponseVariable();
-//		X = extractDesignMatrixFromRawData(X_y);
+		y = extractResponseFromRawData(X_y);
+
 		this.X_y = addIndicesToDataMatrix(X_y);
 		this.X_y_by_col = getDataMatrixByCol(X_y);
 	}
@@ -340,29 +334,7 @@ public abstract class Classifier implements Serializable{
 //		System.out.println("in_sample_residuals: " + Tools.StringJoin(in_sample_residuals));
 		return loss;
 	}
-	
-	/**
-	 * Transforms the response variable (implemented by a daughter class).
-	 * The default here is to just save the original response.
-	 */
-	protected void transformResponseVariable() {
-		y_trans = new double[y_orig.length];
-		//default is to do nothing... ie just copy the y's into y_trans's
-		for (int i = 0; i < n; i++){
-			y_trans[i] = y_orig[i];
-		}		
-	}	
 
-	/**
-	 * Untransforms a response value (implemented by a daughter class).
-	 * The default here is to just return the original response.
-	 * 
-	 * @param y_i	The value to untransform
-	 * @return		The untransformed value
-	 */
-	protected double un_transform_y(double y_i) {
-		return y_i;
-	}		
 	
 	public Classifier clone(){
 		return null;

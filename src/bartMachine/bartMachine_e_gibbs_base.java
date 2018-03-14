@@ -40,10 +40,10 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 				GibbsSampleDebugMessage(t);
 			}
 			R_j = SampleTree(gibbs_sample_num, t, bart_trees, tree_array_illustration);
-			SampleMusWrapper(gibbs_sample_num, t);				
+			SampleLambdaComponentsWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
-		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
+		SampleK(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
 		if (tree_illust){
 			illustrate(tree_array_illustration);
 		}
@@ -72,18 +72,18 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param t				The tree index number in 1...<code>num_trees</code>
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected void SampleMusWrapper(int sample_num, int t) {
+	protected void SampleLambdaComponentsWrapper(int sample_num, int t) {
 		bartMachineTreeNode previous_tree = gibbs_samples_of_bart_trees[sample_num - 1][t];
 		//subtract out previous tree's yhats
-		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
+		resid_prods_vec = Tools.divide_arrays(resid_prods_vec, previous_tree.lambda_comp_hats);
 		bartMachineTreeNode tree = gibbs_samples_of_bart_trees[sample_num][t];
 
-		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
+		double current_k = gibbs_samples_of_k[sample_num - 1];
+		assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(tree, current_k);
 		
 		//after mus are sampled, we need to update the sum_resids_vec
 		//add in current tree's yhats		
-		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
+		resid_prods_vec = Tools.multiply_arrays(resid_prods_vec, tree.lambda_comp_hats);
 	}
 
 	/** deletes from memory tree Gibbs samples in the burn-in portion of the chain */
@@ -99,9 +99,8 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-	protected void SampleSigsq(int sample_num, double[] es) {
-		double sigsq = drawSigsqFromPosterior(sample_num, es);
-		gibbs_samples_of_sigsq[sample_num] = sigsq;
+	protected void SampleK(int sample_num, double[] es) {
+		gibbs_samples_of_k[sample_num] = drawKFromPosterior(sample_num, es);
 	}
 	
 	/**
@@ -116,7 +115,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		//all we need to do is subtract the last tree's yhats now
 		bartMachineTreeNode last_tree = gibbs_samples_of_bart_trees[sample_num][num_trees - 1];
 		for (int i = 0; i < n; i++){
-			R_j[i] -= last_tree.yhats[i];
+			R_j[i] -= last_tree.lambda_comp_hats[i];
 		}
 		return R_j;
 	}
@@ -136,7 +135,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
-		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree.yhats);
+		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y, resid_prods_vec), copy_of_old_jth_tree.lambda_comp_hats);
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
@@ -155,9 +154,9 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		return R_j;
 	}
 	
-	protected abstract double drawSigsqFromPosterior(int sample_num, double[] es);
+	protected abstract double drawKFromPosterior(int sample_num, double[] es);
 	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
-	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
 }

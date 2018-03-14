@@ -18,23 +18,23 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param node		The node to assign a prediction guess for
 	 * @param sigsq		The current guess of the variance of the model errors
 	 */
-	protected void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(bartMachineTreeNode node, double sigsq) {
+	protected void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double k) {
 		if (node.isLeaf){
 			//update ypred
 			double posterior_var = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
-			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
-			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
-				node.y_pred = 0.0; //this could happen on an empty node
-				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
+			node.lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			if (node.lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
+				node.lambda_comp_pred = 0.0; //this could happen on an empty node
+				System.err.println("ERROR assignLeafFINAL " + node.lambda_comp_pred + " (sigsq = " + sigsq + ")");
 			}
 			//now update yhats
 			node.updateYHatsWithPrediction();
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(node.left, sigsq);
-			assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(node.right, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, sigsq);
 		}
 	}
 
@@ -67,7 +67,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-	protected double drawSigsqFromPosterior(int sample_num, double[] es) {
+	protected double drawKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){

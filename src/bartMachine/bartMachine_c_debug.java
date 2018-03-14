@@ -37,12 +37,8 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 	 * 
 	 * @return	The vector of untransformed variances over all the Gibbs samples
 	 */
-	public double[] getGibbsSamplesSigsqs(){
-		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.length];
-		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.length; n_g++){			
-			sigsqs_to_export[n_g] = un_transform_sigsq(gibbs_samples_of_sigsq[n_g]);		
-		}
-		return sigsqs_to_export;
+	public double[] getGibbsSamplesKs(){
+		return gibbs_samples_of_k;
 	}	
 	
 	/**

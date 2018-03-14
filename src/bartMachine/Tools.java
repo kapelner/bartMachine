@@ -302,6 +302,39 @@ public class Tools {
 	}
 
     /**
+     * Multiply one array to another
+     * 
+     * @param arr1	The array of first addends
+     * @param arr2	The array of seconds addends
+     * @return		The array of sums
+     */
+	public static double[] multiply_arrays(double[] arr1, double[] arr2) {
+		int n = arr1.length;
+		double[] prod = new double[n];
+		for (int i = 0; i < n; i++){
+			prod[i] = arr1[i] * arr2[i];
+		}
+		return prod;
+	}
+	
+
+    /**
+     * Divide one array to another
+     * 
+     * @param arr1	The array of first addends
+     * @param arr2	The array of seconds addends
+     * @return		The array of sums
+     */
+	public static double[] divide_arrays(double[] arr1, double[] arr2) {
+		int n = arr1.length;
+		double[] quotient = new double[n];
+		for (int i = 0; i < n; i++){
+			quotient[i] = arr1[i] / arr2[i];
+		}
+		return quotient;
+	}	
+	
+    /**
      * Adds one array to another
      * 
      * @param arr1	The array of first addends
