@@ -38,11 +38,10 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	protected int num_gibbs_total_iterations = 1250; //default
 	/** the total number of Gibbs samples for each of the <code>num_cores</code> chains */
 	protected int total_iterations_multithreaded;
-
 	/** The probability vector that samples covariates for selecting split rules */
 	protected double[] cov_split_prior;
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree independent of depth */
-	protected Double alpha = 0.95;
+	protected Double alpha = 0.95; //ES(alter here and below)
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree dependent on depth which makes it more difficult as the tree gets deeper */
 	protected Double beta = 2.0;
 	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
@@ -112,8 +111,8 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		bart.num_gibbs_total_iterations = total_iterations_multithreaded;
 		bart.num_gibbs_burn_in = num_gibbs_burn_in;
 		bart.sample_var_y = sample_var_y;		
-		//now some hyperparams
-		bart.setAlpha(alpha);
+		//now some hyperparams //ES(change these and below) 
+		bart.setAlpha(alpha); 
 		bart.setBeta(beta);
 		bart.setK(hyper_k);
 		bart.setProbGrow(prob_grow);
@@ -140,14 +139,14 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	
 	/**
 	 * Takes a library of standard normal samples provided external and caches them
-	 * 
+	 *  
 	 * @param norm_samples	The externally provided cache
 	 */
 	public void setNormSamples(double[] norm_samples){
 		bartMachine_b_hyperparams.samps_std_normal = norm_samples;
 		bartMachine_b_hyperparams.samps_std_normal_length = norm_samples.length;
 	}
-	
+//ES(Doesn't above not apply anymore because we are distributing normally? Also, keep going below and check the gamma)
 	/**
 	 * Takes a library of chi-squared samples provided external and caches them
 	 * 
@@ -531,7 +530,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	public void setSampleVarY(double sample_var_y){
 		this.sample_var_y = sample_var_y;
 	}
-	
+//ES(must alter the setters)
 	public void setAlpha(double alpha){
 		this.alpha = alpha;
 	}

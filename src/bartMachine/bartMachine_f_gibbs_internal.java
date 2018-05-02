@@ -57,6 +57,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param sigsq		The current guess of the variance of the model errors
 	 * @return			The posterior variance for this node
 	 */
+//ES(Update the sigsq_mu)	
 	protected double calcLeafPosteriorVar(bartMachineTreeNode node, double sigsq) {
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
@@ -67,12 +68,18 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
+<<<<<<< HEAD
 	protected double drawKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
+=======
+	protected double drawSigsqFromPosterior(int sample_num, double[] es) {
+		//first calculate the SSE   
+>>>>>>> aa0d2cec1beaa0d25f430df08eb9e969a80ea99f
 		double sse = 0;
 		for (double e : es){
 			sse += e * e; 
 		}
+//ES(Look here; update)		
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
 		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (sse + hyper_nu * hyper_lambda));

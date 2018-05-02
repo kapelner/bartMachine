@@ -61,12 +61,23 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		gibbs_samples_of_bart_trees[0] = bart_trees;	
 	}
 
+<<<<<<< HEAD
+=======
+// ES(this should change? our means are no longer 0, because otherwise lambda would have to be 0,... but it isn't)
+	/** Initializes the leaf structure (the mean predictions) by setting them to zero (in the transformed scale, this is the center of the range) */
+	protected void InitializeMus() {
+		for (bartMachineTreeNode stump : gibbs_samples_of_bart_trees[0]){
+			stump.y_pred = 0;
+		}
+	}
+//ES(alter to blob that needs to be solved numerically)
+>>>>>>> aa0d2cec1beaa0d25f430df08eb9e969a80ea99f
 	/** Initializes the first variance value by drawing from the prior */
 	protected void InitizializeK() {
 		gibbs_samples_of_k[0] = 1; //TODO
 	}	
 	
-	/** this is the number of posterior Gibbs samples afte burn-in (thinning was never implemented) */
+	/** this is the number of posterior Gibbs samples after burn-in (thinning was never implemented) */
 	public int numSamplesAfterBurningAndThinning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}

@@ -99,8 +99,15 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
+<<<<<<< HEAD
 	protected void SampleK(int sample_num, double[] es) {
 		gibbs_samples_of_k[sample_num] = drawKFromPosterior(sample_num, es);
+=======
+//ES(Pay attention to the sigsqs)	
+	protected void SampleSigsq(int sample_num, double[] es) {
+		double sigsq = drawSigsqFromPosterior(sample_num, es);
+		gibbs_samples_of_sigsq[sample_num] = sigsq;
+>>>>>>> aa0d2cec1beaa0d25f430df08eb9e969a80ea99f
 	}
 	
 	/**

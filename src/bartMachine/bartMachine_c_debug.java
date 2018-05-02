@@ -31,7 +31,7 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}
 	}
-	
+//ES(Question: variances = sigsq here; in weibull, do we want lambda solely or do we want variance blob? they aren't the same )	
 	/**
 	 * Get the untransformed samples of the sigsqs from the Gibbs chaing
 	 * 

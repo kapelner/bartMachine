@@ -1,38 +1,73 @@
 BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give without throwing an error or crashing
 BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
-##build a BART model
-build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
+#' Builds an Extreme BART model
+#'  
+#' @param X											The matrix of covariates (n rows and p columns) 
+#' @param y 										The vector of extreme responses (length \code{n}). Make sure the minimum response is subtracted off 
+#' 													prior to building the BART model.
+#' @param Xy 										An alternative means to specify the covariates and response. This matrix has the response as the last column.
+#' @param num_trees 								The number of trees in the BART model. Default is \code{50}.
+#' @param num_burn_in 								How many initial Metropolis-within-Gibbs iterations are dropped. Default is \code{250}.
+#' @param num_iterations_after_burn_in 				How many iterations to use. Default is \code{1000}.
+#' @param a											The hyperparameter \code{a} on the prior for lambda (inverse gamma). Default is \code{2}.
+#' @param b  										The hyperparameter \code{b} on the prior for lambda (inverse gamma). Default is \code{1}.
+#' @param q 										The probability the extreme BART model has a higher \code{k} value than a Weibull regression employing
+#' 													the linear model of all \code{p} features in \code{X}. Recall that the \code{k} value in a Weibull distribution
+#' 													is related to variance --- the higher the \code{k}, the lower the variance. Default is \code{0.9}.
+#' @param alpha										A hyperparemeter controlling tree depth via the probability of creating a new split.  Default is \code{0.95}.
+#' @param beta 										A hyperparemeter controlling tree depth via the probability of creating a new split. It is the exponent
+#' 													on the inverse depth of the tree at that point.  Default is \code{2}.
+#' @param mh_prob_steps								The hyperparameter vector controlling the probabilities of the tree modifications: \code{GROW}, \code{PRUNE} 
+#' 													and \code{CHANGE}. The default is approximately \code{[0.28, 0.28, 0.44]}.
+#' @param debug_log 								Print out a log file. Default is \code{FALSE}.
+#' @param run_in_sample 							After model construction, should we compute the in-sample fits? Default is \code{TRUE}.
+#' @param cov_prior_vec								The hyperparameter vector controlling the probabilities of selecting the \code{p} covariates from \code{X}
+#' 													during \code{GROW} steps. Default is \code{NULL} indicating uniform sampling.
+#' @param covariates_to_permute 					This is a private parameter used by the testing functions only. Leave as \code{NULL} for expected behavior.
+#' @param use_missing_data 							Should we use the "missing in attributes" algorithm for splitting naturally on missingness in \code{X}? 
+#' 													Default is \code{TRUE}.
+#' @param use_missing_data_dummies_as_covars		Should we add dummy variables for missingness among the \code{p} features that feature missingness? Default is \code{TRUE}. 
+#' @param replace_missing_data_with_x_j_bar 		Should we add replace missingness among the \code{p} features that feature missingness with the average covariate value for
+#' 													continuous predictors (and the modal value for categorical predictors)? Default is \code{FALSE}.
+#' @param impute_missingness_with_rf_impute 		Should we add replace missingness among the \code{p} features that feature missingness with the predicted covariate value
+#' 													arrived at using the \code{MissForest} algorithm? Default is \code{FALSE}.
+#' @param mem_cache_for_speed 						Should we use memory caching for speed? This requires more memory and may not be possible with high \code{p} and 
+#' 													\code{n}. Default is \code{TRUE}.
+#' @param serialize 								Should we serialize the model to a file? Do so if you wish to save this model and transport it (load it up later).
+#' 													Default is \code{FALSE} because it is slow.
+#' @param seed 										The set seed value for reproducibility in the random algorithm. Default is \code{NULL} for no seed. 
+#' @param verbose 									Should we print out detailed messages? Default is \code{FALSE}.
+#' 
+#' @return											An object of type \code{extremeBartMachine}.
+#' 
+#' @author Kapelner
+#' @export
+build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
+		a = 2,
+		b = 1,
+		q = 0.9,
 		alpha = 0.95,
 		beta = 2,
-		k = 2,
-		q = 0.9,
-		nu = 3.0,
-		prob_rule_class = 0.5,
 		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
 		debug_log = FALSE,
 		run_in_sample = TRUE,
-		s_sq_y = "mse", # "mse" or "var"
-		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
-		print_tree_illustrations = FALSE,
 		cov_prior_vec = NULL,
-		use_missing_data = FALSE,
 		covariates_to_permute = NULL, #PRIVATE
-		num_rand_samps_in_library = 10000, #give the user the option to make a bigger library of random samples of normals and inv-gammas
+		use_missing_data = FALSE,
 		use_missing_data_dummies_as_covars = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
 		impute_missingness_with_rf_impute = FALSE,
-		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		serialize = FALSE,
 		seed = NULL,
 		verbose = TRUE){
 
 	if (verbose){
-		cat("bartMachine initializing with", num_trees, "trees...\n")	
+		cat("extremeBartMachine initializing with", num_trees, "trees...\n")	
 	}	
 	t0 = Sys.time()
 	
@@ -60,7 +95,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#make sure it's a data frame
-	if (class(X) != "data.frame"){
+	if ("data.frame" %in% class(X)){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
 	if (verbose){
@@ -72,25 +107,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#you are at risk of running out of memory without this invocation. 
 	gc() #Delete at your own risk!	
 
-	#now take care of classification or regression
-	y_levels = levels(y)
-	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
-		#java expects doubles, not ints, so we need to cast this now to avoid errors later
-		if (class(y) == "integer"){
-			y = as.numeric(y)
-		}		
-		java_bart_machine = .jnew("bartMachine.bartMachineRegressionMultThread")
-		y_remaining = y
-		pred_type = "regression"
-		if (class(y) == "integer"){
-			cat("Warning: The response y is integer, bartMachine will run regression.\n")
-		}
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
-		java_bart_machine = .jnew("bartMachine.bartMachineClassificationMultThread")
-		y_remaining = ifelse(y == y_levels[1], 1, 0)
-		pred_type = "classification"
-	} else { #otherwise throw an error
-		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
+	#now take care of illegal response types
+	if (class(y) != "numeric" && class(y) != "integer"){
+		stop("Your response must be either numeric or integer.\n")
 	}
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
@@ -126,7 +145,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		cat("bartMachine factors created...\n")
 	}
 	
-	if (sum(is.na(y_remaining)) > 0){
+	if (sum(is.na(y)) > 0){
 		stop("You cannot have any missing data in your response vector.")
 	}
 	
@@ -139,7 +158,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			#just use cols that HAVE missing data
 			predictor_colnums_with_missingness = names(which(colSums(is.na(X)) > 0))
 			
-			rf_imputations_for_missing = rfImpute(X, y)
+			rf_imputations_for_missing = rfImpute(X, y) #TO-DO change to MissForest!!!!
 			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]
 			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
 		}
@@ -168,7 +187,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	pre_process_obj = pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing)
-	model_matrix_training_data = cbind(pre_process_obj$data, y_remaining)
+	model_matrix_training_data = cbind(pre_process_obj$data, y)
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	factor_lengths = pre_process_obj$factor_lengths
 	if (verbose){
@@ -199,60 +218,42 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		model_matrix_training_data[, covariates_to_permute] = model_matrix_training_data[permuted_order, covariates_to_permute]
 	}
 	
+	
+	#we're ready to create the Java object that will do the heavy lifting
+	java_extreme_bart_machine = .jnew("bartMachine.bartMachineRegressionMultThread")
+	
+	#now we compute and set hyperparameters
+	.jcall(java_extreme_bart_machine, "V", "setAlpha", alpha)
+	.jcall(java_extreme_bart_machine, "V", "setBeta", beta)
+	.jcall(java_extreme_bart_machine, "V", "setA", a)
+	.jcall(java_extreme_bart_machine, "V", "setB", b)
+	
+	
+	#to set k, we use q and a multivariate weibull linear regression
+	mod = survreg(Surv(y, rep(1, nrow(model_matrix_training_data))) ~ ., data.frame(model_matrix_training_data), dist = 'weibull')
+	k_hat = 1 / summary(mod)$scale
+	
+	#now we use q and k_hat to pick a d
+	kernel_k = function(k){
+		b * k^a * exp(-b * k) * (b + d^k)^(-a)
+	}
+	#now we need to find the constant of integration
+	res = 0.01
+	k_min = 0
+	k_max = 5
+	k_grid = seq(k_min, k_max, by = res)
+	kernel_k_k = kernel_k(k_grid)
+	plot(k_grid, kernel_k_k, type = "l")
+	
+	
+	
+	
+	
 	#now set whether we want the program to log to a file
 	if (debug_log & verbose){
 		cat("warning: printing out the log file will slow down the runtime significantly.\n")
-		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
+		.jcall(java_extreme_bart_machine, "V", "writeStdOutToLogFile")
 	}
-	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations){
-		cat("warning: printing tree illustrations is excruciatingly slow.\n")
-		.jcall(java_bart_machine, "V", "printTreeIllustations")
-	}
-	
-	#set the std deviation of y to use
-	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
-		if (verbose){
-			cat("warning: cannot use MSE of linear model for s_sq_y if p > n. bartMachine will use sample var(y) instead.\n")
-		}
-		s_sq_y = "var"
-		
-	}
-	
-  	##estimate sigma^2 to be given to the BART model
-	if (is.null(sig_sq_est)){
-		if (pred_type == "regression"){		
-			y_range = max(y) - min(y)
-			y_trans = (y - min(y)) / y_range - 0.5
-			if (s_sq_y == "mse"){
-				X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
-				if (impute_missingness_with_x_j_bar_for_lm){
-					X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
-				}
-				else if (nrow(na.omit(X_for_lm)) == 0){
-					stop("The data does not have enough full records to estimate a naive prediction error. Please rerun with \"impute_missingness_with_x_j_bar_for_lm\" set to true.")
-				}
-				mod = lm(y_trans ~ ., X_for_lm)
-				mse = var(mod$residuals)
-				sig_sq_est = as.numeric(mse)
-				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-			} else if (s_sq_y == "var"){
-				sig_sq_est = as.numeric(var(y_trans))
-				.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-			} else { #if it's not a valid flag, throw an error
-				stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
-			}
-			sig_sq_est = sig_sq_est * y_range^2		
-		}
-		if (verbose){
-			cat("bartMachine sigsq estimated...\n")
-		}		
-	} else {
-		if (verbose){
-			cat("bartMachine using previous sigsq estimated...\n")
-		}		
-	}
-
 	
 	#if the user hasn't set a number of cores, set it here
 	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){
@@ -262,33 +263,23 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	num_cores = get("BART_NUM_CORES", bartMachine_globals)
 	
 	#build bart to spec with what the user wants
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
-	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
-	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
-	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
-	.jcall(java_bart_machine, "V", "setAlpha", alpha)
-	.jcall(java_bart_machine, "V", "setBeta", beta)
-	.jcall(java_bart_machine, "V", "setK", k)
-	.jcall(java_bart_machine, "V", "setQ", q)
-	.jcall(java_bart_machine, "V", "setNU", nu)
+	.jcall(java_extreme_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
+	.jcall(java_extreme_bart_machine, "V", "setNumTrees", as.integer(num_trees))
+	.jcall(java_extreme_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
+	.jcall(java_extreme_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
-	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
-	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
-	.jcall(java_bart_machine, "V", "setVerbose", verbose)
-	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
+	.jcall(java_extreme_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
+	.jcall(java_extreme_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
+	.jcall(java_extreme_bart_machine, "V", "setVerbose", verbose)
+	.jcall(java_extreme_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	
 	if (!is.null(seed)){
 		#set the seed in R
 		set.seed(seed)
 		#set the seed in Java
-		.jcall(java_bart_machine, "V", "setSeed", as.integer(seed))
+		.jcall(java_extreme_bart_machine, "V", "setSeed", as.integer(seed))
 	}
-	
-	#now we need to set random samples
-	.jcall(java_bart_machine, "V", "setNormSamples", rnorm(num_rand_samps_in_library))
-	n_plus_hyper_nu = nrow(model_matrix_training_data) + nu	
-	.jcall(java_bart_machine, "V", "setGammaSamples", rchisq(num_rand_samps_in_library, n_plus_hyper_nu))
-	
+
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user to make sure the covariate prior vec is the correct length
 		offset = length(cov_prior_vec) - (ncol(model_matrix_training_data) - 1) 
@@ -304,16 +295,16 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
 			return(TRUE)
 		}
-		.jcall(java_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
+		.jcall(java_extreme_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
 	}
 	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){
 		row_as_char = as.character(model_matrix_training_data[i, ])
 		row_as_char = replace(row_as_char, is.na(row_as_char), "NA") #this seems to be necessary for some R-rJava-linux distro-Java combinations
-		.jcall(java_bart_machine, "V", "addTrainingDataRow", row_as_char)
+		.jcall(java_extreme_bart_machine, "V", "addTrainingDataRow", row_as_char)
 	}
-	.jcall(java_bart_machine, "V", "finalizeTrainingData")
+	.jcall(java_extreme_bart_machine, "V", "finalizeTrainingData")
 	if (verbose){
 		cat("bartMachine training data finalized...\n")
 	}
@@ -335,11 +326,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		cat("\n")
 	}
-	.jcall(java_bart_machine, "V", "Build")
+	.jcall(java_extreme_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	
-	bart_machine = list(java_bart_machine = java_bart_machine,
+	extreme_bart_machine = list(java_extreme_bart_machine = java_extreme_bart_machine,
 			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data && use_missing_data_dummies_as_covars, (p / 2), p)],
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features
 			X = X,
@@ -379,7 +370,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	)
 	#if the user used a cov prior vec, pass it back
 	if (!null_cov_prior_vec){
-		bart_machine$cov_prior_vec = cov_prior_vec
+		extreme_bart_machine$cov_prior_vec = cov_prior_vec
 	}
 	
 	#once its done gibbs sampling, see how the training data does if user wants
@@ -389,27 +380,27 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		if (pred_type == "regression"){
 			y_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+					t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			y_hat_train = rowMeans(y_hat_posterior_samples)
 			#return a bunch more stuff
-			bart_machine$y_hat_train = y_hat_train
-			bart_machine$residuals = y_remaining - bart_machine$y_hat_train
-			bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
-			bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-			bart_machine$PseudoRsq = 1 - bart_machine$L2_err_train / sum((y_remaining - mean(y_remaining))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
-			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
+			extreme_bart_machine$y_hat_train = y_hat_train
+			extreme_bart_machine$residuals = y_remaining - extreme_bart_machine$y_hat_train
+			extreme_bart_machine$L1_err_train = sum(abs(extreme_bart_machine$residuals))
+			extreme_bart_machine$L2_err_train = sum(extreme_bart_machine$residuals^2)
+			extreme_bart_machine$PseudoRsq = 1 - extreme_bart_machine$L2_err_train / sum((y_remaining - mean(y_remaining))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
+			extreme_bart_machine$rmse_train = sqrt(extreme_bart_machine$L2_err_train / extreme_bart_machine$n)
 		} else if (pred_type == "classification"){
 			p_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+					t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = labels_to_y_levels(bart_machine, p_hat_train > prob_rule_class)
+			y_hat_train = labels_to_y_levels(extreme_bart_machine, p_hat_train > prob_rule_class)
 			#return a bunch more stuff
-			bart_machine$p_hat_train = p_hat_train
-			bart_machine$y_hat_train = y_hat_train
+			extreme_bart_machine$p_hat_train = p_hat_train
+			extreme_bart_machine$y_hat_train = y_hat_train
 			
 			#calculate confusion matrix
 			confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
@@ -423,9 +414,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
 			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
 			
-			bart_machine$confusion_matrix = confusion_matrix
+			extreme_bart_machine$confusion_matrix = confusion_matrix
 #			bart_machine$num_classification_errors = confusion_matrix[1, 2] + confusion_matrix[2, 1]
-			bart_machine$misclassification_error = confusion_matrix[3, 3]
+			extreme_bart_machine$misclassification_error = confusion_matrix[3, 3]
 		}
 		if (verbose){
 			cat("done\n")
@@ -436,13 +427,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#Let's serialize the object if the user wishes
 	if (serialize){
 		cat("serializing in order to be saved for future R sessions...")
-		.jcache(bart_machine$java_bart_machine)
+		.jcache(extreme_bart_machine$java_extreme_bart_machine)
 		cat("done\n")
 	}
 	
 	#use R's S3 object orientation
-	class(bart_machine) = "bartMachine"
-	bart_machine
+	class(extreme_bart_machine) = "extremeBartMachine"
+	extreme_bart_machine
 }
 
 ##private function that creates a duplicate of an existing bartMachine object.

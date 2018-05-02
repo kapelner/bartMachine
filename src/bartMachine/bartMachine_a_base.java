@@ -14,12 +14,12 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees;
 	/** Gibbs samples post burn-in where each entry is a vector of pointers to the <code>num_trees</code> trees in the sum-of-trees model */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
+
 	
 	/** Gibbs samples for burn-in and post burn-in of the k's */
 	protected double[] gibbs_samples_of_k;
 	/** Gibbs samples for post burn-in of the variances */
 	protected double[] gibbs_samples_of_k_after_burn_in;
-	
 	
 	/** a record of whether each Gibbs sample accepted or rejected the MH step within each of the <code>num_trees</code> trees */
 	protected boolean[][] accept_reject_mh;
