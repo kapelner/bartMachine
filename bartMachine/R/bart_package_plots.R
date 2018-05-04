@@ -205,9 +205,9 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkblue", "red"), cex = 0.6, pch = ifelse(y_in_ppi[i], 16, 4))	
 		}		
 	} else if (prediction_intervals){
-		credible_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
-		ci_a = credible_intervals[, 1]
-		ci_b = credible_intervals[, 2]
+		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)$interval
+		ci_a = prediction_intervals[, 1]
+		ci_b = prediction_intervals[, 2]
 		y_in_ppi = ytest >= ci_a & ytest <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		

@@ -3,10 +3,10 @@
   
   #need to check if proper Java is installed by special request of Prof Brian Ripley
   jv = .jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
-  if (substr(jv, 1L, 1L) == "1") {
+  if (substr(jv, 1L, 2L) == "1.") {
 	  jvn = as.numeric(paste0(strsplit(jv, "[.]")[[1L]][1:2], collapse = "."))
 	  if (jvn < 1.7){
-	  	stop("Java 7 (at minimum) is needed for this package but is not available.")
+		  warning("Java 7 (at minimum) is needed for this package but is does not seem to be available. This message may be in error; apologies if it is.")
 	  }		
   }
   
