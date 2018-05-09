@@ -19,14 +19,15 @@ import OpenSourceExtensions.UnorderedPair;
  * @author Adam Kapelner and Justin Bleich
  */
 public class bartMachineWeibullSurvivalMultThread extends Classifier implements Serializable {
-	
+	private static final long serialVersionUID = -8748208399204441186L;
+
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1; //default
 	/** the number of trees in this BART model on all Gibbs chains */
 	protected int num_trees = 50; //default
 	
 	/** the collection of <code>num_cores</code> BART models which will run separate Gibbs chains */
-	protected bartMachineRegression[] bart_gibbs_chain_threads;
+	protected bartMachineWeibullSurvival[] bart_gibbs_chain_threads;
 	/** this is the combined gibbs samples after burn in from all of the <code>num_cores</code> chains */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
 	
@@ -65,6 +66,12 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	protected boolean mem_cache_for_speed = true;
 	private boolean tree_illust;
 
+	private double hyper_a;
+
+	private double hyper_b;
+
+	private double hyper_d;
+
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
 	public bartMachineWeibullSurvivalMultThread(){	
@@ -90,9 +97,9 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	
 	/** Set up an array of regression BARTs with length equal to <code>num_cores</code>, the number of CPU cores requested */
 	protected void SetupBARTModels() {
-		bart_gibbs_chain_threads = new bartMachineRegression[num_cores];
+		bart_gibbs_chain_threads = new bartMachineWeibullSurvival[num_cores];
 		for (int t = 0; t < num_cores; t++){
-			bartMachineRegression bart = new bartMachineRegression();
+			bartMachineWeibullSurvival bart = new bartMachineWeibullSurvival();
 			SetupBartModel(bart, t);
 		}
 	}
@@ -104,7 +111,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	 * @param bart		The BART model to initialize
 	 * @param t			The number of the core this BART model corresponds to
 	 */
-	protected void SetupBartModel(bartMachineRegression bart, int t) {
+	protected void SetupBartModel(bartMachineWeibullSurvival bart, int t) {
 		bart.setVerbose(verbose);
 		//now set specs on each of the bart models
 		bart.num_trees = num_trees;
@@ -114,7 +121,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		//now some hyperparams //ES(change these and below) 
 		bart.setAlpha(alpha); 
 		bart.setBeta(beta);
-		bart.setK(hyper_k);
+//		bart.setK(hyper_k);
 		bart.setProbGrow(prob_grow);
 		bart.setProbPrune(prob_prune);
 		//set thread num and data
@@ -126,11 +133,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
 		}
-		//do special stuff for regression model
-		if (!(bart instanceof bartMachineClassification)){
-			bart.setNu(hyper_nu);		
-			bart.setQ(hyper_q);
-		}
+
 		//once the params are set, now you can set the data
 		bart.setData(X_y);
 		bart.tree_illust = tree_illust;
@@ -183,7 +186,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		}
 		//go through each thread and get the tail and put them together
 		for (int t = 0; t < num_cores; t++){
-			bartMachineRegression bart_model = bart_gibbs_chain_threads[t];
+			bartMachineWeibullSurvival bart_model = bart_gibbs_chain_threads[t];
 			for (int i = num_gibbs_burn_in; i < total_iterations_multithreaded; i++){
 				int offset = t * (total_iterations_multithreaded - num_gibbs_burn_in);
 				int g = offset + (i - num_gibbs_burn_in);
@@ -224,7 +227,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	 */
 	protected double[][] getGibbsSamplesForPrediction(final double[][] records, final int num_cores_evaluate){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
-		final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
+		final bartMachineWeibullSurvival first_bart = bart_gibbs_chain_threads[0];
 		
 		final int n = records.length;
 		final double[][] y_hats = new double[n][records[0].length];
@@ -318,7 +321,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	public double[] getGibbsSamplesSigsqs(){
 		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
 		for (int t = 0; t < num_cores; t++){
-			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
+			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList();
 			if (t == 0){
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
 			}
@@ -539,17 +542,17 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		this.beta = beta;
 	}	
 	
-	public void setK(double hyper_k) {
-		this.hyper_k = hyper_k;
+	public void setHyper_a(double hyper_a) {
+		this.hyper_a = hyper_a;
 	}
-
-	public void setQ(double hyper_q) {
-		this.hyper_q = hyper_q;
+	
+	public void setHyper_b(double hyper_b) {
+		this.hyper_b = hyper_b;
 	}
-
-	public void setNU(double hyper_nu) {
-		this.hyper_nu = hyper_nu;
-	}	
+	
+	public void setHyper_d(double hyper_d) {
+		this.hyper_d = hyper_d;
+	}
 	
 	
 	public void setProbGrow(double prob_grow) {

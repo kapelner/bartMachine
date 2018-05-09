@@ -1,4 +1,4 @@
-pacman::p_load(survival, rootSolve)
+pacman::p_load(survival)
 mod = survreg(Surv(futime, fustat) ~ ecog.ps + rx, ovarian, dist='weibull')
 mod
 
@@ -67,12 +67,6 @@ plot(ds, inverse_cdf_ds)
 abline(h = 0)
 
 
-
-
-
-
-uniroot.all(inverse_cdf_k_one_minus_q, c(0,10))
-
 ############
 
 kernel_k = function(k){
@@ -86,5 +80,30 @@ for (i in 1 : length(ks)){
   kernel_ks[i] = kernel_k(ks[i])
 }
 plot(ks, kernel_ks)
+
+
+
+
+
+
+
+
+Xy = read.csv("jfk_airport_wind_speed_data.csv")
+head(Xy)
+Xy = Xy[, c("PRCP", "SNOW", "WSF2")]
+Xy = na.omit(Xy)
+y = Xy$WSF2
+X = data.frame(Xy)
+X$WSF2 = NULL
+
+summary(y)
+hist(y, br = 500)
+
+options(java.parameters = "-Xmx8000m")
+library(extremeBartMachine)
+
+build_extreme_bart_machine(X, y)
+
+
 
 

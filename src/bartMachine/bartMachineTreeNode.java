@@ -69,7 +69,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	protected transient Integer padj;
 	/** a tabulation of the counts of attributes being used in split points in this tree */
 	private int[] attribute_split_counts;
-
+	
+	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
+	public double y_pred = BAD_FLAG_double;
 	
 	public bartMachineTreeNode(){}	
 	
@@ -370,7 +372,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			responses[i] = y_new;
 		}
 		if (DEBUG_NODES){
-			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(new_responses)) + "]");
+			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(new_responses) + "]");
 			printNodeDebugInfo("updateWithNewResponsesRecursively");
 		}
 		
@@ -754,7 +756,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	public void printNodeDebugInfo(String title) {		
 		System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
 		System.out.println("-----------------------------------------");
-		System.out.println("n_eta = " + n_eta + " y_pred = " + (lambda_comp_pred == BAD_FLAG_double ? "BLANK" : bart.un_transform_y_and_round(lambda_comp_pred)));
+		System.out.println("n_eta = " + n_eta + " y_pred = " + (lambda_comp_pred == BAD_FLAG_double ? "BLANK" : (lambda_comp_pred)));
 		System.out.println("parent = " + parent + " left = " + left + " right = " + right);
 		
 		if (this.parent != null){
@@ -800,13 +802,13 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			}
 		}
 		
-		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(responses)) + "]");
+		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin((responses)) + "]");
 		System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
 		if (Arrays.equals(lambda_comp_hats, new double[lambda_comp_hats.length])){
 			System.out.println("y_hat_vec: (size " + lambda_comp_hats.length + ") [ BLANK ]");
 		}
 		else {
-			System.out.println("y_hat_vec: (size " + lambda_comp_hats.length + ") [" + Tools.StringJoin(bart.un_transform_y_and_round(lambda_comp_hats)) + "]");
+			System.out.println("y_hat_vec: (size " + lambda_comp_hats.length + ") [" + Tools.StringJoin((lambda_comp_hats)) + "]");
 		}
 		System.out.println("-----------------------------------------\n\n\n");
 	}

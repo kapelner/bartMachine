@@ -21,20 +21,20 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	protected void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double k) {
 		if (node.isLeaf){
 			//update ypred
-			double posterior_var = calcLeafPosteriorVar(node, sigsq);
+			double posterior_var = calcLeafPosteriorVar(node, 1);
 			//draw from posterior distribution
-			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
+			double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
 			node.lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			if (node.lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.lambda_comp_pred = 0.0; //this could happen on an empty node
-				System.err.println("ERROR assignLeafFINAL " + node.lambda_comp_pred + " (sigsq = " + sigsq + ")");
+				System.err.println("ERROR assignLeafFINAL " + node.lambda_comp_pred + " (sigsq = " + 1 + ")");
 			}
 			//now update yhats
 			node.updateYHatsWithPrediction();
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, sigsq);
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, 1);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, 1);
 		}
 	}
 
@@ -47,7 +47,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return					The posterior mean for this node
 	 */
 	protected double calcLeafPosteriorMean(bartMachineTreeNode node, double sigsq, double posterior_var) {
-		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
+		return (1 / 1 + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
 
 	/**
@@ -59,7 +59,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 */
 //ES(Update the sigsq_mu)	
 	protected double calcLeafPosteriorVar(bartMachineTreeNode node, double sigsq) {
-		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
+		return 1 / (1 / 1 + node.n_eta / sigsq);
 	}
 	
 	/**
@@ -68,13 +68,9 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-<<<<<<< HEAD
+
 	protected double drawKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
-=======
-	protected double drawSigsqFromPosterior(int sample_num, double[] es) {
-		//first calculate the SSE   
->>>>>>> aa0d2cec1beaa0d25f430df08eb9e969a80ea99f
 		double sse = 0;
 		for (double e : es){
 			sse += e * e; 
@@ -82,7 +78,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 //ES(Look here; update)		
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (sse + hyper_nu * hyper_lambda));
+		return StatToolbox.sample_from_inv_gamma((1 + es.length) / 2, 2 / (sse + 1 * 1));
 	}
 
 	/**

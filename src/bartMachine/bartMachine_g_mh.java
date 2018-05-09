@@ -212,21 +212,21 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @see 				Section A.1.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
-		double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+		double sigsq = 4;//gibbs_samples_of_sigsq[gibbs_sample_num - 1];
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
 //ES(change)
 		//now go ahead and calculate it out	in an organized fashion:
-		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
-		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;
-		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * hyper_sigsq_mu;
+		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * 1;
+		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * 1;
+		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * 1;
 		double c = 0.5 * (
 				Math.log(sigsq) 
 				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
 				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
 				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
-		double d = hyper_sigsq_mu / (2 * sigsq);
+		double d = 1 / (2 * sigsq);
 		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
 				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
 				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
@@ -351,8 +351,8 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		int n_1 = eta.left.n_eta;
 		int n_2 = eta.right.n_eta;
 		
-		double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
-		double ratio_sigsqs = sigsq / hyper_sigsq_mu;
+		double sigsq = 1;//gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+		double ratio_sigsqs = sigsq / 1;
 		double n_1_plus_ratio_sigsqs = n_1 + ratio_sigsqs;
 		double n_2_plus_ratio_sigsqs = n_2 + ratio_sigsqs;
 		

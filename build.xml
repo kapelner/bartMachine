@@ -19,7 +19,7 @@
     </target>	
 	
 	<target name="dist" depends="compile" description="generate the jar file" >
-	    <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files" />
+	    <jar destfile="extremeBartMachine/inst/java/bart_java.jar" basedir="class_files" />
 	</target>	
 	
 	<target name="clean" description="Clean up" depends="dist">

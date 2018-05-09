@@ -112,46 +112,8 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	/** A wrapper to set data which also calculates hyperparameters and statistics about the response variable */
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		calculateHyperparameters();	
 	}
-	
-	/** Computes <code>hyper_sigsq_mu</code> and <code>hyper_lambda</code>. */
-//ES(hyperparameters again, but these correspond to k?) 
-	protected void calculateHyperparameters() {
-		hyper_mu_mu = 0;
-		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
-		
-		if (sample_var_y == null){
-			sample_var_y = StatToolbox.sample_variance(y_trans);
-		}
 
-		 
-		double ten_pctile_chisq_df_hyper_nu = 0;		
-		ChiSquaredDistributionImpl chi_sq_dist = new ChiSquaredDistributionImpl(hyper_nu);
-		try {
-			ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q);
-		} catch (MathException e) {
-			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu + " with q = " + hyper_q);
-			System.exit(0);
-		}
-//ES(change the lambda here; note: this was determined by data)
-		hyper_lambda = ten_pctile_chisq_df_hyper_nu / hyper_nu * sample_var_y;
-	}	
-	
-	/** Computes the transformed y variable using the procedure outlined in the following paper:
-	 *  
-	 *  @see HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics, 4(1): 266-298, 2010.
-	 */
-	protected void transformResponseVariable() {
-		super.transformResponseVariable();
-		y_min = StatToolbox.sample_minimum(y_orig);
-		y_max = StatToolbox.sample_maximum(y_orig);
-		y_range_sq = Math.pow(y_max - y_min, 2);
-	 //ES(how can we standardize?)
-		for (int i = 0; i < n; i++){
-			y_trans[i] = transform_y(y_orig[i]);
-		}
-	}
 //ES(We need to worry about scaling here, as weibull does not have pretty property to scale easily like the norm)
 //ES(If we somehow scale, we need to worry about the interval in which to scale... 0 to 1? etc) 
 	/**
@@ -212,15 +174,6 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
 		return sigsq_t_i * y_range_sq;
 	}
-
-
-	/**
-	 * Untransforms many response values on the transformed scale back to the original scale and rounds them to one decimal digit
-	 * 
-	 * @param yt	The transformed response values
-	 * @return		The original response values rounded to one decimal digit
-	 */
-	public double[] un_transform_y_and_round(TDoubleArrayList yt){
-		return un_transform_y_and_round(yt.toArray());
-	}	
+}
+	
 

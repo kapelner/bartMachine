@@ -1,6 +1,6 @@
-Package: bartMachine
+Package: extremeBartMachine
 Type: Package
-Title: Bayesian Additive Regression Trees
+Title: Extreme Bayesian Additive Regression Trees
 Version: 1.0
 Date: 2018-06-01
 Author: Adam Kapelner
@@ -10,3 +10,4 @@ License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.9-8), extremeBartMachineJARs (>= 1.0), car, survival, randomForest, missForest
 Imports: graphics, grDevices, stats
 SystemRequirements: Java (>= 1.7.0)
+RoxygenNote: 6.0.1

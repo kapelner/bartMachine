@@ -7,8 +7,9 @@ import java.io.Serializable;
  * 
  * @author Adam Kapelner 
  */
-public class bartMachineWeibullSurvival implements Serializable{
-	
+public class bartMachineWeibullSurvival extends bartMachine_i_prior_cov_spec implements Serializable{
+	private static final long serialVersionUID = -5803231630745873451L;
+
 	/**
 	 * Constructs the BART classifier for regression.
 	 */

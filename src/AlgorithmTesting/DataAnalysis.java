@@ -47,7 +47,7 @@ public class DataAnalysis {
 		
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
 		if (DataSetFilename.charAt(0) == 'c'){ //classification problem
-			machine = new bartMachineClassificationMultThread();
+//			machine = new bartMachineClassificationMultThread();
 			long start_time = System.currentTimeMillis();
 			machine.setData(data.getX_y());
 			

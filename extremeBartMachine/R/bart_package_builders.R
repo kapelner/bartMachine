@@ -95,7 +95,8 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#make sure it's a data frame
-	if ("data.frame" %in% class(X)){
+	if (!("data.frame" %in% class(X))){
+#		cat("class X", class(X), "equals?",  "data.frame" == class(X), "in?", "data.frame" %in% class(X), "\n")
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
 	if (verbose){
@@ -220,13 +221,13 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	
 	#we're ready to create the Java object that will do the heavy lifting
-	java_extreme_bart_machine = .jnew("bartMachine.bartMachineRegressionMultThread")
+	java_extreme_bart_machine = .jnew("bartMachine.bartMachineWeibullSurvivalMultThread")
 	
 	#now we compute and set hyperparameters
-	.jcall(java_extreme_bart_machine, "V", "setAlpha", alpha)
-	.jcall(java_extreme_bart_machine, "V", "setBeta", beta)
-	.jcall(java_extreme_bart_machine, "V", "setHyper_a", hyper_a)
-	.jcall(java_extreme_bart_machine, "V", "setHyper_b", hyper_b)
+	.jcall(java_extreme_bart_machine, "V", "setAlpha", as.numeric(alpha))
+	.jcall(java_extreme_bart_machine, "V", "setBeta", as.numeric(beta))
+	.jcall(java_extreme_bart_machine, "V", "setHyper_a", as.numeric(hyper_a))
+	.jcall(java_extreme_bart_machine, "V", "setHyper_b", as.numeric(hyper_b))
 	
 	
 	#to set k, we use q and a multivariate weibull linear regression
@@ -280,8 +281,12 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	)
 	hyper_d = optim_obj$par
 	
+	cat("hyper_d", hyper_d, "\n")
 	
-	.jcall(java_extreme_bart_machine, "V", "setHyper_d", hyper_d)
+	
+	
+	
+	.jcall(java_extreme_bart_machine, "V", "setHyper_d", as.numeric(hyper_d))
 	
 	
 	#now set whether we want the program to log to a file
@@ -346,7 +351,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
-		cat("Now building bartMachine for", pred_type, "...")
+		cat("Now building extrmeBartMachine", "...")
 		if (length(cov_prior_vec) != 0){
 			cat("Covariate importance prior ON. ")
 		}
@@ -370,8 +375,6 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features
 			X = X,
 			y = y,
-			y_levels = y_levels,
-			pred_type = pred_type,
 			model_matrix_training_data = model_matrix_training_data,
 			n = nrow(model_matrix_training_data),
 			p = p,
@@ -382,26 +385,23 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			num_gibbs = num_gibbs,
 			alpha = alpha,
 			beta = beta,
-			k = k,
-			q = q,
-			nu = nu,
-			prob_rule_class = prob_rule_class,
+			hyper_a = hyper_a,
+			hyper_b = hyper_b,
+			hyper_d = hyper_d,
+			hyper_q = hyper_q,
 			mh_prob_steps = mh_prob_steps,
-			s_sq_y = s_sq_y,
+			k_hat_weibull_model = k_hat_weibull_model,
 			run_in_sample = run_in_sample,
-			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
 			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
 			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
-			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
-			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
+			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,			
 			verbose = verbose,
 			serialize = serialize,
 			mem_cache_for_speed = mem_cache_for_speed,
 			debug_log = debug_log,
-			seed = seed,
-			num_rand_samps_in_library = num_rand_samps_in_library
+			seed = seed
 	)
 	#if the user used a cov prior vec, pass it back
 	if (!null_cov_prior_vec){
@@ -413,46 +413,18 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		if (verbose){
 			cat("evaluating in sample data...")
 		}
-		if (pred_type == "regression"){
-			y_hat_posterior_samples = 
-					t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
-			
-			#to get y_hat.. just take straight mean of posterior samples
-			y_hat_train = rowMeans(y_hat_posterior_samples)
-			#return a bunch more stuff
-			extreme_bart_machine$y_hat_train = y_hat_train
-			extreme_bart_machine$residuals = y_remaining - extreme_bart_machine$y_hat_train
-			extreme_bart_machine$L1_err_train = sum(abs(extreme_bart_machine$residuals))
-			extreme_bart_machine$L2_err_train = sum(extreme_bart_machine$residuals^2)
-			extreme_bart_machine$PseudoRsq = 1 - extreme_bart_machine$L2_err_train / sum((y_remaining - mean(y_remaining))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
-			extreme_bart_machine$rmse_train = sqrt(extreme_bart_machine$L2_err_train / extreme_bart_machine$n)
-		} else if (pred_type == "classification"){
-			p_hat_posterior_samples = 
-					t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
-			
-			#to get y_hat.. just take straight mean of posterior samples
-			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = labels_to_y_levels(extreme_bart_machine, p_hat_train > prob_rule_class)
-			#return a bunch more stuff
-			extreme_bart_machine$p_hat_train = p_hat_train
-			extreme_bart_machine$y_hat_train = y_hat_train
-			
-			#calculate confusion matrix
-			confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
-			rownames(confusion_matrix) = c(paste("actual", y_levels), "use errors")
-			colnames(confusion_matrix) = c(paste("predicted", y_levels), "model errors")
-			
-			confusion_matrix[1 : 2, 1 : 2] = as.integer(table(y, y_hat_train)) 
-			confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
-			confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
-			confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
-			confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
-			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
-			
-			extreme_bart_machine$confusion_matrix = confusion_matrix
-#			bart_machine$num_classification_errors = confusion_matrix[1, 2] + confusion_matrix[2, 1]
-			extreme_bart_machine$misclassification_error = confusion_matrix[3, 3]
-		}
+		y_hat_posterior_samples = 
+				t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		
+		#to get y_hat.. just take straight mean of posterior samples
+		y_hat_train = rowMeans(y_hat_posterior_samples)
+		#return a bunch more stuff
+		extreme_bart_machine$y_hat_train = y_hat_train
+		extreme_bart_machine$residuals = y - extreme_bart_machine$y_hat_train
+		extreme_bart_machine$L1_err_train = sum(abs(extreme_bart_machine$residuals))
+		extreme_bart_machine$L2_err_train = sum(extreme_bart_machine$residuals^2)
+		extreme_bart_machine$PseudoRsq = 1 - extreme_bart_machine$L2_err_train / sum((y - mean(y))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
+		extreme_bart_machine$rmse_train = sqrt(extreme_bart_machine$L2_err_train / extreme_bart_machine$n)
 		if (verbose){
 			cat("done\n")
 		}
@@ -542,18 +514,6 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		X = Xy
 	}
 	
-	y_levels = levels(y)
-	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
-		pred_type = "regression"
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
-		pred_type = "classification"
-	} else { #otherwise throw an error
-		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
-	}
-	
-	if (pred_type == "classification"){
-		nu_q_cvs = list(c(3, 0.9)) #ensure we only do this once, the 3 and the 0.9 don't actually matter, they just need to be valid numbers for the hyperparameters
-	}
 	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
@@ -575,11 +535,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
 				
-				if (pred_type == "regression"){
-					cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
-				} else {
-					cat(paste("  bartMachine CV try: k:", k, "m:", num_trees, "\n"))
-				}
+				cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
 				
 				k_fold_results = k_fold_cv(X, y, 
           			k_folds = k_folds,
@@ -591,29 +547,17 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 					verbose = verbose,
 					...)
 				
-				if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
-					min_oos_rmse = k_fold_results$rmse					
-					min_rmse_k = k
-					min_rmse_nu_q = nu_q
-					min_rmse_num_tree = num_trees
-				} else if (pred_type == "classification" && k_fold_results$misclassification_error < min_oos_misclassification_error){
-					min_oos_misclassification_error = k_fold_results$misclassification_error					
-					min_rmse_k = k
-					min_rmse_nu_q = nu_q
-					min_rmse_num_tree = num_trees					
-				}
+				min_oos_rmse = k_fold_results$rmse					
+				min_rmse_k = k
+				min_rmse_nu_q = nu_q
+				min_rmse_num_tree = num_trees
 				
-				cv_stats[run_counter, 1 : 5] = c(k, nu_q[1], nu_q[2], num_trees, 
-					ifelse(pred_type == "regression", k_fold_results$rmse, k_fold_results$misclassification_error))
+				cv_stats[run_counter, 1 : 5] = c(k, nu_q[1], nu_q[2], num_trees, k_fold_results$rmse)
 				run_counter = run_counter + 1
 			}
 		}
 	}
-	if (pred_type == "regression"){
-		cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
-	} else {
-		cat(paste("  bartMachine CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
-	}
+	cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	bart_machine_cv = build_bart_machine(X, y,
 			num_trees = min_rmse_num_tree,
