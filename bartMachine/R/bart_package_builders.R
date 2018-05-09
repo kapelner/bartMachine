@@ -10,9 +10,9 @@ BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 #' @param num_trees 								The number of trees in the BART model. Default is \code{50}.
 #' @param num_burn_in 								How many initial Metropolis-within-Gibbs iterations are dropped. Default is \code{250}.
 #' @param num_iterations_after_burn_in 				How many iterations to use. Default is \code{1000}.
-#' @param a											The hyperparameter \code{a} on the prior for lambda (inverse gamma). Default is \code{2}.
-#' @param b  										The hyperparameter \code{b} on the prior for lambda (inverse gamma). Default is \code{1}.
-#' @param q 										The probability the extreme BART model has a higher \code{k} value than a Weibull regression employing
+#' @param hyper_a									The hyperparameter \code{a} on the prior for lambda (inverse gamma). Default is \code{2}.
+#' @param hyper_b									The hyperparameter \code{b} on the prior for lambda (inverse gamma). Default is \code{1}.
+#' @param hyper_q									The probability the extreme BART model has a higher \code{k} value than a Weibull regression employing
 #' 													the linear model of all \code{p} features in \code{X}. Recall that the \code{k} value in a Weibull distribution
 #' 													is related to variance --- the higher the \code{k}, the lower the variance. Default is \code{0.9}.
 #' @param alpha										A hyperparemeter controlling tree depth via the probability of creating a new split.  Default is \code{0.95}.
@@ -47,9 +47,9 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
-		a = 2,
-		b = 1,
-		q = 0.9,
+		hyper_a = 2,
+		hyper_b = 1,
+		hyper_q = 0.9,
 		alpha = 0.95,
 		beta = 2,
 		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
@@ -225,39 +225,63 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now we compute and set hyperparameters
 	.jcall(java_extreme_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_extreme_bart_machine, "V", "setBeta", beta)
-	.jcall(java_extreme_bart_machine, "V", "setA", a)
-	.jcall(java_extreme_bart_machine, "V", "setB", b)
+	.jcall(java_extreme_bart_machine, "V", "setHyper_a", hyper_a)
+	.jcall(java_extreme_bart_machine, "V", "setHyper_b", hyper_b)
 	
 	
 	#to set k, we use q and a multivariate weibull linear regression
 	mod = survreg(Surv(y, rep(1, nrow(model_matrix_training_data))) ~ ., data.frame(model_matrix_training_data), dist = 'weibull')
-	k_hat = 1 / summary(mod)$scale
+	k_hat_weibull_model = 1 / summary(mod)$scale
 	
 	#now we use q and k_hat to pick a d
-	kernel_k = function(k){
-		(b * k)^(a) * exp(-b * k) * (b + d^k)^(-a)
+	cdf_k_at_k_hat = function(d, k_hat_weibull_model, hyper_a, hyper_b, d_max){
+		
+		kernel_k = function(k){
+			(hyper_b * k)^(hyper_a) * exp(-hyper_b * k) * (hyper_b + d^k)^(-hyper_a)
+		}		
+		
+		numer = integrate(kernel_k, 0, k_hat_weibull_model)$value
+		denom = integrate(kernel_k, 0, d_max)$value
+		
+		repeat {
+			# cat("cdf_k_at_k_hat k_hat_weibull_model", k_hat_weibull_model, "d_max", d_max, "numer", numer, "denom", denom, "\n")
+			if (numer > denom){ #i.e. impossible... there must be some numeric underflow
+				d_max = d_max * 0.9
+				denom = integrate(kernel_k, 0, d_max)$value
+			} else {
+				break
+			}
+		}
+		numer / denom
 	}
 	
-	#find d from integrating? is it possible to solve for d in an integral with all things known except for d
-	d = solve(integrate(kernel_k, k_hat, 100000), 0.9)
+	inverse_cdf_k_one_minus_q_target = function(d, hyper_q, hyper_a, hyper_b, k_hat_weibull_model, d_max){
+		obj_val = abs(
+			cdf_k_at_k_hat(d, k_hat_weibull_model, hyper_a, hyper_b, d_max) - 
+				(1 - hyper_q)
+		)
+#		cat("d", d, "obj_val", obj_val, "\n")
+		obj_val
+	}
 	
-	#integral of the kernel, but we need d here to do so.... it should work?
-	int_kernel = optim(k_hat, kernel_k, method = "Brent", lower = 0, upper = k_hat)
+	###TO-DO make sure this optimization doesn't hit an endpoint
+	optim_obj = optim(
+		par = 1, 
+		fn = inverse_cdf_k_one_minus_q_target, 
+		hyper_q = hyper_q,
+		hyper_a = hyper_a,
+		hyper_b = hyper_b,
+		d_max = 1000,
+		k_hat_weibull_model = k_hat_weibull_model,
+		lower = 0.01, 
+		upper = 2, 
+		method = "Brent",
+		control = list(maxit = 1000)
+	)
+	hyper_d = optim_obj$par
 	
-	#from formula of kernel relating to its normalizing constant
-	norm_const = (1 - q) / (int_kernel$par)
 	
-	
-	#now we need to find the constant of integration
-	res = 0.01
-	k_min = 0
-	k_max = 5
-	k_grid = seq(k_min, k_max, by = res)
-	kernel_k_k = kernel_k(k_grid)
-	plot(k_grid, kernel_k_k, type = "l")
-	
-	
-	
+	.jcall(java_extreme_bart_machine, "V", "setHyper_d", hyper_d)
 	
 	
 	#now set whether we want the program to log to a file
