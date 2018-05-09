@@ -235,8 +235,19 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#now we use q and k_hat to pick a d
 	kernel_k = function(k){
-		b * k^a * exp(-b * k) * (b + d^k)^(-a)
+		(b * k)^(a) * exp(-b * k) * (b + d^k)^(-a)
 	}
+	
+	#find d from integrating? is it possible to solve for d in an integral with all things known except for d
+	d = solve(integrate(kernel_k, k_hat, 100000), 0.9)
+	
+	#integral of the kernel, but we need d here to do so.... it should work?
+	int_kernel = optim(k_hat, kernel_k, method = "Brent", lower = 0, upper = k_hat)
+	
+	#from formula of kernel relating to its normalizing constant
+	norm_const = (1 - q) / (int_kernel$par)
+	
+	
 	#now we need to find the constant of integration
 	res = 0.01
 	k_min = 0
