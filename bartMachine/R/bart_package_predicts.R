@@ -65,7 +65,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_clas
 bart_machine_get_posterior = function(bart_machine, new_data){	
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
-	if (class(new_data) != "data.frame"){		
+	if (!"data.frame"%in%class(new_data)){		
 		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
 	}
 	if (!bart_machine$use_missing_data){
