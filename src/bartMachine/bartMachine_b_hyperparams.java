@@ -24,33 +24,12 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	/** The number of samples in the cached library of standard normal values */
 	protected static int samps_std_normal_length;
 	
-	/** the first hyperparameter for the lambda parameters */
-	protected double hyper_alpha_lambda;
-	/** the second hyperparameter for the lambda parameters */
-	protected double hyper_beta_lambda;
-	
-
-	public double getHyper_alpha_lambda() {
-		return hyper_alpha_lambda;
-	}
-
-	public void setHyper_alpha_lambda(double hyper_alpha_lambda) {
-		this.hyper_alpha_lambda = hyper_alpha_lambda;
-	}
-	public double getHyper_beta_lambda() {
-		return hyper_alpha_lambda;
-	}
-
-	public void setHyper_beta_lambda(double hyper_alpha_lambda) {
-		this.hyper_alpha_lambda = hyper_alpha_lambda;
-	}
-	
-	/** the first hyperparameter for the k parameter */
+	/** the first hyperparameter for the lambda prior */
 	protected double hyper_a;
-	/** the second hyperparameter for the k parameter */
+	/** the second hyperparameter for the lambda prior  */
 	protected double hyper_b;
-	/** the third hyperparameter for the k parameter */
-	protected double hyper_d;
+	/** the hyperparameter for the k prior */
+	protected double hyper_k_max;
 	
 	
 	public double getHyper_a() {
@@ -69,12 +48,12 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		this.hyper_b = hyper_b;
 	}
 	
-	public double getHyper_d() {
-		return hyper_d;
+	public double getHyper_Kmax() {
+		return hyper_k_max;
 	}
 
-	public void setHyper_d(double hyper_d) {
-		this.hyper_d = hyper_d;
+	public void setHyper_Kmax(double hyper_k_max) {
+		this.hyper_k_max = hyper_k_max;
 	}
 
 
