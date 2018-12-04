@@ -17,7 +17,7 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 
 	
 	/** Gibbs samples for burn-in and post burn-in of the k's */
-	protected double[] gibbs_samples_of_k;
+	protected double[] gibbs_samples_of_log_k;
 	/** Gibbs samples for post burn-in of the variances */
 	protected double[] gibbs_samples_of_k_after_burn_in;
 	

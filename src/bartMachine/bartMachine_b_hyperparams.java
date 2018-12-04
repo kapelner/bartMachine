@@ -10,7 +10,8 @@ import java.util.ArrayList;
  * @author Adam Kapelner and Justin Bleich
  */
 public abstract class bartMachine_b_hyperparams extends bartMachine_a_base implements Serializable{
-	
+	private static final long serialVersionUID = 8194181668890893274L;
+
 	/** The static field that controls the bounds on the transformed y variable which is between negative and positive this value */
 	protected static final double YminAndYmaxHalfDiff = 0.5;
 	/** A cached library of chi-squared with degrees of freedom nu plus n (used for Gibbs sampling the variance) */
@@ -23,27 +24,6 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected static double[] samps_std_normal = {1, 2, 3, 4, 5}; //give a default for debugging in Java ONLY
 	/** The number of samples in the cached library of standard normal values */
 	protected static int samps_std_normal_length;
-	
-	/** the first hyperparameter for the lambda parameters */
-	protected double hyper_alpha_lambda;
-	/** the second hyperparameter for the lambda parameters */
-	protected double hyper_beta_lambda;
-	
-
-	public double getHyper_alpha_lambda() {
-		return hyper_alpha_lambda;
-	}
-
-	public void setHyper_alpha_lambda(double hyper_alpha_lambda) {
-		this.hyper_alpha_lambda = hyper_alpha_lambda;
-	}
-	public double getHyper_beta_lambda() {
-		return hyper_alpha_lambda;
-	}
-
-	public void setHyper_beta_lambda(double hyper_alpha_lambda) {
-		this.hyper_alpha_lambda = hyper_alpha_lambda;
-	}
 	
 	/** the first hyperparameter for the k parameter */
 	protected double hyper_a;
@@ -114,66 +94,6 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		super.setData(X_y);
 	}
 
-//ES(We need to worry about scaling here, as weibull does not have pretty property to scale easily like the norm)
-//ES(If we somehow scale, we need to worry about the interval in which to scale... 0 to 1? etc) 
-	/**
-	 * Transforms a response value on the original scale to the transformed scale
-	 * 
-	 * @param y_i	The original response value
-	 * @return		The transformed response value
-	 */
-	public double transform_y(double y_i){
-		return (y_i - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
-	}
-	
-	/**
-	 * Untransforms a vector of response value on the transformed scale back to the original scale
-	 * 
-	 * @param yt	The transformed response values
-	 * @return		The original response values
-	 */
-	public double[] un_transform_y(double[] yt){
-		double[] y = new double[yt.length];
-		for (int i = 0; i < yt.length; i++){
-			y[i] = un_transform_y(yt[i]);
-		}
-		return y;
-	}
-	
-	/**
-	 * Untransforms a response value on the transformed scale back to the original scale
-	 * 
-	 * @param yt_i	The transformed response value
-	 * @return		The original response value
-	 */
-	public double un_transform_y(double yt_i){
-		return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
-	}
-	
-	/**
-	 * Untransforms a response value on the transformed scale back to the original scale
-	 * 
-	 * @param yt_i	The transformed response value
-	 * @return		The original response value
-	 */
-	public double un_transform_y(Double yt_i){
-		if (yt_i == null){
-			return -9999999;
-		}
-		return un_transform_y((double)yt_i);
-	}	
-	
-	/**
-	 * Untransforms a variance value on the transformed scale back to the original scale
-	 * 
-	 * @param sigsq_t_i		The transformed variance value
-	 * @return				The original variance value
-	 */
-	public double un_transform_sigsq(double sigsq_t_i){
-		//Based on the following elementary calculation: 
-		//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
-		return sigsq_t_i * y_range_sq;
-	}
 }
 	
 
