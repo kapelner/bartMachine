@@ -1,0 +1,571 @@
+BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give without throwing an error or crashing
+BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
+
+#' Builds an Extreme BART model
+#' 
+#' An extreme BART model ... Bracha
+#'  
+#' @param X											The matrix of covariates (n rows and p columns) 
+#' @param y 										The vector of extreme responses (length \code{n}). Make sure the minimum response MUST BE subtracted off 
+#' 													prior to building the BART model. Note: the model building will scale \code{y} to be average = 1.
+#' @param Xy 										An alternative means to specify the covariates and response. This matrix has the response as the last column.
+#' @param num_trees 								The number of trees in the BART model. Default is \code{50}.
+#' @param num_burn_in 								How many initial Metropolis-within-Gibbs iterations are dropped. Default is \code{250}.
+#' @param num_iterations_after_burn_in 				How many iterations to use. Default is \code{1000}.
+#' @param hyper_a									The hyperparameter \code{a} on the prior for lambda (inverse gamma). Default is \code{2}.
+#' @param hyper_b									The hyperparameter \code{b} on the prior for lambda (inverse gamma). Default is \code{1}.
+#' @param hyper_q									The probability the extreme BART model has a higher \code{k} value than a Weibull regression employing
+#' 													the linear model of all \code{p} features in \code{X}. Recall that the \code{k} value in a Weibull distribution
+#' 													is related to variance --- the higher the \code{k}, the lower the variance. Default is \code{0.9}.
+#' @param alpha										A hyperparemeter controlling tree depth via the probability of creating a new split.  Default is \code{0.95}.
+#' @param beta 										A hyperparemeter controlling tree depth via the probability of creating a new split. It is the exponent
+#' 													on the inverse depth of the tree at that point.  Default is \code{2}.
+#' @param mh_prob_steps								The hyperparameter vector controlling the probabilities of the tree modifications: \code{GROW}, \code{PRUNE} 
+#' 													and \code{CHANGE}. The default is approximately \code{[0.28, 0.28, 0.44]}.
+#' @param debug_log 								Print out a log file. Default is \code{FALSE}.
+#' @param run_in_sample 							After model construction, should we compute the in-sample fits? Default is \code{TRUE}.
+#' @param cov_prior_vec								The hyperparameter vector controlling the probabilities of selecting the \code{p} covariates from \code{X}
+#' 													during \code{GROW} steps. Default is \code{NULL} indicating uniform sampling.
+#' @param covariates_to_permute 					This is a private parameter used by the testing functions only. Leave as \code{NULL} for expected behavior.
+#' @param use_missing_data 							Should we use the "missing in attributes" algorithm for splitting naturally on missingness in \code{X}? 
+#' 													Default is \code{TRUE}.
+#' @param use_missing_data_dummies_as_covars		Should we add dummy variables for missingness among the \code{p} features that feature missingness? Default is \code{TRUE}. 
+#' @param replace_missing_data_with_x_j_bar 		Should we add replace missingness among the \code{p} features that feature missingness with the average covariate value for
+#' 													continuous predictors (and the modal value for categorical predictors)? Default is \code{FALSE}.
+#' @param impute_missingness_with_rf_impute 		Should we add replace missingness among the \code{p} features that feature missingness with the predicted covariate value
+#' 													arrived at using the \code{MissForest} algorithm? Default is \code{FALSE}.
+#' @param mem_cache_for_speed 						Should we use memory caching for speed? This requires more memory and may not be possible with high \code{p} and 
+#' 													\code{n}. Default is \code{TRUE}.
+#' @param serialize 								Should we serialize the model to a file? Do so if you wish to save this model and transport it (load it up later).
+#' 													Default is \code{FALSE} because it is slow.
+#' @param seed 										The set seed value for reproducibility in the random algorithm. Default is \code{NULL} for no seed. 
+#' @param verbose 									Should we print out detailed messages? Default is \code{FALSE}.
+#' 
+#' @return											An object of type \code{extremeBartMachine}.
+#' 
+#' @author Adam Kapelner
+#' @export
+build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
+		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
+		num_burn_in = 250, 
+		num_iterations_after_burn_in = 1000, 
+		hyper_a = 2,
+		hyper_b = 1,
+		hyper_q = 0.9,
+		alpha = 0.95,
+		beta = 2,
+		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
+		debug_log = FALSE,
+		run_in_sample = TRUE,
+		cov_prior_vec = NULL,
+		covariates_to_permute = NULL, #PRIVATE
+		use_missing_data = FALSE,
+		use_missing_data_dummies_as_covars = FALSE,
+		replace_missing_data_with_x_j_bar = FALSE,
+		impute_missingness_with_rf_impute = FALSE,
+		mem_cache_for_speed = TRUE,
+		serialize = FALSE,
+		seed = NULL,
+		verbose = TRUE){
+
+	if (verbose){
+		cat("extremeBartMachine initializing with", num_trees, "trees...\n")	
+	}	
+	t0 = Sys.time()
+	
+	if (use_missing_data_dummies_as_covars && replace_missing_data_with_x_j_bar){
+		stop("You cannot impute by averages and use missing data as dummies simultaneously.")
+	}
+	
+	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
+		stop("You cannot specify both X,y and Xy simultaneously.")		
+	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		#first ensure it's a dataframe
+		if (!("data.frame" %in% class(Xy))){
+			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
+		}
+		y = Xy[, ncol(Xy)]
+		for (cov in 1 : (ncol(Xy) - 1)){
+			if (colnames(Xy)[cov] == ""){
+				colnames(Xy)[cov] = paste("V", cov, sep = "")
+			}
+		}
+		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
+		colnames(X) = colnames(Xy)[1 : (ncol(Xy) - 1)]
+	}
+	
+	#make sure it's a data frame
+	
+	if (!("data.frame" %in% class(X))){
+#		cat("class X", class(X), "equals?",  "data.frame" == class(X), "in?", "data.frame" %in% class(X), "\n")
+		stop(paste("The training data X must be a data frame."), call. = FALSE)	
+	}
+	if (verbose){
+		cat("bartMachine vars checked...\n")
+	}	
+	#we are about to construct a bartMachine object. First, let R garbage collect
+	#to clean up previous bartMachine objects that are no longer in use. This is important
+	#because R's garbage collection system does not "see" the size of Java objects. Thus,
+	#you are at risk of running out of memory without this invocation. 
+	gc() #Delete at your own risk!	
+
+	#now take care of illegal response types
+	if (class(y) != "numeric" && class(y) != "integer"){
+		stop("Your response must be either numeric or integer.\n")
+	}
+	
+	num_gibbs = num_burn_in + num_iterations_after_burn_in
+	
+	if (ncol(X) == 0){
+		stop("Your data matrix must have at least one attribute.")
+	}
+	if (nrow(X) == 0){
+		stop("Your data matrix must have at least one observation.")
+	}
+	if (length(y) != nrow(X)){
+		stop("The number of responses must be equal to the number of observations in the training data.")
+	}
+	if (hyper_a < 0){
+		stop("The hyperparameter a must be positive.")
+	}
+	if (hyper_b < 0){
+		stop("The hyperparameter b must be positive.")
+	}
+	if (verbose){
+		cat("bartMachine java init...\n")
+	}
+	
+	#Now we scale y to be sample average 1
+	y_avg = mean(y)
+	y = y / y_avg
+	
+	#if no column names, make up names
+	if (is.null(colnames(X))){
+		colnames(X) = paste("V", seq(from = 1, to = ncol(X), by = 1), sep = "")
+	}
+	
+	if (any(mh_prob_steps < 0)){
+		stop("The grow, prune, change ratio parameter vector must all be greater than 0.")
+	}
+	
+	#now we should regenerate the factors for the factor columns
+	predictors_which_are_factors = names(which(sapply(X, is.factor)))
+	for (predictor in predictors_which_are_factors){
+		X[, predictor] = factor(X[, predictor])
+	}
+	if (verbose){
+		cat("bartMachine factors created...\n")
+	}
+	
+	if (sum(is.na(y)) > 0){
+		stop("You cannot have any missing data in your response vector.")
+	}
+	
+	rf_imputations_for_missing = NULL
+	if (impute_missingness_with_rf_impute){
+		if (nrow(na.omit(X)) == nrow(X)){ #for the cases where it doesn't impute
+			warning("No missing entries in the training data to impute.")
+			rf_imputations_for_missing = X
+		} else {
+			#just use cols that HAVE missing data
+			predictor_colnums_with_missingness = names(which(colSums(is.na(X)) > 0))
+			
+			rf_imputations_for_missing = rfImpute(X, y) #TO-DO change to MissForest!!!!
+			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]
+			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
+		}
+		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
+		if (verbose){
+			cat("bartMachine after rf imputations...\n")
+		}	
+	}
+	
+	#if we're not using missing data, go on and get rid of it
+	if (!use_missing_data && !replace_missing_data_with_x_j_bar){
+		rows_before = nrow(X)
+		X = na.omit(X)
+		rows_after = nrow(X)
+		if (rows_before - rows_after > 0){
+			stop("You have ", rows_before - rows_after, " observations with missing data. \nYou must either omit your missing data using \"na.omit()\" or turn on the\n\"use_missing_data\" or \"replace_missing_data_with_x_j_bar\" feature in order to use bartMachine.\n")
+		}
+	} else if (replace_missing_data_with_x_j_bar){
+		X = imputeMatrixByXbarjContinuousOrModalForBinary(X, X)
+		if (verbose){
+			cat("Imputed missing data using attribute averages.\n")
+		}
+	}
+	if (verbose){
+		cat("bartMachine before preprocess...\n")
+	}
+	
+	pre_process_obj = pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing)
+	model_matrix_training_data = cbind(pre_process_obj$data, y)
+	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
+	factor_lengths = pre_process_obj$factor_lengths
+	if (verbose){
+		cat("bartMachine after preprocess...", ncol(model_matrix_training_data), "total features...\n")
+	}
+	#now create a default cov_prior_vec that factors in the levels of the factors
+	null_cov_prior_vec = is.null(cov_prior_vec)
+	if (null_cov_prior_vec && length(factor_lengths) > 0){
+		#begin with the uniform
+		cov_prior_vec = rep(1, p)
+		j_factor_begin = p - sum(factor_lengths) + 1
+		for (l in 1 : length(factor_lengths)){
+			factor_length = factor_lengths[l]
+			cov_prior_vec[j_factor_begin : (j_factor_begin + factor_length - 1)] = 1 / factor_length
+			j_factor_begin = j_factor_begin + factor_length
+		}
+	}
+
+	#this is a private parameter ONLY called by cov_importance_test
+	if (!is.null(covariates_to_permute)){
+		#first check if these covariates are even in the matrix to begin with
+		for (cov in covariates_to_permute){
+			if (!(cov %in% colnames(model_matrix_training_data)) && class(cov) == "character"){
+				stop("Covariate \"", cov, "\" not found in design matrix.")
+			}
+		}
+		permuted_order = sample(1 : nrow(model_matrix_training_data), nrow(model_matrix_training_data))
+		model_matrix_training_data[, covariates_to_permute] = model_matrix_training_data[permuted_order, covariates_to_permute]
+	}
+	
+	
+	#we're ready to create the Java object that will do the heavy lifting
+	java_extreme_bart_machine = .jnew("bartMachine.bartMachineWeibullSurvivalMultThread")
+	
+	#now we compute and set hyperparameters
+	.jcall(java_extreme_bart_machine, "V", "setAlpha", as.numeric(alpha))
+	.jcall(java_extreme_bart_machine, "V", "setBeta", as.numeric(beta))
+	.jcall(java_extreme_bart_machine, "V", "setHyper_a", as.numeric(hyper_a))
+	.jcall(java_extreme_bart_machine, "V", "setHyper_b", as.numeric(hyper_b))
+	
+	
+	#to set k, we use q and a multivariate weibull linear regression
+	mod = survreg(Surv(y, rep(1, nrow(model_matrix_training_data))) ~ ., data.frame(model_matrix_training_data), dist = 'weibull')
+	k_hat_weibull_model = 1 / summary(mod)$scale
+
+	#now we use q and k_hat to pick a k_max
+	#Bracha
+	k_max = ...
+	cat("k_max", k_max, "\n")
+	
+	.jcall(java_extreme_bart_machine, "V", "setHyperKMax", as.numeric(k_max))
+	
+	#now set whether we want the program to log to a file
+	if (debug_log & verbose){
+		cat("warning: printing out the log file will slow down the runtime significantly.\n")
+		.jcall(java_extreme_bart_machine, "V", "writeStdOutToLogFile")
+	}
+	
+	#if the user hasn't set a number of cores, set it here
+	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){
+		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, bartMachine_globals)
+	}
+	#load the number of cores the user set
+	num_cores = get("BART_NUM_CORES", bartMachine_globals)
+	
+	#build bart to spec with what the user wants
+	.jcall(java_extreme_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
+	.jcall(java_extreme_bart_machine, "V", "setNumTrees", as.integer(num_trees))
+	.jcall(java_extreme_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
+	.jcall(java_extreme_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
+	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
+	.jcall(java_extreme_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
+	.jcall(java_extreme_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
+	.jcall(java_extreme_bart_machine, "V", "setVerbose", verbose)
+	.jcall(java_extreme_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
+	
+	if (!is.null(seed)){
+		#set the seed in R
+		set.seed(seed)
+		#set the seed in Java
+		.jcall(java_extreme_bart_machine, "V", "setSeed", as.integer(seed))
+	}
+
+	if (length(cov_prior_vec) != 0){
+		#put in checks here for user to make sure the covariate prior vec is the correct length
+		offset = length(cov_prior_vec) - (ncol(model_matrix_training_data) - 1) 
+		if (offset < 0){
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was lengthened with 1's)"))
+			cov_prior_vec = c(cov_prior_vec, rep(1, -offset))
+		}
+		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "(the vector was shortened)"))
+			cov_prior_vec = cov_prior_vec[1 : (ncol(model_matrix_training_data) - 1)]		
+		}		
+		if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
+			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
+			return(TRUE)
+		}
+		.jcall(java_extreme_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
+	}
+	
+	#now load the training data into BART
+	for (i in 1 : nrow(model_matrix_training_data)){
+		row_as_char = as.character(model_matrix_training_data[i, ])
+		row_as_char = replace(row_as_char, is.na(row_as_char), "NA") #this seems to be necessary for some R-rJava-linux distro-Java combinations
+		.jcall(java_extreme_bart_machine, "V", "addTrainingDataRow", row_as_char)
+	}
+	.jcall(java_extreme_bart_machine, "V", "finalizeTrainingData")
+	if (verbose){
+		cat("bartMachine training data finalized...\n")
+	}
+	
+	#build the bart machine and let the user know what type of BART this is
+	if (verbose){
+		cat("Now building extrmeBartMachine", "...")
+		if (length(cov_prior_vec) != 0){
+			cat("Covariate importance prior ON. ")
+		}
+		if (use_missing_data){
+			cat("Missing data feature ON. ")
+		}
+		if (use_missing_data_dummies_as_covars){
+			cat("Missingness used as covariates. ")
+		}
+		if (impute_missingness_with_rf_impute){
+			cat("Missing values imputed via rfImpute. ")
+		}
+		cat("\n")
+	}
+	.jcall(java_extreme_bart_machine, "V", "Build")
+	
+	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
+	
+	extreme_bart_machine = list(java_extreme_bart_machine = java_extreme_bart_machine,
+			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data && use_missing_data_dummies_as_covars, (p / 2), p)],
+			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features
+			X = X,
+			y = y,
+			y_avg = y_avg,
+			model_matrix_training_data = model_matrix_training_data,
+			n = nrow(model_matrix_training_data),
+			p = p,
+			num_cores = num_cores,
+			num_trees = num_trees,
+			num_burn_in = num_burn_in,
+			num_iterations_after_burn_in = num_iterations_after_burn_in, 
+			num_gibbs = num_gibbs,
+			alpha = alpha,
+			beta = beta,
+			hyper_a = hyper_a,
+			hyper_b = hyper_b,
+			hyper_d = hyper_d,
+			hyper_q = hyper_q,
+			mh_prob_steps = mh_prob_steps,
+			k_hat_weibull_model = k_hat_weibull_model,
+			run_in_sample = run_in_sample,
+			time_to_build = Sys.time() - t0,
+			use_missing_data = use_missing_data,
+			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
+			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
+			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,			
+			verbose = verbose,
+			serialize = serialize,
+			mem_cache_for_speed = mem_cache_for_speed,
+			debug_log = debug_log,
+			seed = seed
+	)
+	#if the user used a cov prior vec, pass it back
+	if (!null_cov_prior_vec){
+		extreme_bart_machine$cov_prior_vec = cov_prior_vec
+	}
+	
+	#once its done gibbs sampling, see how the training data does if user wants
+	if (run_in_sample){
+		if (verbose){
+			cat("evaluating in sample data...")
+		}
+		y_hat_posterior_samples = 
+				t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		
+		#to get y_hat.. just take straight mean of posterior samples
+		y_hat_train = rowMeans(y_hat_posterior_samples)
+		#return a bunch more stuff
+		extreme_bart_machine$y_hat_train = y_hat_train
+		extreme_bart_machine$residuals = y - extreme_bart_machine$y_hat_train
+		extreme_bart_machine$L1_err_train = sum(abs(extreme_bart_machine$residuals))
+		extreme_bart_machine$L2_err_train = sum(extreme_bart_machine$residuals^2)
+		extreme_bart_machine$PseudoRsq = 1 - extreme_bart_machine$L2_err_train / sum((y - mean(y))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
+		extreme_bart_machine$rmse_train = sqrt(extreme_bart_machine$L2_err_train / extreme_bart_machine$n)
+		if (verbose){
+			cat("done\n")
+		}
+	}
+	
+	
+	#Let's serialize the object if the user wishes
+	if (serialize){
+		cat("serializing in order to be saved for future R sessions...")
+		.jcache(extreme_bart_machine$java_extreme_bart_machine)
+		cat("done\n")
+	}
+	
+	#use R's S3 object orientation
+	class(extreme_bart_machine) = "extremeBartMachine"
+	extreme_bart_machine
+}
+
+##private function that creates a duplicate of an existing bartMachine object.
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){	
+	if (is.null(X)){
+		X = bart_machine$X
+	}
+	if (is.null(y)){
+		y = bart_machine$y
+	}
+	if (is.null(cov_prior_vec)){
+		cov_prior_vec = bart_machine$cov_prior_vec
+	}
+	if (is.null(num_trees)){
+		num_trees = bart_machine$num_trees
+	}	
+	if (is.null(run_in_sample)){
+		run_in_sample = FALSE
+	}
+	if (is.null(covariates_to_permute)){
+		covariates_to_permute = bart_machine$covariates_to_permute
+	}
+	if (is.null(verbose)){
+		verbose = FALSE
+	}	
+	build_bart_machine(X, y,
+		num_trees = num_trees, #found many times to not get better after this value... so let it be the default, it's faster too 
+		num_burn_in = bart_machine$num_burn_in, 
+		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
+		alpha = bart_machine$alpha,
+		beta = bart_machine$beta,
+		k = bart_machine$k,
+		q = bart_machine$q,
+		nu = bart_machine$nu,
+		prob_rule_class = bart_machine$prob_rule_class,
+		mh_prob_steps = bart_machine$mh_prob_steps, #only the first two matter
+		run_in_sample = run_in_sample,
+		s_sq_y =  bart_machine$s_sq_y, # "mse" or "var"
+		cov_prior_vec = cov_prior_vec,
+		use_missing_data = bart_machine$use_missing_data,
+		covariates_to_permute = covariates_to_permute, #PRIVATE
+		num_rand_samps_in_library = bart_machine$num_rand_samps_in_library, #give the user the option to make a bigger library of random samples of normals and inv-gammas
+		use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+		replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
+		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
+		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
+		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
+		serialize = FALSE, #we do not want to waste CPU time here since these are created internally by us
+		verbose = verbose)
+}
+
+#build a BART-cv model
+build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
+		num_tree_cvs = c(50, 200),
+		k_cvs = c(2, 3, 5),
+		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
+		k_folds = 5, 
+		verbose = FALSE,
+		...){
+	
+	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
+		stop("You cannot specify both X,y and Xy simultaneously.")	
+	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		if (class(Xy) != "data.frame"){
+			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
+		}
+		y = Xy$y
+		Xy$y = NULL
+		X = Xy
+	}
+	
+	
+	min_rmse_num_tree = NULL
+	min_rmse_k = NULL
+	min_rmse_nu_q = NULL
+	min_oos_rmse = Inf
+	min_oos_misclassification_error = Inf
+	
+	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs), ncol = 6)
+	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "oos_error", "% diff with lowest")
+	
+  ##generate a single set of folds to keep using
+	temp = rnorm(length(y))
+	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+	                include.lowest= T, labels = F)
+  
+    #cross-validate
+	run_counter = 1
+	for (k in k_cvs){
+		for (nu_q in nu_q_cvs){
+			for (num_trees in num_tree_cvs){
+				
+				cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
+				
+				k_fold_results = k_fold_cv(X, y, 
+          			k_folds = k_folds,
+					folds_vec = folds_vec, ##will hold the cv folds constant 
+					num_trees = num_trees,
+					k = k,
+					nu = nu_q[1],
+					q = nu_q[2], 
+					verbose = verbose,
+					...)
+				
+				min_oos_rmse = k_fold_results$rmse					
+				min_rmse_k = k
+				min_rmse_nu_q = nu_q
+				min_rmse_num_tree = num_trees
+				
+				cv_stats[run_counter, 1 : 5] = c(k, nu_q[1], nu_q[2], num_trees, k_fold_results$rmse)
+				run_counter = run_counter + 1
+			}
+		}
+	}
+	cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
+	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
+	bart_machine_cv = build_bart_machine(X, y,
+			num_trees = min_rmse_num_tree,
+			k = min_rmse_k,
+			nu = min_rmse_nu_q[1],
+			q = min_rmse_nu_q[2], ...)
+	
+	#give the user some cv_stats ordered by the best (ie lowest) oosrmse
+	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
+	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
+	bart_machine_cv$cv_stats = cv_stats
+  	bart_machine_cv$folds = folds_vec
+	bart_machine_cv
+}
+
+##private function for filling in missing data with averages for cont. vars and modes for cat. vars
+imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_calculating_avgs){
+	for (i in 1 : nrow(X_with_missing)){
+		for (j in 1 : ncol(X_with_missing)){
+			if (is.na(X_with_missing[i, j])){
+				#mode for factors, otherwise average
+				if (class(X_with_missing[, j]) == "factor"){
+					X_with_missing[i, j] = names(which.max(table(X_for_calculating_avgs[, j])))
+				} else {
+					X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
+				}
+			}
+		}
+	}
+	#now we have to go through and drop columns that are all NaN's if need be
+	bad_cols = c()
+	for (j in colnames(X_with_missing)){
+		if (sum(is.nan(X_with_missing[, j])) == nrow(X_with_missing)){
+			bad_cols = c(bad_cols, j)
+		}
+	}
+	for (j in bad_cols){
+		X_with_missing[, j] = NULL
+	}
+	X_with_missing
+}
+
+destroy_bart_machine = function(bart_machine){
+	#does nothing anymore...
+}

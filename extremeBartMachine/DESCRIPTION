@@ -2,7 +2,7 @@ Package: extremeBartMachine
 Type: Package
 Title: Extreme Bayesian Additive Regression Trees
 Version: 1.0
-Date: 2018-06-01
+Date: 2018-10-11
 Author: Adam Kapelner
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
