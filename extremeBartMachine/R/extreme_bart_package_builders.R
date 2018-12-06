@@ -237,12 +237,12 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	mod = survreg(Surv(y, rep(1, nrow(model_matrix_training_data))) ~ ., data.frame(model_matrix_training_data), dist = 'weibull')
 	k_hat_weibull_model = 1 / summary(mod)$scale
 	
-	#now we use q and k_hat to pick a k_max
+	#now we use hyper_q and k_hat to pick a k_max
 	#Bracha
-	k_max = ...
+	hyper_k_max = k_hat_weibull_model / (1-hyper_q)
 	cat("k_max", k_max, "\n")
 	
-	.jcall(java_extreme_bart_machine, "V", "setHyperKMax", as.numeric(k_max))
+	.jcall(java_extreme_bart_machine, "V", "setHyper_Kmax", as.numeric(hyper_k_max))
 	
 	#now set whether we want the program to log to a file
 	if (debug_log & verbose){
@@ -342,7 +342,8 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			beta = beta,
 			hyper_a = hyper_a,
 			hyper_b = hyper_b,
-			hyper_d = hyper_d,
+			#hyper_d = hyper_d,
+		    hyper_k_max = hyper_k_max,
 			hyper_q = hyper_q,
 			mh_prob_steps = mh_prob_steps,
 			k_hat_weibull_model = k_hat_weibull_model,

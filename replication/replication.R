@@ -10,7 +10,10 @@ k_hat = 1 / summary(mod)$scale
 
 
 
-
+get_k_max = function(q) {
+	k_max = k_hat / (1-q)
+	return(k_max)
+}
 
 
 

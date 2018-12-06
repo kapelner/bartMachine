@@ -47,7 +47,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	protected Double beta = 2.0;
 	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
 	protected Double hyper_k = 2.0;
-	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_lambda</code> by forcing q proportion to be at that value in the inverse gamma CDF */
+	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_k_max</code> by forcing q proportion to be at that value in the inverse gamma CDF */
 	protected Double hyper_q = 0.9;
 	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the variance */
 	protected Double hyper_nu = 3.0;
@@ -70,7 +70,9 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 
 	private double hyper_b;
 
-	private double hyper_d;
+//	private double hyper_d;
+	
+	private double hyper_k_max;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -550,8 +552,12 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		this.hyper_b = hyper_b;
 	}
 	
-	public void setHyper_d(double hyper_d) {
-		this.hyper_d = hyper_d;
+//	public void setHyper_d(double hyper_d) {
+//		this.hyper_d = hyper_d;
+//	}
+	
+	public void setHyper_Kmax(double hyper_k_max) {
+		this.hyper_k_max = hyper_k_max;
 	}
 	
 	
