@@ -6,8 +6,8 @@ BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 #' An extreme BART model ... Bracha
 #'  
 #' @param X											The matrix of covariates (n rows and p columns) 
-#' @param y 										The vector of extreme responses (length \code{n}). Make sure the minimum response is subtracted off 
-#' 													prior to building the BART model.
+#' @param y 										The vector of extreme responses (length \code{n}). Make sure the minimum response MUST BE subtracted off 
+#' 													prior to building the BART model. Note: the model building will scale \code{y} to be average = 1.
 #' @param Xy 										An alternative means to specify the covariates and response. This matrix has the response as the last column.
 #' @param num_trees 								The number of trees in the BART model. Default is \code{50}.
 #' @param num_burn_in 								How many initial Metropolis-within-Gibbs iterations are dropped. Default is \code{250}.
@@ -127,9 +127,19 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (length(y) != nrow(X)){
 		stop("The number of responses must be equal to the number of observations in the training data.")
 	}
+	if (hyper_a < 0){
+		stop("The hyperparameter a must be positive.")
+	}
+	if (hyper_b < 0){
+		stop("The hyperparameter b must be positive.")
+	}
 	if (verbose){
 		cat("bartMachine java init...\n")
 	}
+	
+	#Now we scale y to be sample average 1
+	y_avg = mean(y)
+	y = y / y_avg
 	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
@@ -238,6 +248,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	k_hat_weibull_model = 1 / summary(mod)$scale
 	
 	#now we use hyper_q and k_hat to pick a k_max
+
 	#Bracha
 	hyper_k_max = k_hat_weibull_model / (1-hyper_q)
 	cat("k_max", k_max, "\n")
@@ -330,6 +341,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p], #always return this even if there's no missing features
 			X = X,
 			y = y,
+			y_avg = y_avg,
 			model_matrix_training_data = model_matrix_training_data,
 			n = nrow(model_matrix_training_data),
 			p = p,

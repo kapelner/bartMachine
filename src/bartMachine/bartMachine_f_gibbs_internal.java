@@ -24,10 +24,10 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 			double posterior_var = calcLeafPosteriorVar(node, 1);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
-			node.lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
-			if (node.lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
-				node.lambda_comp_pred = 0.0; //this could happen on an empty node
-				System.err.println("ERROR assignLeafFINAL " + node.lambda_comp_pred + " (sigsq = " + 1 + ")");
+			node.log_lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			if (node.log_lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
+				node.log_lambda_comp_pred = 0.0; //this could happen on an empty node
+				System.err.println("ERROR assignLeafFINAL " + node.log_lambda_comp_pred + " (sigsq = " + 1 + ")");
 			}
 			//now update yhats
 			node.updateYHatsWithPrediction();
@@ -63,13 +63,13 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	}
 	
 	/**
-	 * Draws one variance from the posterior distribution
+	 * Draws one lambda from the posterior distribution
 	 * 
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
 
-	protected double drawKFromPosterior(int sample_num, double[] es) {
+	protected double drawLogKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){

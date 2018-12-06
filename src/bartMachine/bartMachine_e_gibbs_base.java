@@ -43,7 +43,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 			SampleLambdaComponentsWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
-		SampleK(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
+		SampleLogK(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
 		if (tree_illust){
 			illustrate(tree_array_illustration);
 		}
@@ -75,15 +75,15 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	protected void SampleLambdaComponentsWrapper(int sample_num, int t) {
 		bartMachineTreeNode previous_tree = gibbs_samples_of_bart_trees[sample_num - 1][t];
 		//subtract out previous tree's yhats
-		resid_prods_vec = Tools.divide_arrays(resid_prods_vec, previous_tree.lambda_comp_hats);
+		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.log_lambda_hats);
 		bartMachineTreeNode tree = gibbs_samples_of_bart_trees[sample_num][t];
 
-		double current_k = gibbs_samples_of_k[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(tree, current_k);
+		double current_log_k = gibbs_samples_of_log_k[sample_num - 1];
+		assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(tree, current_log_k);
 		
 		//after mus are sampled, we need to update the sum_resids_vec
 		//add in current tree's yhats		
-		resid_prods_vec = Tools.multiply_arrays(resid_prods_vec, tree.lambda_comp_hats);
+		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.log_lambda_hats);
 	}
 
 	/** deletes from memory tree Gibbs samples in the burn-in portion of the chain */
@@ -99,8 +99,8 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-	protected void SampleK(int sample_num, double[] es) {
-		gibbs_samples_of_k[sample_num] = drawKFromPosterior(sample_num, es);
+	protected void SampleLogK(int sample_num, double[] es) {
+		gibbs_samples_of_log_k[sample_num] = drawLogKFromPosterior(sample_num, es);
 	}
 	
 	protected void SampleSigsq(int sample_num, double[] es) {
@@ -120,7 +120,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		//all we need to do is subtract the last tree's yhats now
 		bartMachineTreeNode last_tree = gibbs_samples_of_bart_trees[sample_num][num_trees - 1];
 		for (int i = 0; i < n; i++){
-			R_j[i] -= last_tree.lambda_comp_hats[i];
+			R_j[i] -= last_tree.log_lambda_hats[i];
 		}
 		return R_j;
 	}
@@ -140,7 +140,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
-		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y, resid_prods_vec), copy_of_old_jth_tree.lambda_comp_hats);
+		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y, sum_resids_vec), copy_of_old_jth_tree.log_lambda_hats);
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
@@ -159,7 +159,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		return R_j;
 	}
 	
-	protected abstract double drawKFromPosterior(int sample_num, double[] es);
+	protected abstract double drawLogKFromPosterior(int sample_num, double[] es);
 	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
