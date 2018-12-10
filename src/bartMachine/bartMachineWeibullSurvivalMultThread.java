@@ -45,8 +45,8 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	protected Double alpha = 0.95; //ES(alter here and below)
 	/** A hyperparameter that controls how easy it is to grow new nodes in a tree dependent on depth which makes it more difficult as the tree gets deeper */
 	protected Double beta = 2.0;
-	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
-	protected Double hyper_k = 2.0;
+//	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
+//	protected Double hyper_k = 2.0;
 	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_k_max</code> by forcing q proportion to be at that value in the inverse gamma CDF */
 	protected Double hyper_q = 0.9;
 	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the variance */
@@ -123,7 +123,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		//now some hyperparams //ES(change these and below) 
 		bart.setAlpha(alpha); 
 		bart.setBeta(beta);
-//		bart.setK(hyper_k);
+		bart.setHyper_Kmax(hyper_k_max);
 		bart.setProbGrow(prob_grow);
 		bart.setProbPrune(prob_prune);
 		//set thread num and data

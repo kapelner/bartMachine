@@ -48,9 +48,7 @@ BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
-		num_iterations_after_burn_in = 1000, 
-		hyper_a = 2,
-		hyper_b = 1,
+		num_iterations_after_burn_in = 1000,
 		hyper_q = 0.9,
 		alpha = 0.95,
 		beta = 2,
@@ -237,6 +235,8 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	java_extreme_bart_machine = .jnew("bartMachine.bartMachineWeibullSurvivalMultThread")
 	
 	#now we compute and set hyperparameters
+	hyper_a = runif(1, min = 0, max = 1000)
+	hyper_b = runif(1, min = 0, max = 1000)
 	.jcall(java_extreme_bart_machine, "V", "setAlpha", as.numeric(alpha))
 	.jcall(java_extreme_bart_machine, "V", "setBeta", as.numeric(beta))
 	.jcall(java_extreme_bart_machine, "V", "setHyper_a", as.numeric(hyper_a))
@@ -251,7 +251,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 
 	#Bracha
 	hyper_k_max = k_hat_weibull_model / (1-hyper_q)
-	cat("k_max", k_max, "\n")
+	cat("hyper_k_max", hyper_k_max, "\n")
 	
 	.jcall(java_extreme_bart_machine, "V", "setHyper_Kmax", as.numeric(hyper_k_max))
 	
