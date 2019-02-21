@@ -163,5 +163,5 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
-	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double k);
 }

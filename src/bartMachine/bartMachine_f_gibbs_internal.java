@@ -33,8 +33,8 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 			node.updateYHatsWithPrediction();
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, 1);
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, 1);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, k);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, k);
 		}
 	}
 
@@ -69,7 +69,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
 
-	protected double drawLogKFromPosterior(int sample_num, double[] es) {
+	protected double drawKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){
