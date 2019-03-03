@@ -20,17 +20,27 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 */
 	protected void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double k) {
 		if (node.isLeaf){
-			//update ypred
+				/* //update ypred
+				double posterior_var = calcLeafPosteriorVar(node, 1);
+				//draw from posterior distribution
+				double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
+				node.log_lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+				if (node.log_lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
+					node.log_lambda_comp_pred = 0.0; //this could happen on an empty node
+					System.err.println("ERROR assignLeafFINAL " + node.log_lambda_comp_pred + " (sigsq = " + 1 + ")");
+				}
+				//now update yhats
+				node.updateYHatsWithPrediction(); */
+			
+			//need to update mean, var, a, and b
 			double posterior_var = calcLeafPosteriorVar(node, 1);
-			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
-			node.log_lambda_comp_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
-			if (node.log_lambda_comp_pred == StatToolbox.ILLEGAL_FLAG){				
-				node.log_lambda_comp_pred = 0.0; //this could happen on an empty node
-				System.err.println("ERROR assignLeafFINAL " + node.log_lambda_comp_pred + " (sigsq = " + 1 + ")");
-			}
-			//now update yhats
+			double posterior_a = calcLeafPosteriorA(node);
+			double posterior_b = calcLeafPosteriorB(node, k);
+			//sample lambda from posterior
+			node.log_lambda_comp_pred = StatToolbox.sample_from_trunc_norm_dist(posterior_mean, posterior_var, posterior_a, posterior_b);
 			node.updateYHatsWithPrediction();
+			
 		}
 		else {
 			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, 1);
@@ -49,6 +59,29 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	protected double calcLeafPosteriorMean(bartMachineTreeNode node, double sigsq, double posterior_var) {
 		return (1 / 1 + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
+	
+	/**
+	 * Calculate the posterior parameter a of the prediction distribution at a certain node
+	 * 
+	 * @param node				The node we are calculating the posterior mean for node
+	 * @return					The posterior parameter a for this node
+	 */
+	protected double calcLeafPosteriorA(bartMachineTreeNode node) {
+		return node.n_eta + hyper_a;
+	}
+	
+	/**
+	 * Calculate the posterior parameter b of the prediction distribution at a certain node
+	 * 
+	 * @param node				The node we are calculating the posterior mean for node
+	 * @return					The posterior parameter b for this node
+	 */
+	protected double calcLeafPosteriorB(bartMachineTreeNode node, double k) {
+		//should return sum y_i^k + b
+		return node.sumResponses_to_the_k(k) + hyper_b;
+	}
+
+	
 
 	/**
 	 * Calculate the posterior variance of the prediction distribution at a certain node
@@ -63,12 +96,12 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	}
 	
 	/**
-	 * Draws one lambda from the posterior distribution
+	 * Draws one k from the posterior distribution
 	 * 
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-
+	//bracha do grid search
 	protected double drawLogKFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
 		double sse = 0;

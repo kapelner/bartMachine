@@ -361,6 +361,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @param new_responses		The new responses
 	 */
+	//need to unlog with exp bracha
 	public void updateWithNewResponsesRecursively(double[] new_responses) {
 		//nuke previous responses and sums
 		responses = new double[n_eta]; //ensure correct dimension
@@ -458,6 +459,16 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			sum_responses_qty = 0.0;
 			for (int i = 0; i < n_eta; i++){
 				sum_responses_qty += responses[i];
+			}
+		}
+		return sum_responses_qty;
+	}	
+	
+	public double sumResponses_to_the_k(double k) {
+		if (sum_responses_qty == 0){
+			sum_responses_qty = 0.0;
+			for (int i = 0; i < n_eta; i++){
+				sum_responses_qty += Math.pow(responses[i], k);
 			}
 		}
 		return sum_responses_qty;

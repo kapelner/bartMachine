@@ -2,6 +2,7 @@ package bartMachine;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import org.apache.commons.math3.special.Gamma;
 
 /**
  * This portion of the code performs the Metropolis-Hastings tree search step
@@ -28,7 +29,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @param iteration_name	we just use this when naming the image file of this illustration (debugging only)
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H which can be the proposal tree (if the step was accepted) or the original tree (if the step was rejected)
 	 */
-	protected bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode T_i, int tree_num, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps) {
+	protected bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode T_i, int tree_num, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps, double k) {
 		bartMachineTreeNode T_star = T_i.clone();		
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
@@ -37,15 +38,15 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps()){
 			case GROW:
 				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'G';
-				log_r = doMHGrowAndCalcLnR(T_i, T_star);
+				log_r = doMHGrowAndCalcLnR(T_i, T_star, k);
 				break;
 			case PRUNE:
 				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'P';
-				log_r = doMHPruneAndCalcLnR(T_i, T_star);
+				log_r = doMHPruneAndCalcLnR(T_i, T_star, k);
 				break;
 			case CHANGE:
 				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'C';
-				log_r = doMHChangeAndCalcLnR(T_i, T_star);
+				log_r = doMHChangeAndCalcLnR(T_i, T_star, k);
 				break;				
 		}	
 		//draw from a Uniform 0, 1 and log it
@@ -79,7 +80,8 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @return			The log Metropolis-Hastings ratio
 	 * @see 			Section A.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected double doMHGrowAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star) {
+	//bracha code 
+	protected double doMHGrowAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star, double k) {
 		//first select a node that can be grown
 		bartMachineTreeNode grow_node = pickGrowNode(T_star);
 		//if we couldn't find a node that be grown, then we can't grow, so reject offhand
@@ -110,7 +112,8 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		}
 		
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
-		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
+		//bracha just need to change likelihood ratio 
+		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node, k);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
 		if (DEBUG_MH){
@@ -135,7 +138,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @return			The log Metropolis-Hastings ratio
 	 * @see 			Section A.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected double doMHPruneAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star) {
+	protected double doMHPruneAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star, double k) {
 		//first select a node that can be pruned
 		bartMachineTreeNode prune_node = pickPruneNodeOrChangeNode(T_star);
 		//if we didn't find one to prune, then we can't prune, so reject offhand
@@ -143,8 +146,8 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 			return Double.NEGATIVE_INFINITY;
 		}
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
-		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
-		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
+		double ln_likelihood_ratio_prune = 1 / calcLnLikRatioGrow(prune_node, k); //inverse of before (will speed up later)
+		double ln_tree_structure_ratio_prune = 1 / calcLnTreeStructureRatioGrow(prune_node);
 		
 		if (DEBUG_MH){
 			System.out.println(gibbs_sample_num + " PRUNE <<" + prune_node.stringLocation(true) + 
@@ -211,26 +214,42 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @return				The log of the likelihood ratio
 	 * @see 				Section A.1.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
+	//bracha code to be formula on page 11 ratio
+//	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node) {
+//		double sigsq = 4;//gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+//		int n_ell = grow_node.n_eta;
+//		int n_ell_L = grow_node.left.n_eta;
+//		int n_ell_R = grow_node.right.n_eta;
+////ES(change)
+//		//now go ahead and calculate it out	in an organized fashion:
+//		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * 1;
+//		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * 1;
+//		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * 1;
+//		double c = 0.5 * (
+//				Math.log(sigsq) 
+//				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
+//				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
+//				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
+//		double d = 1 / (2 * sigsq);
+//		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
+//				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
+//				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
+//		return c + d * e;
+//	}	
+	
+	//basically done, just need to call the gamma function properly
+	protected double calcLnLikRatioGrow(bartMachineTreeNode grow_node, double k) {
 		double sigsq = 4;//gibbs_samples_of_sigsq[gibbs_sample_num - 1];
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
-//ES(change)
-		//now go ahead and calculate it out	in an organized fashion:
-		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * 1;
-		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * 1;
-		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * 1;
-		double c = 0.5 * (
-				Math.log(sigsq) 
-				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
-				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
-				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
-		double d = 1 / (2 * sigsq);
-		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
-				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
-				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
-		return c + d * e;
+
+		double first_part = Math.log(gamma(hyper_a + n_ell_L - 1)) + Math.log(gamma(hyper_a + n_ell_R - 1)) + Math.log(gamma(hyper_a + n_ell - 1));
+		double second_part = (1-(hyper_a + n_ell)) * Math.log(grow_node.sumResponses_to_the_k(k) + hyper_b)
+				+ (1-(hyper_a + n_ell_L)) * Math.log(grow_node.left.sumResponses_to_the_k(k) + hyper_b)
+				+ (1-(hyper_a + n_ell_R)) * Math.log(grow_node.right.sumResponses_to_the_k(k) + hyper_b);
+		
+		return first_part - second_part;
 	}	
 
 	/**
@@ -305,7 +324,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @return			The log Metropolis-Hastings ratio
 	 * @see 			Section A.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	protected double doMHChangeAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star) {
+	protected double doMHChangeAndCalcLnR(bartMachineTreeNode T_i, bartMachineTreeNode T_star, double k) {
 		bartMachineTreeNode eta_star = pickPruneNodeOrChangeNode(T_star);		
 		bartMachineTreeNode eta_just_for_calculation = eta_star.clone();
 		
@@ -324,7 +343,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		eta_star.left.clearRulesAndSplitCache();
 		eta_star.right.clearRulesAndSplitCache();
 		
-		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star);
+		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star, k);
 		if (DEBUG_MH){
 			System.out.println(gibbs_sample_num + " CHANGE  <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + 
 				" < " + TreeIllustration.two_digit_format.format(eta_star.splitValue) + " & " + (eta_star.sendMissingDataRight ? "M -> R" : "M -> L") + " from " + 
@@ -345,7 +364,64 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	 * @return			The log likelihood ratio
 	 * @see 			Section A.3.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	private double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star) {
+	//bracha bottom of page 14
+//		private double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star, double k) {
+//			int n_1_star = eta_star.left.n_eta;
+//			int n_2_star = eta_star.right.n_eta;
+//			int n_1 = eta.left.n_eta;
+//			int n_2 = eta.right.n_eta;
+//			
+//			double sigsq = 1;//gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+//			double ratio_sigsqs = sigsq / 1;
+//			double n_1_plus_ratio_sigsqs = n_1 + ratio_sigsqs;
+//			double n_2_plus_ratio_sigsqs = n_2 + ratio_sigsqs;
+//			
+//			//NOTE: this can be sped up by just taking the diffs
+//			double sum_sq_1_star = eta_star.left.sumResponsesQuantitySqd(); 
+//			double sum_sq_2_star = eta_star.right.sumResponsesQuantitySqd(); 
+//			double sum_sq_1 = eta.left.sumResponsesQuantitySqd();
+//			double sum_sq_2 = eta.right.sumResponsesQuantitySqd();
+//			
+//			//couple checks
+//			if (n_1_star == 0 || n_2_star == 0){
+//				eta.printNodeDebugInfo("PARENT BEFORE");
+//				eta_star.printNodeDebugInfo("PARENT AFTER");
+//				eta.left.printNodeDebugInfo("LEFT BEFORE");
+//				eta.right.printNodeDebugInfo("RIGHT BEFORE");
+//				eta_star.left.printNodeDebugInfo("LEFT AFTER");
+//				eta_star.right.printNodeDebugInfo("RIGHT AFTER");
+//				return Double.NEGATIVE_INFINITY;
+//			}
+//	
+//			//do simplified calculation if the n's remain the same
+//			if (n_1_star == n_1){
+//				return 1 / (2 * sigsq) * (
+//						(sum_sq_1_star - sum_sq_1) / n_1_plus_ratio_sigsqs + 
+//						(sum_sq_2_star - sum_sq_2) / n_2_plus_ratio_sigsqs
+//					);
+//			}
+//			//otherwise do the lengthy calculation
+//			else {
+//				double n_1_star_plus_ratio_sigsqs = n_1_star + ratio_sigsqs;
+//				double n_2_star_plus_ratio_sigsqs = n_2_star + ratio_sigsqs;
+//				
+//				double a = Math.log(n_1_plus_ratio_sigsqs) + 
+//							Math.log(n_2_plus_ratio_sigsqs) - 
+//							Math.log(n_1_star_plus_ratio_sigsqs) - 
+//							Math.log(n_2_star_plus_ratio_sigsqs);
+//				double b = (
+//						sum_sq_1_star / n_1_star_plus_ratio_sigsqs + 
+//						sum_sq_2_star / n_2_star_plus_ratio_sigsqs -
+//						sum_sq_1 / n_1_plus_ratio_sigsqs - 
+//						sum_sq_2 / n_2_plus_ratio_sigsqs 					
+//					);
+//				
+//				return 0.5 * a + 1 / (2 * sigsq) * b;
+//			}
+//		}
+
+	//basically done besides gamma
+	private double calcLnLikRatioChange(bartMachineTreeNode eta, bartMachineTreeNode eta_star, double k) {
 		int n_1_star = eta_star.left.n_eta;
 		int n_2_star = eta_star.right.n_eta;
 		int n_1 = eta.left.n_eta;
@@ -373,31 +449,43 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 			return Double.NEGATIVE_INFINITY;
 		}
 
-		//do simplified calculation if the n's remain the same
-		if (n_1_star == n_1){
-			return 1 / (2 * sigsq) * (
-					(sum_sq_1_star - sum_sq_1) / n_1_plus_ratio_sigsqs + 
-					(sum_sq_2_star - sum_sq_2) / n_2_plus_ratio_sigsqs
-				);
-		}
-		//otherwise do the lengthy calculation
-		else {
-			double n_1_star_plus_ratio_sigsqs = n_1_star + ratio_sigsqs;
-			double n_2_star_plus_ratio_sigsqs = n_2_star + ratio_sigsqs;
-			
-			double a = Math.log(n_1_plus_ratio_sigsqs) + 
-						Math.log(n_2_plus_ratio_sigsqs) - 
-						Math.log(n_1_star_plus_ratio_sigsqs) - 
-						Math.log(n_2_star_plus_ratio_sigsqs);
-			double b = (
-					sum_sq_1_star / n_1_star_plus_ratio_sigsqs + 
-					sum_sq_2_star / n_2_star_plus_ratio_sigsqs -
-					sum_sq_1 / n_1_plus_ratio_sigsqs - 
-					sum_sq_2 / n_2_plus_ratio_sigsqs 					
-				);
-			
-			return 0.5 * a + 1 / (2 * sigsq) * b;
-		}
+//		//do simplified calculation if the n's remain the same
+//		if (n_1_star == n_1){
+//			return 1 / (2 * sigsq) * (
+//					(sum_sq_1_star - sum_sq_1) / n_1_plus_ratio_sigsqs + 
+//					(sum_sq_2_star - sum_sq_2) / n_2_plus_ratio_sigsqs
+//				);
+//		}
+//		//otherwise do the lengthy calculation
+//		else {
+//			double n_1_star_plus_ratio_sigsqs = n_1_star + ratio_sigsqs;
+//			double n_2_star_plus_ratio_sigsqs = n_2_star + ratio_sigsqs;
+//			
+//			double a = Math.log(n_1_plus_ratio_sigsqs) + 
+//						Math.log(n_2_plus_ratio_sigsqs) - 
+//						Math.log(n_1_star_plus_ratio_sigsqs) - 
+//						Math.log(n_2_star_plus_ratio_sigsqs);
+//			double b = (
+//					sum_sq_1_star / n_1_star_plus_ratio_sigsqs + 
+//					sum_sq_2_star / n_2_star_plus_ratio_sigsqs -
+//					sum_sq_1 / n_1_plus_ratio_sigsqs - 
+//					sum_sq_2 / n_2_plus_ratio_sigsqs 					
+//				);
+//			
+//			return 0.5 * a + 1 / (2 * sigsq) * b;
+//		}
+		
+		double first_part = Math.log(gamma(hyper_a + n_1_star - 1))
+				+ Math.log(gamma(hyper_a + n_2_star - 1))
+				- Math.log(gamma(hyper_a + n_1 - 1))
+				- Math.log(gamma(hyper_a + n_2 - 1));
+		
+		double second_part = (1 - (hyper_a + n_1_star)) * Math.log(eta_star.left.sumResponses_to_the_k(k) + hyper_b)
+				+ (1 - (hyper_a + n_2_star)) * Math.log(eta_star.right.sumResponses_to_the_k(k) + hyper_b)
+				- (1 - (hyper_a + n_1)) * Math.log(eta.left.sumResponses_to_the_k(k) + hyper_b)
+				- (1 - (hyper_a + n_2)) * Math.log(eta.right.sumResponses_to_the_k(k) + hyper_b);
+		
+		return first_part + second_part;
 	}
 
 	/**

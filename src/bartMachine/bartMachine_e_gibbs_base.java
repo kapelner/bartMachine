@@ -65,8 +65,30 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		}
 	}
 
+//	/** 
+//	 * A wrapper for sampling the mus (mean predictions at terminal nodes). This function implements part of the "residual diffing" explained in the paper.
+//	 * 
+//	 * @param sample_num	The current sample number of the Gibbs sampler
+//	 * @param t				The tree index number in 1...<code>num_trees</code>
+//	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+//	 */
+//	protected void SampleLambdaComponentsWrapper(int sample_num, int t) {
+//		bartMachineTreeNode previous_tree = gibbs_samples_of_bart_trees[sample_num - 1][t];
+//		//subtract out previous tree's yhats
+//		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.log_lambda_hats);
+//		bartMachineTreeNode tree = gibbs_samples_of_bart_trees[sample_num][t];
+//
+//		double current_log_k = gibbs_samples_of_log_k[sample_num - 1];
+//		assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(tree, current_log_k);
+//		
+//		//after mus are sampled, we need to update the sum_resids_vec
+//		//add in current tree's yhats		
+//		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.log_lambda_hats);
+//	}
+	
+	
 	/** 
-	 * A wrapper for sampling the mus (mean predictions at terminal nodes). This function implements part of the "residual diffing" explained in the paper.
+	 * A wrapper for sampling the lambdas (mean predictions at terminal nodes). This function implements part of the "residual diffing" explained in the paper.
 	 * 
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param t				The tree index number in 1...<code>num_trees</code>
@@ -81,7 +103,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		double current_log_k = gibbs_samples_of_log_k[sample_num - 1];
 		assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(tree, current_log_k);
 		
-		//after mus are sampled, we need to update the sum_resids_vec
+		//after lambdas are sampled, we need to update the sum_resids_vec
 		//add in current tree's yhats		
 		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.log_lambda_hats);
 	}
@@ -141,7 +163,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
 		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y, sum_resids_vec), copy_of_old_jth_tree.log_lambda_hats);
-		
+		//should all be log_R_j bracha
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
 		
@@ -164,4 +186,5 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
 	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+	//protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
 }
