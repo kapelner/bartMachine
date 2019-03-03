@@ -33,12 +33,13 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 				node.updateYHatsWithPrediction(); */
 			
 			//need to update mean, var, a, and b
-			double posterior_var = calcLeafPosteriorVar(node, 1);
-			double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
+			//double posterior_var = calcLeafPosteriorVar(node, 1);
+			//double posterior_mean = calcLeafPosteriorMean(node, 1, posterior_var);
 			double posterior_a = calcLeafPosteriorA(node);
 			double posterior_b = calcLeafPosteriorB(node, k);
-			//sample lambda from posterior
-			node.log_lambda_comp_pred = StatToolbox.sample_from_trunc_norm_dist(posterior_mean, posterior_var, posterior_a, posterior_b);
+			//sample lambda from invgamma posterior
+			node.log_lambda_comp_pred = StatToolbox.sample_from_inv_gamma(posterior_a, posterior_b);
+			//node.log_lambda_comp_pred = StatToolbox.sample_from_trunc_norm_dist(posterior_mean, posterior_var, posterior_a, posterior_b);
 			node.updateYHatsWithPrediction();
 			
 		}
@@ -63,17 +64,17 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	/**
 	 * Calculate the posterior parameter a of the prediction distribution at a certain node
 	 * 
-	 * @param node				The node we are calculating the posterior mean for node
+	 * @param node				The node we are calculating the posterior a parameter for
 	 * @return					The posterior parameter a for this node
 	 */
 	protected double calcLeafPosteriorA(bartMachineTreeNode node) {
-		return node.n_eta + hyper_a;
+		return node.n_eta + hyper_a - 1;
 	}
 	
 	/**
 	 * Calculate the posterior parameter b of the prediction distribution at a certain node
 	 * 
-	 * @param node				The node we are calculating the posterior mean for node
+	 * @param node				The node we are calculating the posterior b parameter for
 	 * @return					The posterior parameter b for this node
 	 */
 	protected double calcLeafPosteriorB(bartMachineTreeNode node, double k) {
