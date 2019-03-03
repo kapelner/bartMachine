@@ -43,8 +43,8 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 			
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, 1);
-			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, 1);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.left, k);
+			assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(node.right, k);
 		}
 	}
 
@@ -101,8 +101,9 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-	//bracha do grid search
-	protected double drawLogKFromPosterior(int sample_num, double[] es) {
+
+	protected double drawKFromPosterior(int sample_num, double[] es) {
+s
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){

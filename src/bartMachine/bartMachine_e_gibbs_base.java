@@ -43,7 +43,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 			SampleLambdaComponentsWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
-		SampleLogK(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
+		SampleK(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
 		if (tree_illust){
 			illustrate(tree_array_illustration);
 		}
@@ -121,8 +121,8 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
-	protected void SampleLogK(int sample_num, double[] es) {
-		gibbs_samples_of_log_k[sample_num] = drawLogKFromPosterior(sample_num, es);
+	protected void SampleK(int sample_num, double[] es) {
+		gibbs_samples_of_log_k[sample_num] = drawKFromPosterior(sample_num, es);
 	}
 	
 	protected void SampleSigsq(int sample_num, double[] es) {
@@ -181,10 +181,14 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		return R_j;
 	}
 	
-	protected abstract double drawLogKFromPosterior(int sample_num, double[] es);
+	protected abstract double drawKFromPosterior(int sample_num, double[] es);
 	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
-	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+
 	//protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+	//protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);
+
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double k);
+
 }
