@@ -58,7 +58,7 @@ public abstract class bartMachine_h_eval extends bartMachine_g_mh implements Ser
 			for (bartMachineTreeNode tree : bart_trees){ //sum of trees right?
 				yt_g += tree.Evaluate(record);
 			}			
-			y_gibbs_samples[g] = un_transform_y(yt_g);
+			y_gibbs_samples[g] = yt_g;
 		}
 		return y_gibbs_samples;
 	}

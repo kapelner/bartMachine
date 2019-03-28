@@ -48,6 +48,7 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	
 
 
+
 	/** Remove unnecessary data from the Gibbs chain to conserve RAM */
 	protected void FlushData() {
 		for (bartMachineTreeNode[] bart_trees : gibbs_samples_of_bart_trees){

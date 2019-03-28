@@ -191,7 +191,7 @@ public class TreeIllustration {
 		else if (node.splitAttributeM != bartMachineTreeNode.BAD_FLAG_int && node.splitValue != bartMachineTreeNode.BAD_FLAG_double) {
 			int attr = node.splitAttributeM;
 			double val = node.splitValue;
-			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n_eta + ") " + two_digit_format.format(node.avg_response_untransformed());
+			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n_eta + ") " + two_digit_format.format(node.avgResponse());
 			int draw_x = (int)Math.round(x - rule_and_n.length() / 2.0 * character_width_in_px);
 			g.drawString(rule_and_n, draw_x, y - 5);
 			draw_x = (int)Math.round(x - node.stringID().length() / 2.0 * character_width_in_px);

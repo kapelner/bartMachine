@@ -103,6 +103,6 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 			return pAdjF1(node);
 		}
 		return super.pAdj(node);
-	}	
+	}
 	
 }

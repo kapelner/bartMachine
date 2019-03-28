@@ -169,7 +169,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		bartMachineTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree, t, accept_reject_mh, accept_reject_mh_steps);
+		bartMachineTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree, t, accept_reject_mh, accept_reject_mh_steps, gibbs_samples_of_log_k[sample_num - 1]);
 		
 		//add it to the vector of current sample's trees
 		trees[t] = new_jth_tree;
@@ -183,7 +183,8 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	
 	protected abstract double drawKFromPosterior(int sample_num, double[] es);
 	
-	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
+	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, 
+			int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps, double k);
 
 
 	//protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndUpdateYhats(bartMachineTreeNode node, double current_sigsq);

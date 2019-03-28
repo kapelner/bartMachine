@@ -244,8 +244,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 					for (int m = 0; m < num_trees; m++){ 
 						yt_i += trees[m].Evaluate(records[i]); //sum of trees, right?
 					}
-					//just make sure we switch it back to really what y is for the user
-					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
+					y_gibbs_samples[g] = yt_i;
 				}
 				y_hats[i] = y_gibbs_samples;
 			}			
@@ -265,8 +264,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 									for (int m = 0; m < num_trees; m++){ //sum of trees right?
 										yt_i += trees[m].Evaluate(records[i]);
 									}
-									//just make sure we switch it back to really what y is for the user
-									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
+									y_gibbs_samples[g] = yt_i;	
 								}
 								y_hats[i] = y_gibbs_samples;
 							}

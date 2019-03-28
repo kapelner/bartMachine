@@ -511,5 +511,6 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 	public void setProbPrune(double prob_prune) {
 		this.prob_prune = prob_prune;
 	}
+
 	
 }
