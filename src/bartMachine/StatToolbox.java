@@ -26,7 +26,6 @@ package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
-import org.apache.commons.math;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -66,12 +65,12 @@ public class StatToolbox {
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
 	}
 	
-	public static double sample_from_trunc_norm_dist(double mu, double sigsq, double a, double b) {
-		double std_norm_realization = bartMachine_b_hyperparams.samps_std_normal[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_std_normal_length)];
-		NormalDistribution normal_dist = new NormalDistribution(mu, sigsq);
-		double scaling_factor = Math.sqrt(sigsq) * (normal_dist.cumulativeProbability((a - mu) / Math.sqrt(sigsq)) - normal_dist.cumulativeProbability((b - mu) / Math.sqrt(sigsq)));
-		return (mu + Math.sqrt(sigsq) * std_norm_realization) / scaling_factor;
-	}
+//	public static double sample_from_trunc_norm_dist(double mu, double sigsq, double a, double b) {
+//		double std_norm_realization = bartMachine_b_hyperparams.samps_std_normal[(int)Math.floor(rand() * bartMachine_b_hyperparams.samps_std_normal_length)];
+//		NormalDistribution normal_dist = new NormalDistribution(mu, sigsq);
+//		double scaling_factor = Math.sqrt(sigsq) * (normal_dist.cumulativeProbability((a - mu) / Math.sqrt(sigsq)) - normal_dist.cumulativeProbability((b - mu) / Math.sqrt(sigsq)));
+//		return (mu + Math.sqrt(sigsq) * std_norm_realization) / scaling_factor;
+//	}
 	
 	// constants for the {@link normal_cdf} function
     private static double NORM_CDF_a1 =  0.254829592;

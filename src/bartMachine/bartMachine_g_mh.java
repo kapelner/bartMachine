@@ -2,7 +2,7 @@ package bartMachine;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math.special.Gamma;
 
 /**
  * This portion of the code performs the Metropolis-Hastings tree search step
@@ -244,7 +244,7 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
 
-		double first_part = Math.log(gamma(hyper_a + n_ell_L - 1)) + Math.log(gamma(hyper_a + n_ell_R - 1)) + Math.log(gamma(hyper_a + n_ell - 1));
+		double first_part = Gamma.logGamma(hyper_a + n_ell_L - 1) + Gamma.logGamma(hyper_a + n_ell_R - 1) + Gamma.logGamma(hyper_a + n_ell - 1);
 		double second_part = (1-(hyper_a + n_ell)) * Math.log(grow_node.sumResponses_to_the_k(k) + hyper_b)
 				+ (1-(hyper_a + n_ell_L)) * Math.log(grow_node.left.sumResponses_to_the_k(k) + hyper_b)
 				+ (1-(hyper_a + n_ell_R)) * Math.log(grow_node.right.sumResponses_to_the_k(k) + hyper_b);
@@ -475,10 +475,10 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 //			return 0.5 * a + 1 / (2 * sigsq) * b;
 //		}
 		
-		double first_part = Math.log(gamma(hyper_a + n_1_star - 1))
-				+ Math.log(gamma(hyper_a + n_2_star - 1))
-				- Math.log(gamma(hyper_a + n_1 - 1))
-				- Math.log(gamma(hyper_a + n_2 - 1));
+		double first_part = Gamma.logGamma(hyper_a + n_1_star - 1)
+				+ Gamma.logGamma(hyper_a + n_2_star - 1)
+				- Gamma.logGamma(hyper_a + n_1 - 1)
+				- Gamma.logGamma(hyper_a + n_2 - 1);
 		
 		double second_part = (1 - (hyper_a + n_1_star)) * Math.log(eta_star.left.sumResponses_to_the_k(k) + hyper_b)
 				+ (1 - (hyper_a + n_2_star)) * Math.log(eta_star.right.sumResponses_to_the_k(k) + hyper_b)

@@ -96,24 +96,38 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 		return 1 / (1 / 1 + node.n_eta / sigsq);
 	}
 	
+//	/**
+//	 * Draws one k from the posterior distribution
+//	 * 
+//	 * @param sample_num	The current sample number of the Gibbs sampler
+//	 * @param es			The vector of residuals at this point in the Gibbs chain
+//	 */
+//
+//	protected double drawKFromPosterior(int sample_num, double[] es) {
+//		
+//		//first calculate the SSE
+//		double sse = 0;
+//		for (double e : es){
+//			sse += e * e; 
+//		}
+////ES(Look here; update)		
+//		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
+//		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
+//		return StatToolbox.sample_from_inv_gamma((1 + es.length) / 2, 2 / (sse + 1 * 1));
+//	}
+	
 	/**
 	 * Draws one k from the posterior distribution
+	 * 
+	 * right now rubbish just to connect everything
 	 * 
 	 * @param sample_num	The current sample number of the Gibbs sampler
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
 
 	protected double drawKFromPosterior(int sample_num, double[] es) {
-s
-		//first calculate the SSE
-		double sse = 0;
-		for (double e : es){
-			sse += e * e; 
-		}
-//ES(Look here; update)		
-		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
-		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		return StatToolbox.sample_from_inv_gamma((1 + es.length) / 2, 2 / (sse + 1 * 1));
+		
+		return Math.random() * 5;
 	}
 
 	/**
