@@ -300,6 +300,10 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		double[] y_gibbs_samples_sorted = y_gibbs_samples_sorted_matrix[0];
 		Arrays.sort(y_gibbs_samples_sorted);
 		
+		//LOGGING
+		System.out.println("Here y_gibbs_samples_sorted_matrix: " + y_gibbs_samples_sorted_matrix[1][1]);
+		System.out.println(" y_gibbs_samples_sorted : " + y_gibbs_samples_sorted[1]);
+		
 		//calculate index of the CI_a and CI_b
 		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
 		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
