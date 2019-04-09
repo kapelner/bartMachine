@@ -114,6 +114,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	 * @param t			The number of the core this BART model corresponds to
 	 */
 	protected void SetupBartModel(bartMachineWeibullSurvival bart, int t) {
+		System.out.println("inside SetupBartModel TODAY IS 4/9/19");
 		bart.setVerbose(verbose);
 		//now set specs on each of the bart models
 		bart.num_trees = num_trees;
@@ -205,6 +206,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 
 	/** This is the core of BART's parallelization for model creation: build one BART model on each CPU core in parallel */
 	private void BuildOnAllThreads(){
+		System.out.println("inside BuildOnAllThreads");
 		ExecutorService bart_gibbs_chain_pool = Executors.newFixedThreadPool(num_cores);
 		for (int t = 0; t < num_cores; t++){
 			final int tf = t;
@@ -299,6 +301,10 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 		double[][] y_gibbs_samples_sorted_matrix = getGibbsSamplesForPrediction(data, num_cores_evaluate);
 		double[] y_gibbs_samples_sorted = y_gibbs_samples_sorted_matrix[0];
 		Arrays.sort(y_gibbs_samples_sorted);
+		
+		//LOGGING
+		System.out.println("Here y_gibbs_samples_sorted_matrix: " + y_gibbs_samples_sorted_matrix[1][1]);
+		System.out.println(" y_gibbs_samples_sorted : " + y_gibbs_samples_sorted[1]);
 		
 		//calculate index of the CI_a and CI_b
 		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero

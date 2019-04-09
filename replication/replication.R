@@ -13,8 +13,5 @@ hist(y, br = 500)
 options(java.parameters = "-Xmx8000m")
 library(extremeBartMachine)
 
-build_extreme_bart_machine(X, y)
-
-
-
+build_extreme_bart_machine(X, y, debug_log = TRUE)
 

@@ -50,6 +50,8 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
 		hyper_q = 0.9,
+		hyper_a = 0.001,
+		hyper_b = 0.001,
 		alpha = 0.95,
 		beta = 2,
 		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
@@ -125,6 +127,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (length(y) != nrow(X)){
 		stop("The number of responses must be equal to the number of observations in the training data.")
 	}
+	
 	if (hyper_a < 0){
 		stop("The hyperparameter a must be positive.")
 	}
@@ -385,6 +388,7 @@ build_extreme_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 				t(sapply(.jcall(extreme_bart_machine$java_extreme_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 		
 		#to get y_hat.. just take straight mean of posterior samples
+		#cat("ROWMWNAS ", y_hat_posterior_samples)
 		y_hat_train = rowMeans(y_hat_posterior_samples)
 		#return a bunch more stuff
 		extreme_bart_machine$y_hat_train = y_hat_train
