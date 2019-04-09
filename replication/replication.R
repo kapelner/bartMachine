@@ -1,22 +1,3 @@
-pacman::p_load(survival)
-mod = survreg(Surv(futime, fustat) ~ ecog.ps + rx, ovarian, dist='weibull')
-mod
-
-
-k_hat = 1 / summary(mod)$scale
-
-
-##TODO Bracha write function that calculates k_max based on q.
-
-
-
-get_k_max = function(q) {
-	k_max = k_hat / (1-q)
-	return(k_max)
-}
-
-
-
 Xy = read.csv("jfk_airport_wind_speed_data.csv")
 
 head(Xy)
