@@ -3,6 +3,8 @@ package bartMachine;
 import java.io.Serializable;
 
 import gnu.trove.list.array.TIntArrayList;
+import org.apache.commons.math.analysis.integration.UnivariateRealIntegrator;
+import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 
 /**
  * This portion of the code that performs the posterior sampling
@@ -120,6 +122,8 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	
 	/**
 	 * Draws one k from the posterior distribution
+	 * prior is uniform (0, k_max)
+	 * posterior is a kernel to grid sample from
 	 * 
 	 * right now rubbish just to connect everything
 	 * 
@@ -128,8 +132,54 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 */
 
 	protected double drawKFromPosterior(int sample_num, double[] es) {
+		double delta = 0.1;
+		double x_min = 0;
+		double x_max = 5; //k_max;
+		double c = 0;
+		double sample = Math.random();
 		
-		return Math.random() * 5;
+//		UnivariateRealFunction kernel_likliehood = new UnivariateRealFunction(
+//				{
+//					public double value(double k)
+//					{
+//						double Q = 1;//product of all x's
+//						double sum_x_to_k_over_lambda = 1;//sum of x_i's to k divided by lambda_i's
+//						double kernel = Math.pow(k, n) * Math.exp(-((-k*Math.log(Q)+ sum_x_to_k_over_lambda)));
+//						return kernel;
+//					}
+//					
+//				}
+//		);
+//		
+//		
+//		TrapezoidIntegrator tp = new TrapezoidIntegrator();
+//		
+//		for (double i = 0; i < x_max; i+=delta) {
+//			c += tp.integrate(kernel_likliehood , i, i+delta);
+//		}
+//		
+//		c = 1/c;
+//		
+//		double k_from_posterior = 0;
+//		double cdf_function(double k) {
+//			double cdf = 0;
+//			double temp = k_min;
+//			while (temp < k) {
+//				cdf += c * kernel_likliehood(temp);
+//				temp += delta;
+//			}
+//			return cdf;
+//		}
+//		
+//		while (cdf_function(k_from_posterior) < sample) {
+//			k_from_posterior += delta;
+//		}
+//		
+//		return k_from_posterior;
+		
+		
+		
+		return 3.5;
 	}
 
 	/**
