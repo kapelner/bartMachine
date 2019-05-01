@@ -2,7 +2,8 @@ package bartMachine;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import org.apache.commons.math.special.Gamma;
+
+import org.apache.commons.math3.special.Gamma;
 
 /**
  * This portion of the code performs the Metropolis-Hastings tree search step

@@ -3,8 +3,6 @@ package bartMachine;
 import java.io.Serializable;
 
 import gnu.trove.list.array.TIntArrayList;
-import org.apache.commons.math.analysis.integration.UnivariateRealIntegrator;
-import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
 
 /**
  * This portion of the code that performs the posterior sampling
@@ -13,6 +11,7 @@ import org.apache.commons.math.analysis.integration.TrapezoidIntegrator;
  * @author Adam Kapelner and Justin Bleich
  */
 public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_base implements Serializable{
+	private static final long serialVersionUID = 3404289684237746594L;
 
 	/**
 	 * Assigns a value to this terminal node; the value is the prediction at this corner of X space.
@@ -119,6 +118,26 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 //		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
 //		return StatToolbox.sample_from_inv_gamma((1 + es.length) / 2, 2 / (sse + 1 * 1));
 //	}
+//	
+//	private class KernelLikelihood implements UnivariateFunction {
+//		
+//		private double product_es;
+//		private double[] es;
+//
+//		public KernelLikelihood(double product_es, double[] es){
+//			this.product_es = product_es;
+//			this.es = es;
+//		}
+//		
+//		public double value(double k){
+//			double sum = 0;
+//			for (int i = 0; i < es.length; i++){
+//				sum += Math.pow(es[i], k);
+//			}
+//			return Math.pow(k, n) * Math.pow(product_es, k) * Math.exp(-sum);
+//		}
+//	};
+	
 	
 	/**
 	 * Draws one k from the posterior distribution
@@ -131,55 +150,46 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
 
-	protected double drawKFromPosterior(int sample_num, double[] es) {
-		double delta = 0.1;
-		double x_min = 0;
-		double x_max = 5; //k_max;
-		double c = 0;
-		double sample = Math.random();
+	private final static int KERNEL_SAMPLE_RESOLUTION = 1000000;
+	
+	private double k_kernel(double k, double[] es, double product_es){
+		double sum = 0;
+		for (int i = 0; i < es.length; i++){
+			sum += Math.pow(es[i], k);
+		}
+		return Math.pow(k, n) * Math.pow(product_es, k) * Math.exp(-sum);
+	}
+	
+	protected double drawKFromPosterior(double[] es) {
 		
-//		UnivariateRealFunction kernel_likliehood = new UnivariateRealFunction(
-//				{
-//					public double value(double k)
-//					{
-//						double Q = 1;//product of all x's
-//						double sum_x_to_k_over_lambda = 1;//sum of x_i's to k divided by lambda_i's
-//						double kernel = Math.pow(k, n) * Math.exp(-((-k*Math.log(Q)+ sum_x_to_k_over_lambda)));
-//						return kernel;
-//					}
-//					
-//				}
-//		);
-//		
-//		
-//		TrapezoidIntegrator tp = new TrapezoidIntegrator();
-//		
-//		for (double i = 0; i < x_max; i+=delta) {
-//			c += tp.integrate(kernel_likliehood , i, i+delta);
-//		}
-//		
-//		c = 1/c;
-//		
-//		double k_from_posterior = 0;
-//		double cdf_function(double k) {
-//			double cdf = 0;
-//			double temp = k_min;
-//			while (temp < k) {
-//				cdf += c * kernel_likliehood(temp);
-//				temp += delta;
-//			}
-//			return cdf;
-//		}
-//		
-//		while (cdf_function(k_from_posterior) < sample) {
-//			k_from_posterior += delta;
-//		}
-//		
-//		return k_from_posterior;
+		double product_es = 1;
+		for (int i = 0; i < es.length; i++){
+			product_es *= es[i];
+		}
 		
+		double[] kernel_values = new double[KERNEL_SAMPLE_RESOLUTION];
 		
+		for (int s = 0; s < KERNEL_SAMPLE_RESOLUTION; s++){
+			kernel_values[s] = k_kernel(s / KERNEL_SAMPLE_RESOLUTION * hyper_k_max, es, product_es);
+		}
 		
-		return 3.5;
+		double sum_kernel_values = 0;
+		for (int s = 0; s < KERNEL_SAMPLE_RESOLUTION; s++){
+			sum_kernel_values += kernel_values[s];
+		}
+		
+		double c = 1 / sum_kernel_values;
+		
+		double u = StatToolbox.rand();
+
+		double cumulative_prob = 0;
+		for (int s = 0; s < KERNEL_SAMPLE_RESOLUTION; s++){
+			cumulative_prob += c * kernel_values[s];
+			if (cumulative_prob > u){
+				return s / KERNEL_SAMPLE_RESOLUTION * hyper_k_max;
+			}
+		}
+		return hyper_k_max;
 	}
 
 	/**

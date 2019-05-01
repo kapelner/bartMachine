@@ -122,7 +122,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 	 * @param es			The vector of residuals at this point in the Gibbs chain
 	 */
 	protected void SampleK(int sample_num, double[] es) {
-		gibbs_samples_of_log_k[sample_num] = drawKFromPosterior(sample_num, es);
+		gibbs_samples_of_log_k[sample_num] = drawKFromPosterior(es);
 	}
 	
 	protected void SampleSigsq(int sample_num, double[] es) {
@@ -181,7 +181,7 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 		return R_j;
 	}
 	
-	protected abstract double drawKFromPosterior(int sample_num, double[] es);
+	protected abstract double drawKFromPosterior(double[] es);
 	
 	protected abstract bartMachineTreeNode metroHastingsPosteriorTreeSpaceIteration(bartMachineTreeNode copy_of_old_jth_tree, 
 			int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps, double k);
