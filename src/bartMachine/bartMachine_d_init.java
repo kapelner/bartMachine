@@ -16,7 +16,6 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	protected int gibbs_sample_num;
 	/** cached current sum of residuals vector */
 	protected transient double[] sum_log_resids_vec;
-	private double k_hat_weibull;	
 	
 	/** Initializes the Gibbs sampler setting all zero entries and moves the counter to the first sample */
 	protected void SetupGibbsSampling(){
@@ -69,11 +68,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 //ES(alter to blob that needs to be solved numerically)
 	/** Initializes the first variance value by drawing from the prior */
 	protected void InitizializeK() {
-		gibbs_samples_of_k[0] = k_hat_weibull;
-	}	
-	
-	public void setKHatWeibullModel(double k_hat_weibull){
-		this.k_hat_weibull = k_hat_weibull;
+		gibbs_samples_of_k[0] = hyper_k_max / 2;
 	}
 	
 	/** this is the number of posterior Gibbs samples after burn-in (thinning was never implemented) */
