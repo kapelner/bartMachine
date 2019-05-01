@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.math3.special.Gamma;
+
 import OpenSourceExtensions.UnorderedPair;
 
 /**
@@ -30,6 +32,8 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	protected bartMachineWeibullSurvival[] bart_gibbs_chain_threads;
 	/** this is the combined gibbs samples after burn in from all of the <code>num_cores</code> chains */
 	protected bartMachineTreeNode[][] gibbs_samples_of_bart_trees_after_burn_in;
+	
+	protected double[] gibbs_samples_of_k_after_burn_in;
 	
 	/** the estimate of some upper limit of the variance of the response which is usually the MSE from a a linear regression */
 	private Double sample_var_y;
@@ -183,6 +187,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 	/** Create a post burn-in chain for ease of manipulation later */
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_bart_trees_after_burn_in = new bartMachineTreeNode[numSamplesAfterBurning()][num_trees];
+		gibbs_samples_of_k_after_burn_in = new double[numSamplesAfterBurning()];
 
 		if (verbose){
 			System.out.print("burning and aggregating chains from all threads... ");
@@ -197,6 +202,7 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 					break;
 				}
 				gibbs_samples_of_bart_trees_after_burn_in[g] = bart_model.gibbs_samples_of_bart_trees[i];
+				gibbs_samples_of_k_after_burn_in[g] = bart_model.gibbs_samples_of_k[i];
 			}			
 		}
 		if (verbose){
@@ -242,11 +248,11 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 				for (int g = 0; g < num_samples_after_burn_in; g++){
 					bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
-					double yt_i = 0;
+					double log_yt_i = 0;
 					for (int m = 0; m < num_trees; m++){ 
-						yt_i += trees[m].Evaluate(records[i]); //sum of trees, right?
+						log_yt_i += trees[m].Evaluate(records[i]); //sum of trees, right?
 					}
-					y_gibbs_samples[g] = yt_i;
+					y_gibbs_samples[g] = Math.exp(log_yt_i) * Gamma.gamma(1 + 1 / gibbs_samples_of_k_after_burn_in[g]);
 				}
 				y_hats[i] = y_gibbs_samples;
 			}			
@@ -262,11 +268,11 @@ public class bartMachineWeibullSurvivalMultThread extends Classifier implements 
 								double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 								for (int g = 0; g < num_samples_after_burn_in; g++){									
 									bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
-									double yt_i = 0;
+									double log_yt_i = 0;
 									for (int m = 0; m < num_trees; m++){ //sum of trees right?
-										yt_i += trees[m].Evaluate(records[i]);
+										log_yt_i += trees[m].Evaluate(records[i]);
 									}
-									y_gibbs_samples[g] = yt_i;	
+									y_gibbs_samples[g] = Math.exp(log_yt_i) * Gamma.gamma(1 + 1 / gibbs_samples_of_k_after_burn_in[g]);
 								}
 								y_hats[i] = y_gibbs_samples;
 							}

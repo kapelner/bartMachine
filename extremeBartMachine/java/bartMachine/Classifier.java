@@ -42,9 +42,7 @@ public abstract class Classifier implements Serializable{
 	/** an array of the raw training data by COLUMN i.e. consisting of xj = [x1j, ..., xnj] with the last entry being [y1, ..., yn] */ 
 	protected transient ArrayList<double[]> X_y_by_col;
 	/** the raw responses */
-	protected transient double[] y_orig;
-	/** the responses transformed (only if necessary) */
-	protected transient double[] y_trans;
+	protected transient double[] y;
 	/** the number of records in the training set */
 	protected int n;
 	/** the number of features / predictors in the training set */

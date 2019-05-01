@@ -56,7 +56,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** the indices in {0, 1, ..., n-1} of the data records in this node */
 	protected transient int[] indicies;	
 	/** the y's in this node */
-	protected transient double[] responses;
+	protected transient double[] log_responses;
 	/** the square of the sum of the responses, y */
 	private transient double sum_responses_qty_sqd;
 	/** the sum of the responses, y */
@@ -129,7 +129,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		copy.sendMissingDataRight = sendMissingDataRight;
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
-		copy.responses = responses;
+		copy.log_responses = log_responses;
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
 		copy.log_lambda_hats = log_lambda_hats;
@@ -151,7 +151,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * @return	The sample average value
 	 */
 	public double avgResponse(){
-		return StatToolbox.sample_average(responses);
+		return StatToolbox.sample_average(log_responses);
 	}
 	
 	/**
@@ -296,7 +296,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	public void flushNodeData() {
 		log_lambda_hats = null;
 		indicies = null;	
-		responses = null;
+		log_responses = null;
 		possible_rule_variables = null;
 		possible_split_vals_by_attr = null;
 		
@@ -327,29 +327,29 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			if (Classifier.isMissing(datum[splitAttributeM])){
 				if (sendMissingDataRight){
 					right_indices.add(indicies[i]);
-					right_responses.add(responses[i]);
+					right_responses.add(log_responses[i]);
 				} 
 				else {
 					left_indices.add(indicies[i]);
-					left_responses.add(responses[i]);					
+					left_responses.add(log_responses[i]);					
 				}
 			}
 			else if (datum[splitAttributeM] <= splitValue){
 				left_indices.add(indicies[i]);
-				left_responses.add(responses[i]);
+				left_responses.add(log_responses[i]);
 			}
 			else {
 				right_indices.add(indicies[i]);
-				right_responses.add(responses[i]);
+				right_responses.add(log_responses[i]);
 			}
 		}
 		//populate the left daughter
 		left.n_eta = left_responses.size();
-		left.responses = left_responses.toArray();
+		left.log_responses = left_responses.toArray();
 		left.indicies = left_indices.toArray();
 		//populate the right daughter
 		right.n_eta = right_responses.size();
-		right.responses = right_responses.toArray();
+		right.log_responses = right_responses.toArray();
 		right.indicies = right_indices.toArray();
 		//recursively propagate to children
 		left.propagateDataByChangedRule();
@@ -364,13 +364,13 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	//need to unlog with exp bracha
 	public void updateWithNewResponsesRecursively(double[] new_responses) {
 		//nuke previous responses and sums
-		responses = new double[n_eta]; //ensure correct dimension
+		log_responses = new double[n_eta]; //ensure correct dimension
 		sum_responses_qty_sqd = 0; //need to be primitives
 		sum_responses_qty = 0; //need to be primitives
 		//copy all the new data in appropriately
 		for (int i = 0; i < n_eta; i++){
 			double y_new = new_responses[indicies[i]];
-			responses[i] = y_new;
+			log_responses[i] = y_new;
 		}
 		if (DEBUG_NODES){
 			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(new_responses) + "]");
@@ -458,17 +458,17 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		if (sum_responses_qty == 0){
 			sum_responses_qty = 0.0;
 			for (int i = 0; i < n_eta; i++){
-				sum_responses_qty += responses[i];
+				sum_responses_qty += log_responses[i];
 			}
 		}
 		return sum_responses_qty;
 	}	
 	
-	public double sumResponses_to_the_k(double k) {
+	public double sum_log_responses_to_the_k(double k) {
 		if (sum_responses_qty == 0){
 			sum_responses_qty = 0.0;
 			for (int i = 0; i < n_eta; i++){
-				sum_responses_qty += Math.pow(responses[i], k);
+				sum_responses_qty += Math.exp(k * log_responses[i]);
 			}
 		}
 		return sum_responses_qty;
@@ -616,7 +616,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		//pull out X data, set y's, and indices appropriately
 		n_eta = X_y.size();
 		
-		responses = new double[n_eta];
+		log_responses = new double[n_eta];
 		indicies = new int[n_eta];
 		
 		
@@ -626,7 +626,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		for (int i = 0; i < n_eta; i++){
 			for (int j = 0; j < p + 2; j++){
 				if (j == p){
-					responses[i] = y_trans[i];
+					log_responses[i] = y_trans[i];
 				}
 			}
 		}	
@@ -804,7 +804,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			}
 		}
 		
-		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin((responses)) + "]");
+		System.out.println("responses: (size " + log_responses.length + ") [" + Tools.StringJoin((log_responses)) + "]");
 		System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
 		if (Arrays.equals(log_lambda_hats, new double[log_lambda_hats.length])){
 			System.out.println("y_hat_vec: (size " + log_lambda_hats.length + ") [ BLANK ]");

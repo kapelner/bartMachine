@@ -246,9 +246,9 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 		int n_ell_R = grow_node.right.n_eta;
 
 		double first_part = Gamma.logGamma(hyper_a + n_ell_L - 1) + Gamma.logGamma(hyper_a + n_ell_R - 1) + Gamma.logGamma(hyper_a + n_ell - 1);
-		double second_part = (1-(hyper_a + n_ell)) * Math.log(grow_node.sumResponses_to_the_k(k) + hyper_b)
-				+ (1-(hyper_a + n_ell_L)) * Math.log(grow_node.left.sumResponses_to_the_k(k) + hyper_b)
-				+ (1-(hyper_a + n_ell_R)) * Math.log(grow_node.right.sumResponses_to_the_k(k) + hyper_b);
+		double second_part = (1-(hyper_a + n_ell)) * Math.log(grow_node.sum_log_responses_to_the_k(k) + hyper_b)
+				+ (1-(hyper_a + n_ell_L)) * Math.log(grow_node.left.sum_log_responses_to_the_k(k) + hyper_b)
+				+ (1-(hyper_a + n_ell_R)) * Math.log(grow_node.right.sum_log_responses_to_the_k(k) + hyper_b);
 		
 		return first_part - second_part;
 	}	
@@ -481,10 +481,10 @@ public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal impl
 				- Gamma.logGamma(hyper_a + n_1 - 1)
 				- Gamma.logGamma(hyper_a + n_2 - 1);
 		
-		double second_part = (1 - (hyper_a + n_1_star)) * Math.log(eta_star.left.sumResponses_to_the_k(k) + hyper_b)
-				+ (1 - (hyper_a + n_2_star)) * Math.log(eta_star.right.sumResponses_to_the_k(k) + hyper_b)
-				- (1 - (hyper_a + n_1)) * Math.log(eta.left.sumResponses_to_the_k(k) + hyper_b)
-				- (1 - (hyper_a + n_2)) * Math.log(eta.right.sumResponses_to_the_k(k) + hyper_b);
+		double second_part = (1 - (hyper_a + n_1_star)) * Math.log(eta_star.left.sum_log_responses_to_the_k(k) + hyper_b)
+				+ (1 - (hyper_a + n_2_star)) * Math.log(eta_star.right.sum_log_responses_to_the_k(k) + hyper_b)
+				- (1 - (hyper_a + n_1)) * Math.log(eta.left.sum_log_responses_to_the_k(k) + hyper_b)
+				- (1 - (hyper_a + n_2)) * Math.log(eta.right.sum_log_responses_to_the_k(k) + hyper_b);
 		
 		return first_part + second_part;
 	}

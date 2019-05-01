@@ -38,7 +38,7 @@ public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams impl
 	 * @return	The vector of untransformed variances over all the Gibbs samples
 	 */
 	public double[] getGibbsSamplesKs(){
-		return gibbs_samples_of_log_k;
+		return gibbs_samples_of_k;
 	}	
 	
 	/**

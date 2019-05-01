@@ -40,7 +40,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 			double posterior_b = calcLeafPosteriorB(node, k);
 			
 			//sample lambda from invgamma posterior
-			node.log_lambda_comp_pred = StatToolbox.sample_from_inv_gamma(posterior_a, posterior_b);
+			node.log_lambda_comp_pred = Math.log(StatToolbox.sample_from_inv_gamma(posterior_a, posterior_b));
 			System.out.println("posterior_a = " + posterior_a + " posterior_b = " + posterior_b + " k = " + k + " log_lambda_comp_pred = " + node.log_lambda_comp_pred);
 			//node.log_lambda_comp_pred = StatToolbox.sample_from_trunc_norm_dist(posterior_mean, posterior_var, posterior_a, posterior_b);
 			node.updateYHatsWithPrediction();
@@ -82,7 +82,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 */
 	protected double calcLeafPosteriorB(bartMachineTreeNode node, double k) {
 		//should return sum y_i^k + b
-		return node.sumResponses_to_the_k(k) + hyper_b;
+		return node.sum_log_responses_to_the_k(k) + hyper_b;
 	}
 
 	

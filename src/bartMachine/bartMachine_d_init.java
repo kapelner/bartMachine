@@ -15,7 +15,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	/** the number of the current Gibbs sample */
 	protected int gibbs_sample_num;
 	/** cached current sum of residuals vector */
-	protected transient double[] sum_resids_vec;
+	protected transient double[] sum_log_resids_vec;
 	private double k_hat_weibull;	
 	
 	/** Initializes the Gibbs sampler setting all zero entries and moves the counter to the first sample */
@@ -30,10 +30,10 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		//the zeroth gibbs sample is the initialization we just did; now we're onto the first in the chain
 		gibbs_sample_num = 1;
 		
-		sum_resids_vec = new double[n];
+		sum_log_resids_vec = new double[n];
 		//initialize to 1 (not zero)
 		for (int i = 0; i < n; i++){
-			sum_resids_vec[i] = 1;
+			sum_log_resids_vec[i] = 0;
 		}
 	}
 	
@@ -43,7 +43,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		gibbs_samples_of_bart_trees = new bartMachineTreeNode[num_gibbs_total_iterations + 1][num_trees];
 		gibbs_samples_of_bart_trees_after_burn_in = new bartMachineTreeNode[num_gibbs_total_iterations - num_gibbs_burn_in + 1][num_trees];
 		
-		gibbs_samples_of_log_k = new double[num_gibbs_total_iterations + 1];	
+		gibbs_samples_of_k = new double[num_gibbs_total_iterations + 1];	
 		gibbs_samples_of_k_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		
 		accept_reject_mh = new boolean[num_gibbs_total_iterations + 1][num_trees];	
@@ -56,7 +56,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 		bartMachineTreeNode[] bart_trees = new bartMachineTreeNode[num_trees];		
 		for (int i = 0; i < num_trees; i++){
 			bartMachineTreeNode stump = new bartMachineTreeNode(this);
-			stump.setStumpData(X_y, y, p);
+			stump.setStumpData(X_y, log_y, p);
 			stump.log_lambda_comp_pred = //this is the log of the expectation of the lambda's prior, i.e. InvGamma(a,b) and if a <= 1 => 1
 					(hyper_a <= 1) ? 
 					0 : //i.e. log of 1 
@@ -69,7 +69,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 //ES(alter to blob that needs to be solved numerically)
 	/** Initializes the first variance value by drawing from the prior */
 	protected void InitizializeK() {
-		gibbs_samples_of_log_k[0] = k_hat_weibull;
+		gibbs_samples_of_k[0] = k_hat_weibull;
 	}	
 	
 	public void setKHatWeibullModel(double k_hat_weibull){

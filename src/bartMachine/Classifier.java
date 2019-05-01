@@ -43,7 +43,7 @@ public abstract class Classifier implements Serializable{
 	/** an array of the raw training data by COLUMN i.e. consisting of xj = [x1j, ..., xnj] with the last entry being [y1, ..., yn] */ 
 	protected transient ArrayList<double[]> X_y_by_col;
 	/** the raw responses */
-	protected transient double[] y;
+	protected transient double[] log_y;
 	/** the number of records in the training set */
 	protected int n;
 	/** the number of features / predictors in the training set */
@@ -105,7 +105,7 @@ public abstract class Classifier implements Serializable{
 		n = X_y.size();
 		p = X_y.get(0).length - 1;
 //		System.out.println("setData n:" + n + " p:" + p);
-		y = extractResponseFromRawData(X_y);
+		log_y = extractLogResponseFromRawData(X_y);
 
 		this.X_y = addIndicesToDataMatrix(X_y);
 		this.X_y_by_col = getDataMatrixByCol(X_y);
@@ -157,13 +157,13 @@ public abstract class Classifier implements Serializable{
 	 * @param X_y	The training data set
 	 * @return		The vector of responses
 	 */
-	private double[] extractResponseFromRawData(ArrayList<double[]> X_y) {
-		double[] y = new double[X_y.size()];
+	private double[] extractLogResponseFromRawData(ArrayList<double[]> X_y) {
+		double[] log_y = new double[X_y.size()];
 		for (int i = 0; i < X_y.size(); i++){
 			double[] record = X_y.get(i);
-			y[i] = record[record.length - 1];
+			log_y[i] = Math.log(record[record.length - 1]);
 		}
-		return y;
+		return log_y;
 	}
 	
 	/** build the machine learning classifier (implemented by a daughter class), you must {@link #setData(ArrayList) set the data} first */
