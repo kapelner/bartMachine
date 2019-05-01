@@ -16,6 +16,9 @@ hist(y, br = 500)
 options(java.parameters = "-Xmx8000m")
 library(extremeBartMachine)
 
-bart_mod = build_extreme_bart_machine(X, y, num_burn_in = 5, num_iterations_after_burn_in = 10, num_trees = 1)
+bart_mod = build_extreme_bart_machine(X, y, 
+            num_burn_in = 5, num_iterations_after_burn_in = 10, num_trees = 2, 
+            debug_log = TRUE)
+
 bart_mod
 
