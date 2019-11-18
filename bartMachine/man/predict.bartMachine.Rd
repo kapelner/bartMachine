@@ -29,6 +29,10 @@ Makes a prediction on new data given a fitted BART model for regression or class
 	The rule to determine when the class estimate is \eqn{Y = 1} (the ``positive'' class) based on the probability estimate. This
 	defaults to what was originally specified in the \code{bart_machine} object. 
 }
+  \item{verbose}{
+	Prints out prediction-related messages. Currently in use only for probability predictions to let the user know which class
+	is being predicted. Default is \code{TRUE}.
+}
   \item{...}{
 	Parameters that are ignored.
 }

@@ -1,5 +1,5 @@
 #S3 predict method
-predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, ...){
+predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, verbose = TRUE, ...){
 	check_serialization(object) #ensure the Java object exists and fire an error if not
 	
 	if(!(type %in% c("prob", "class"))){
@@ -10,6 +10,9 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 		bart_machine_get_posterior(object, new_data)$y_hat
 	} else { ##classification
 	    if (type == "prob"){
+			if (verbose == TRUE){
+				cat("predicting probabilities where \"", object$y_levels[1], "\" is considered the target level...\n", sep = "")
+			}			
 	    	bart_machine_get_posterior(object, new_data)$y_hat
 	    } else {
 	    	labels = bart_machine_get_posterior(object, new_data)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
@@ -41,11 +44,12 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_clas
 				e = ytest - ytest_hat
 		)
 	} else { ##classification list
-    if(class(ytest)!= "factor") stop("ytest must be a factor.")
-    if(!all(levels(ytest) %in% bart_machine$y_levels)) stop("New factor level not seen in training introduced. Please remove.")
-    ptest_hat = predict(bart_machine, Xtest, type = "prob")
-    ytest_labels = ptest_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
-    ytest_hat = labels_to_y_levels(bart_machine, ytest_labels)
+	    if (class(ytest)!= "factor") stop("ytest must be a factor.")
+	    if (!all(levels(ytest) %in% bart_machine$y_levels)) stop("New factor level not seen in training introduced. Please remove.")
+		
+	    ptest_hat = predict(bart_machine, Xtest, type = "prob")
+	    ytest_labels = ptest_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+	    ytest_hat = labels_to_y_levels(bart_machine, ytest_labels)
     
 		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
 		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
