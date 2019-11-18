@@ -320,7 +320,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
-		cat("Now building bartMachine for", pred_type, "...")
+		cat("Now building bartMachine for", pred_type)
+		if (pred_type == "classification"){
+			cat(" where \"", y_levels[1], "\" is considered the target level", sep = "")
+		}
+		cat("...")
 		if (length(cov_prior_vec) != 0){
 			cat("Covariate importance prior ON. ")
 		}
