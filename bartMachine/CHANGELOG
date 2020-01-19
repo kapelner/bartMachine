@@ -1,3 +1,12 @@
+
+
+version 1.2.4.2
+* Prints message during classification indicating clearly the level of y = 1 to prevent user confusion
+* As pertains to the above, added a verbose FLAG to predict that lets user know which level is y = 1 to prevent user confusion
+* Compatibility with data.table
+* Function "calc_prediction_intervals" returns all prediction samples
+* Fixed Java version error (by making it a warning)
+
 version 1.2.3
 * Fixed bug in label reversals
 
