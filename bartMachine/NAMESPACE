@@ -19,6 +19,8 @@ export(bart_machine_num_cores)
 export(dummify_data)
 export(get_var_counts_over_chain)
 export(get_var_props_over_chain)
+export(node_prediction_training_data_indices)
+export(get_sample_weights)
 
 export(cov_importance_test)
 export(linearity_test)

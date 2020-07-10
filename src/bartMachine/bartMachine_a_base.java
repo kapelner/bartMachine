@@ -40,6 +40,8 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed;	
+	/** saves indices in nodes (useful for computing weights) */
+	protected boolean flush_indices_to_save_ram;
 	/** should we print stuff out to screen? */
 	protected boolean verbose = true;
 	
@@ -76,6 +78,10 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
 		this.mem_cache_for_speed = mem_cache_for_speed;
+	}
+	
+	public void setFlushIndicesToSaveRAM(boolean flush_indices_to_save_ram) {
+		this.flush_indices_to_save_ram = flush_indices_to_save_ram;
 	}
 
 	public void setNumTrees(int m){

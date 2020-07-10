@@ -19,6 +19,7 @@ import OpenSourceExtensions.UnorderedPair;
  * @author Adam Kapelner and Justin Bleich
  */
 public class bartMachineRegressionMultThread extends Classifier implements Serializable {
+	private static final long serialVersionUID = 1811079033606953464L;
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1; //default
@@ -64,6 +65,8 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
+	/** saves indices in nodes (useful for computing weights) */
+	protected boolean flush_indices_to_save_ram = true;
 	private boolean tree_illust;
 
 	
@@ -122,6 +125,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
 		bart.setMemCacheForSpeed(mem_cache_for_speed);
+		bart.setFlushIndicesToSaveRAM(flush_indices_to_save_ram);
 		
 		//set features
 		if (cov_split_prior != null){
@@ -214,6 +218,47 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		try {	         
 	         bart_gibbs_chain_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
 	    } catch (InterruptedException ignored){}		
+	}
+	
+	/**
+	 * Return the predictions from each tree for each burned-in Gibbs sample
+	 * 
+	 * @param records				the observations / records for which to return predictions
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation	
+	 * @return						Predictions for all records further indexed by Gibbs sample
+	 */
+	protected boolean[][][][] getNodePredictionTrainingIndicies(double[][] records){
+		int num_samples_after_burn_in = numSamplesAfterBurning();
+		if (records == null) {
+			records = new double[n][p];
+			for (int i = 0; i < n; i++) {
+				records[i] = X_y.get(i); //this will include y but it is never used in evaluation
+			}		 	
+		}
+		int n_star = records.length;
+		
+		boolean[][][][] node_prediction_training_indices = new boolean[n_star][num_samples_after_burn_in][num_trees][n];
+		
+		for (int i_star = 0; i_star < n_star; i_star++) {
+//			boolean[][][] node_prediction_training_indices_for_datum = new boolean[num_samples_after_burn_in][][];
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+//				boolean[][] node_prediction_training_indices_for_datum_for_gibbs = new boolean[num_trees][];
+				
+				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+				for (int m = 0; m < num_trees; m++){ 
+//					boolean[] node_prediction_training_indices_for_datum_for_gibbs_for_tree = new boolean[n];
+					
+					for (int i : trees[m].EvaluateNode(records[i_star]).indicies) {
+						node_prediction_training_indices[i_star][g][m][i] = true;
+//						node_prediction_training_indices_for_datum_for_gibbs_for_tree[i] = true;
+					}
+//					node_prediction_training_indices_for_datum_for_gibbs[m] = node_prediction_training_indices_for_datum_for_gibbs_for_tree;
+				}
+//				node_prediction_training_indices_for_datum[g] = node_prediction_training_indices_for_datum_for_gibbs;
+			}
+//			node_prediction_training_indices[i_star] = node_prediction_training_indices_for_datum;
+		}
+		return node_prediction_training_indices;
 	}
 
 	/**
@@ -575,6 +620,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	
 	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
 		this.mem_cache_for_speed = mem_cache_for_speed;
+	}
+	
+	public void setFlushIndicesToSaveRAM(boolean flush_indices_to_save_ram) {
+		this.flush_indices_to_save_ram = flush_indices_to_save_ram;
 	}
 	
 	/** Must be implemented, but does nothing */

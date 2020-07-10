@@ -20,11 +20,24 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.statet.docmlet.resourceProjects.TexBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.statet.r.resourceProjects.RBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>de.walware.statet.base.StatetNature</nature>
 		<nature>de.walware.statet.r.RNature</nature>
 		<nature>de.walware.docmlet.tex.natures.Tex</nature>
+		<nature>org.eclipse.statet.ide.resourceProjects.Statet</nature>
+		<nature>org.eclipse.statet.r.resourceProjects.R</nature>
+		<nature>org.eclipse.statet.docmlet.resourceProjects.Tex</nature>
 	</natures>
 </projectDescription>

@@ -27,6 +27,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE,
 mem_cache_for_speed = TRUE,
+flush_indices_to_save_RAM = TRUE,
 serialize = FALSE,
 seed = NULL,
 verbose = TRUE)
@@ -51,6 +52,7 @@ replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE,
 mem_cache_for_speed = TRUE,
+flush_indices_to_save_RAM = TRUE,
 serialize = FALSE,
 seed = NULL,
 verbose = TRUE)
@@ -136,6 +138,9 @@ If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entri
   \item{mem_cache_for_speed}{
 Speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
 of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
+}
+\item{flush_indices_to_save_RAM}{
+Setting this flag to \code{TRUE} saves memory with the downside that you cannot use the functions \code{node_prediction_training_data_indices} nor \code{get_sample_weights}.
 }
   \item{serialize}{
 Setting this option to \code{TRUE} will allow serialization of bartMachine objects which allows for persistence between

@@ -27,6 +27,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
+		flush_indices_to_save_RAM = TRUE,
 		serialize = FALSE,
 		seed = NULL,
 		verbose = TRUE){
@@ -276,6 +277,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
+	.jcall(java_bart_machine, "V", "setFlushIndicesToSaveRAM", flush_indices_to_save_RAM)
 	
 	if (!is.null(seed)){
 		#set the seed in R
@@ -377,6 +379,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			verbose = verbose,
 			serialize = serialize,
 			mem_cache_for_speed = mem_cache_for_speed,
+			flush_indices_to_save_RAM = flush_indices_to_save_RAM,
 			debug_log = debug_log,
 			seed = seed,
 			num_rand_samps_in_library = num_rand_samps_in_library
