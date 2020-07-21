@@ -21,7 +21,7 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 		normal_p_val = shapiro.test(es)$p.value
 	}
 	
-	qqp(es, col = "blue",
+	qqnorm(es, col = "blue",
 			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
 			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")	
 	

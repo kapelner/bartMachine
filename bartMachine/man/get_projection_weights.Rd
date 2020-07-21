@@ -5,7 +5,7 @@
 Gets Training Sample Projection / Weights
 }
 \description{
-Returns the matrix H where yhat \approx H y where yhat is the predicted values for \code{new_data}. If \code{new_data} is unspecified, yhat will be the in-sample fits.
+Returns the matrix H where yhat is approximately equal to H y where yhat is the predicted values for \code{new_data}. If \code{new_data} is unspecified, yhat will be the in-sample fits.
 If BART was the same as OLS, H would be an orthogonal projection matrix. Here it is a projection matrix, but clearly non-orthogonal. Unfortunately, I cannot get
 this function to work correctly because of three possible reasons (1) BART does not work by averaging tree predictions: it is a sum of trees model where each tree sees the residuals
 via backfitting (2) the prediction in each node is a bayesian posterior draw which is close to ybar of the observations contained in the node if noise is gauged to be small and 
@@ -14,7 +14,7 @@ use regression to estimate the constant multiple and correct for it. Turn \code{
 The intuition is because due to the backfitting there is multiple counting. But I'm not entirely sure.
 }
 \usage{
-get_sample_weights(bart_machine, new_data = NULL)
+get_projection_weights(bart_machine, new_data = NULL, regression_kludge = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -47,7 +47,11 @@ y = x + rnorm(n, 0, sigma)
 
 num_trees = 200
 num_iterations_after_burn_in = 1000
-bart_mod = bartMachine(data.frame(x = x), y, flush_indices_to_save_RAM = FALSE, num_trees = num_trees, num_iterations_after_burn_in = num_iterations_after_burn_in, seed = seed)
+bart_mod = bartMachine(data.frame(x = x), y, 
+	flush_indices_to_save_RAM = FALSE, 
+	num_trees = num_trees, 
+	num_iterations_after_burn_in = num_iterations_after_burn_in, 
+	seed = seed)
 bart_mod
 
 n_star = 100
@@ -59,7 +63,10 @@ Hstar = get_projection_weights(bart_mod, data.frame(x = x_star))
 rowSums(Hstar)
 yhat_star_projection = as.numeric(Hstar %*% y)
 
-ggplot(data.frame(yhat_star = yhat_star_bart, yhat_star_projection = yhat_star_projection, y_star = y_star)) +
+ggplot(data.frame(
+	yhat_star = yhat_star_bart, 
+	yhat_star_projection = yhat_star_projection, 
+	y_star = y_star)) +
   geom_point(aes(x = yhat_star_bart, y = yhat_star_projection), col = "green") + 
   geom_abline(slope = 1, intercept = 0)
 
@@ -67,7 +74,10 @@ Hstar = get_projection_weights(bart_mod, data.frame(x = x_star), regression_klud
 rowSums(Hstar)
 yhat_star_projection = as.numeric(Hstar %*% y)
 
-ggplot(data.frame(yhat_star = yhat_star_bart, yhat_star_projection = yhat_star_projection, y_star = y_star)) +
+ggplot(data.frame(
+	yhat_star = yhat_star_bart, 
+	yhat_star_projection = yhat_star_projection, 
+	y_star = y_star)) +
   geom_point(aes(x = yhat_star_bart, y = yhat_star_projection), col = "green") + 
   geom_abline(slope = 1, intercept = 0)
 

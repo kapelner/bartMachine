@@ -5,10 +5,10 @@
 Gets node predictions indices of the training data for new data.
 }
 \description{
-
+This returns a binary tensor for all gibbs samples after burn-in for all trees and for all training observations.
 }
 \usage{
-get_sample_weights(bart_machine, new_data = NULL)
+node_prediction_training_data_indices(bart_machine, new_data = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

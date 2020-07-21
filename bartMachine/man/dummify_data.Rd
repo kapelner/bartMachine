@@ -44,7 +44,3 @@ X = data.frame(x1,x2,x3)
 X_dummified = dummify_data(X)
 print(X_dummified)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

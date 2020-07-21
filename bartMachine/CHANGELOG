@@ -2,6 +2,7 @@ v1.2.5
 * Major speedups to all places where data is passed from Java -> R
 * A function that provides the observations in each node for all post-burn-in nodes. 
 * Sample weight function to see how a prediction is being weighted by the original training data i.e. the approximate projection matrix H where yhatvec \approx H yvec. This function is not currently working properly without a kludge.
+* Dependence on package "car" removed.
 
 v1.2.4
 * Prints message during classification indicating clearly the level of y = 1 to prevent user confusion

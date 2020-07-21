@@ -140,7 +140,7 @@ Speed enhancement that caches the predictors and the split values that are avail
 of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
 }
 \item{flush_indices_to_save_RAM}{
-Setting this flag to \code{TRUE} saves memory with the downside that you cannot use the functions \code{node_prediction_training_data_indices} nor \code{get_sample_weights}.
+Setting this flag to \code{TRUE} saves memory with the downside that you cannot use the functions \code{node_prediction_training_data_indices} nor \code{get_projection_weights}.
 }
   \item{serialize}{
 Setting this option to \code{TRUE} will allow serialization of bartMachine objects which allows for persistence between
@@ -244,7 +244,3 @@ bart_machine$confusion_matrix
 
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

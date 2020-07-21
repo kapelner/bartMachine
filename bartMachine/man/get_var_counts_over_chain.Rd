@@ -53,7 +53,3 @@ var_counts = get_var_counts_over_chain(bart_machine)
 print(var_counts)
 }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
