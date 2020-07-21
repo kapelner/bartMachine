@@ -9,4 +9,4 @@ Description: An advanced implementation of Bayesian Additive Regression Trees wi
 License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.9-8), bartMachineJARs (>= 1.0), randomForest, missForest
 Imports: graphics, grDevices, stats
-SystemRequirements: Java (>= 7.0)
+SystemRequirements: Java (>= 8.0)
