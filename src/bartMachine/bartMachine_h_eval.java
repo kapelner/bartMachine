@@ -8,6 +8,7 @@ import java.util.Arrays;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_h_eval extends bartMachine_g_mh implements Serializable{
 	
 	/**

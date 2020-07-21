@@ -8,6 +8,7 @@ import java.util.ArrayList;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_g_mh extends bartMachine_f_gibbs_internal implements Serializable{
 	
 	/** turning this flag on prints out debugging information about the Metropolis-Hastings tree search step */

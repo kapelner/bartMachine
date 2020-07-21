@@ -14,6 +14,7 @@ import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_b_hyperparams extends bartMachine_a_base implements Serializable{
 
 

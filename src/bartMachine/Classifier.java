@@ -21,6 +21,7 @@ import CustomLogging.*;
  * @author Adam Kapelner and Justin Bleich
  */
 public abstract class Classifier implements Serializable{
+	private static final long serialVersionUID = -7470305759402002995L;
 
 	/** Are we on a Windows machine (sometimes this matters) */
 	public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;

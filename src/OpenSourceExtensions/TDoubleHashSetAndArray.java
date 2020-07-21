@@ -435,7 +435,7 @@ _states = new byte[newCapacity];
 for ( int i = oldCapacity; i-- > 0; ) {
 if( oldStates[i] == FULL ) {
 double o = oldSet[i];
-int index = insertKey(o);
+insertKey(o);
 }
 }
 }

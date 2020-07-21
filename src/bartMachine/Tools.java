@@ -218,7 +218,7 @@ public class Tools {
     }
     
     /**
-     * Sums an array
+     * Sums an array of doubles
      * 
      * @param arr	The values of interest
      * @return		The sum of those values
@@ -227,6 +227,23 @@ public class Tools {
     	double sum = 0;
     	for (int i = 0; i < arr.length; i++){
     		sum += arr[i];
+    	}
+    	return sum;
+    }
+    
+    
+    /**
+     * Sums an array of booleans
+     * 
+     * @param arr	The values of interest
+     * @return		The sum of those values
+     */
+    public static int sum_array(boolean[] arr){
+    	int sum = 0;
+    	for (int i = 0; i < arr.length; i++){
+    		if (arr[i]) {
+    			sum++;
+    		}
     	}
     	return sum;
     }

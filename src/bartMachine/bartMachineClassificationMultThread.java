@@ -8,6 +8,7 @@ import java.io.Serializable;
  * @author Adam Kapelner and Justin Bleich
  * 
  */
+@SuppressWarnings("serial")
 public class bartMachineClassificationMultThread extends bartMachineRegressionMultThread implements Serializable{
 	
 	/** The default value of the <code>classification_rule</code> */

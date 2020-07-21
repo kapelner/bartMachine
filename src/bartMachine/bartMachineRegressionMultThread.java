@@ -18,8 +18,8 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public class bartMachineRegressionMultThread extends Classifier implements Serializable {
-	private static final long serialVersionUID = 1811079033606953464L;
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1; //default
@@ -219,16 +219,8 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	         bart_gibbs_chain_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
 	    } catch (InterruptedException ignored){}		
 	}
-	
-	/**
-	 * Return the predictions from each tree for each burned-in Gibbs sample
-	 * 
-	 * @param records				the observations / records for which to return predictions
-	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation	
-	 * @return						Predictions for all records further indexed by Gibbs sample
-	 */
+
 	protected boolean[][][][] getNodePredictionTrainingIndicies(double[][] records){
-		int num_samples_after_burn_in = numSamplesAfterBurning();
 		if (records == null) {
 			records = new double[n][p];
 			for (int i = 0; i < n; i++) {
@@ -236,29 +228,63 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 			}		 	
 		}
 		int n_star = records.length;
+		int num_samples_after_burn_in = numSamplesAfterBurning();
 		
 		boolean[][][][] node_prediction_training_indices = new boolean[n_star][num_samples_after_burn_in][num_trees][n];
 		
 		for (int i_star = 0; i_star < n_star; i_star++) {
-//			boolean[][][] node_prediction_training_indices_for_datum = new boolean[num_samples_after_burn_in][][];
-			for (int g = 0; g < num_samples_after_burn_in; g++){
-//				boolean[][] node_prediction_training_indices_for_datum_for_gibbs = new boolean[num_trees][];
-				
+			for (int g = 0; g < num_samples_after_burn_in; g++){				
 				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
-				for (int m = 0; m < num_trees; m++){ 
-//					boolean[] node_prediction_training_indices_for_datum_for_gibbs_for_tree = new boolean[n];
-					
+				for (int m = 0; m < num_trees; m++){					
 					for (int i : trees[m].EvaluateNode(records[i_star]).indicies) {
 						node_prediction_training_indices[i_star][g][m][i] = true;
-//						node_prediction_training_indices_for_datum_for_gibbs_for_tree[i] = true;
 					}
-//					node_prediction_training_indices_for_datum_for_gibbs[m] = node_prediction_training_indices_for_datum_for_gibbs_for_tree;
 				}
-//				node_prediction_training_indices_for_datum[g] = node_prediction_training_indices_for_datum_for_gibbs;
 			}
-//			node_prediction_training_indices[i_star] = node_prediction_training_indices_for_datum;
 		}
 		return node_prediction_training_indices;
+	}
+	
+
+	protected double[][] getProjectionWeights(double[][] records){
+		if (records == null) {
+			records = new double[n][p];
+			for (int i = 0; i < n; i++) {
+				records[i] = X_y.get(i); //this will include y but it is never used in evaluation
+			}		 	
+		}
+		int n_star = records.length;
+		int num_samples_after_burn_in = numSamplesAfterBurning();
+		
+//		double[][] all_gibbs_samples = getGibbsSamplesForPrediction(records, 1);
+		
+		boolean[][][][] node_prediction_training_indices = getNodePredictionTrainingIndicies(records);
+		
+		double[][] sample_weights = new double[n_star][];
+		
+		for (int i_star = 0; i_star < n_star; i_star++) {
+//			double y_hat_i_star = StatToolbox.sample_average(all_gibbs_samples[i_star]);
+			double[] sample_weights_i_star = new double[n];
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+//				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+
+				for (int m = 0; m < num_trees; m++){
+					boolean[] indicies_m_i_star = node_prediction_training_indices[i_star][g][m];
+					
+					int n_g_m = Tools.sum_array(indicies_m_i_star);
+					for (int i = 0; i < n; i++) {
+						sample_weights_i_star[i] += (indicies_m_i_star[i] ? 1 : 0) / ((double)n_g_m * num_trees);
+					}					
+				}
+			}
+			//we need to scale by 1 / G
+			for (int i = 0; i < n; i++) {
+				sample_weights_i_star[i] *= 1 / (double)num_samples_after_burn_in;
+			}
+			
+			sample_weights[i_star] = sample_weights_i_star;
+		}
+		return sample_weights;
 	}
 
 	/**

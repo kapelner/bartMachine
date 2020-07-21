@@ -8,6 +8,7 @@ import java.io.Serializable;
  * @author Adam Kapelner and Justin Bleich
  *
  */
+@SuppressWarnings("serial")
 public class bartMachineRegression extends bartMachine_i_prior_cov_spec implements Serializable{
 	
 	/**

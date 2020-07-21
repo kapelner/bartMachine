@@ -20,7 +20,7 @@ export(dummify_data)
 export(get_var_counts_over_chain)
 export(get_var_props_over_chain)
 export(node_prediction_training_data_indices)
-export(get_sample_weights)
+export(get_projection_weights)
 
 export(cov_importance_test)
 export(linearity_test)
@@ -46,9 +46,6 @@ export(k_fold_cv)
 
 export(var_selection_by_permute)
 export(var_selection_by_permute_cv)
-
-export(destroy_bart_machine) #deprecated... do not use!
-
 
 S3method(predict, bartMachine)
 S3method(print, bartMachine)

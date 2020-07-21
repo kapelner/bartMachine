@@ -8,6 +8,7 @@ import java.io.Serializable;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_c_debug extends bartMachine_b_hyperparams implements Serializable{
 
 	/** should we create illustrations of the trees and save the images to the debug directory? */

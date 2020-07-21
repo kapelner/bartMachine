@@ -66,7 +66,8 @@ plot_tree_depths = function(bart_machine){
 get_tree_depths = function(bart_machine){
 	tree_depths_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
-		tree_depths_after_burn_in_core = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getDepthsForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray))
+		tree_depths_after_burn_in_core = 
+			.jcall(bart_machine$java_bart_machine, "[[I", "getDepthsForTreesInGibbsSampAfterBurnIn", as.integer(c), simplify = TRUE)
 		tree_depths_after_burn_in = rbind(tree_depths_after_burn_in, tree_depths_after_burn_in_core)
 	}
 	tree_depths_after_burn_in
@@ -101,7 +102,8 @@ plot_tree_num_nodes = function(bart_machine){
 get_tree_num_nodes_and_leaves = function(bart_machine){
 	tree_num_nodes_and_leaves_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
-		tree_num_nodes_and_leaves_after_burn_in_core = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray))
+		tree_num_nodes_and_leaves_after_burn_in_core = 
+			.jcall(bart_machine$java_bart_machine, "[[I", "getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn", as.integer(c), simplify = TRUE)
 		tree_num_nodes_and_leaves_after_burn_in = rbind(tree_num_nodes_and_leaves_after_burn_in, tree_num_nodes_and_leaves_after_burn_in_core)
 	}
 	tree_num_nodes_and_leaves_after_burn_in
@@ -140,11 +142,13 @@ plot_mh_acceptance_reject = function(bart_machine){
 
 ##private function for getting the MH acceptance proportions by core
 get_mh_acceptance_reject = function(bart_machine){
-	a_r_before_burn_in = t(sapply(.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsBurnin"), .jevalArray)) * 1
+	a_r_before_burn_in = 
+		.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsBurnin", simplify = TRUE) * 1
 	
 	a_r_after_burn_in = list()
 	for (c in 1 : bart_machine$num_cores){
-		a_r_after_burn_in[[c]] = t(sapply(.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsAfterBurnIn", as.integer(c)), .jevalArray)) * 1
+		a_r_after_burn_in[[c]] = 
+			.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsAfterBurnIn", as.integer(c), simplify = TRUE) * 1
 	}
 	
 	list(
@@ -417,14 +421,14 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	
 	for (r in 1 : num_replicates_for_avg){
 		if (r == 1 & num_trees_bottleneck == bart_machine$num_trees){
-			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts"), .jevalArray)
+			interaction_counts[, , r] = .jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", simplify = TRUE)
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
-			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts"), .jevalArray)
+			interaction_counts[, , r] = .jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", simplify = TRUE)
 			cat(".")
 			if (r %% 40 == 0){
 				cat("\n")
-			}					
+			}
 		}
 	}
 	cat("\n")

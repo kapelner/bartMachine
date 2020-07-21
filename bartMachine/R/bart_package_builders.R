@@ -396,7 +396,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		if (pred_type == "regression"){
 			y_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+				.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores), simplify = TRUE)
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			y_hat_train = rowMeans(y_hat_posterior_samples)
@@ -409,7 +409,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		} else if (pred_type == "classification"){
 			p_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+				.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores), simplify = TRUE)
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)

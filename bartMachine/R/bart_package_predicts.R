@@ -109,7 +109,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 	}
 	
 	y_hat_posterior_samples = 
-		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)
@@ -129,7 +129,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 	ci_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = ##get samples
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)
@@ -158,7 +158,7 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num
 	pi_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = 
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
+		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	

@@ -34,7 +34,7 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}
-	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", type), .jevalArray))
+	C = .jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", type, simplify = TRUE)
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }

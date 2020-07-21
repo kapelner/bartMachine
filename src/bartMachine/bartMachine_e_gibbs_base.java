@@ -8,6 +8,7 @@ import java.io.Serializable;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implements Serializable{
 
 	/** Builds a BART model by unleashing the Gibbs sampler */

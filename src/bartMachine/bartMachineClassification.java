@@ -10,6 +10,7 @@ import OpenSourceExtensions.StatUtil;
  * @author Adam Kapelner and Justin Bleich
  *
  */
+@SuppressWarnings("serial")
 public class bartMachineClassification extends bartMachineRegression implements Serializable{
 
 	public bartMachineClassification() {

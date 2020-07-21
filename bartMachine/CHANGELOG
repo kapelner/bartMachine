@@ -1,16 +1,19 @@
+v1.2.5
+* Major speedups to all places where data is passed from Java -> R
+* A function that provides the observations in each node for all post-burn-in nodes. 
+* Sample weight function to see how a prediction is being weighted by the original training data i.e. the approximate projection matrix H where yhatvec \approx H yvec. This function is not currently working properly without a kludge.
 
-
-version 1.2.4.2
+v1.2.4
 * Prints message during classification indicating clearly the level of y = 1 to prevent user confusion
 * As pertains to the above, added a verbose FLAG to predict that lets user know which level is y = 1 to prevent user confusion
 * Compatibility with data.table
 * Function "calc_prediction_intervals" returns all prediction samples
 * Fixed Java version error (by making it a warning)
 
-version 1.2.3
+v1.2.3
 * Fixed bug in label reversals
 
-version 1.2.2
+v1.2.2
 * Created test of linearity convenience method
 * Created bartMachine model array convenience constructor and predicts method
 * Fixed inconsistent label bug: Y = 1 is now coded for the first element in levels(y). Thanks to Lars Kotthoff for pointing this out.
@@ -18,8 +21,7 @@ version 1.2.2
 * Added benchmark datasets and fixed replication code for JSS paper
 * Updated vignette and citation to reflect published paper in JSS 
 
-version 1.2.1
-
+v1.2.1
 * Error message for pathological case with missing data
 * Fix for datasets with missing data in some operating systems
 * Fix for error checking function (normality test)
@@ -31,13 +33,11 @@ version 1.2.1
 * When creating partial dependence plots, there is now less duplication in the calculations which results in faster plotting.
 * Decomped dependencies (the JARs) to package bartMachine JARs thanks to Kurt Hornik.
 
-version 1.2.0
-
+v1.2.0
 * A major memory leak was fixed. bartMachine objects are also generated about 5% faster. Variable importance
   metrics are a tad slower as a result. Thanks to Matt Olson for pointing this out.
 
-version 1.1.2
-
+v1.1.2
 * there is now a seed argument which sets the seed in both R and Java (especially useful for debugging). Only works
   when bartMachine is built with one core
 * sigsq convergence plot now easier to read
@@ -45,8 +45,7 @@ version 1.1.2
 * pd_plot now has interval shaded for reading ease
 * cov_prior_vec bug fixed
 
-version 1.1.1
-
+v1.1.1
 * bartMachine now serializes models for transport in an image file (use serialize = TRUE option)
 * bartMachine models are now cleaned up by R's garbage collection (destroy_bart_machine function is removed)
 * rmse_by_num_trees no longer throws warnings
@@ -55,19 +54,16 @@ version 1.1.1
 * vignette and documentation are now revamped
 * setting verbose flag set to FALSE eliminates Java output as well
 
-version 1.0.4
-
+v1.0.4
 * fixed bug in confusion table creation in the pathological case when only one class is observed and predicted
 * fixed small bug off-by-one bug in get_sigsqs function (thanks to Jeff Moser)
 * Added Java source files to R package build. Declared authors of JARs which this library depends upon.
 
-version 1.0.3
-
+v1.0.3
 * fixed bug in variable selection via cv where it used to crash if one variable was selected
 * bartMachineCV now returns stats for each cross-validation run of hyperparameter sets 
 
-version 1.0.2
-
+v1.0.2
 * worked around a rJava 0.9.5 issue that surfaces when setting RAM on some new MACs
 * Upon initialization of the JVM there is now a message indicating how much maximum memory is available and a warning is thrown if the user attempts to reinitialize the RAM amount.
 * Default JVM memory is now 1.1GB which is the maximum which initializes on 32-bit Windows machines
@@ -85,11 +81,9 @@ version 1.0.2
 * Bugs fixed when using bartMachineCV on a numeric x
 * Various improvements to printed messages during runtime
 
-version 1.0.1
-
+v1.0.1
 * Updated vignette to load from R
 * Better verbose messages in R
 
-version 1.0
-
+v1.0
 * Initial Release

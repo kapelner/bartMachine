@@ -10,6 +10,7 @@ import gnu.trove.list.array.TIntArrayList;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_base implements Serializable{
 
 	/**
@@ -47,6 +48,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return					The posterior mean for this node
 	 */
 	protected double calcLeafPosteriorMean(bartMachineTreeNode node, double sigsq, double posterior_var) {
+//		node.y_avg = node.avgResponse();
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
 

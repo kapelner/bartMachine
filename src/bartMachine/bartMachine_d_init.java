@@ -7,6 +7,7 @@ import java.io.Serializable;
  * 
  * @author Adam Kapelner and Justin Bleich
  */
+@SuppressWarnings("serial")
 public abstract class bartMachine_d_init extends bartMachine_c_debug implements Serializable{
 
 	/** during debugging, we may want to fix sigsq */
