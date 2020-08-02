@@ -280,8 +280,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setFlushIndicesToSaveRAM", flush_indices_to_save_RAM)
 	
 	if (!is.null(seed)){
-		#set the seed in R
-		set.seed(seed)
 		#set the seed in Java
 		.jcall(java_bart_machine, "V", "setSeed", as.integer(seed))
 	}
