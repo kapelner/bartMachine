@@ -1,6 +1,6 @@
 ##give summary info about bart
 summary.bartMachine = function(object, ...){	
-	cat(paste("bartMachine v", VERSION, ifelse(object$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
+	cat(paste("bartMachine v", packageVersion("bartMachine"), ifelse(object$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
 	if (object$use_missing_data){
 		cat("Missing data feature ON\n")
 	}

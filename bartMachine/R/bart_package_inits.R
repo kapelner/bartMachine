@@ -1,6 +1,3 @@
-##package constants
-VERSION = "1.2.3"
-
 ##color array 
 COLORS = array(NA, 500)
 for (i in 1 : 500){

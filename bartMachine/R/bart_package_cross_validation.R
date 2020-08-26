@@ -1,5 +1,10 @@
 ##performs out-of-sample error estimation for a BART model
 k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
+	#we cannot afford the time sink of serialization during the grid search, so shut it off manually
+	args = list(...)
+	args$serialize = FALSE
+
+	
 	if (class(X) != "data.frame"){
 		stop("The training data X must be a data frame.")
 	}
@@ -29,7 +34,9 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
   	if (k_folds <= 1 || k_folds > n){
   		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
   	}
+	
   	temp = rnorm(n)
+	
   	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
   	                include.lowest= T, labels = F)
   }else{
@@ -57,9 +64,7 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 		test_data_k = Xy[test_idx, ]
 		training_data_k = Xy[train_idx, ]
 
-		#we cannot afford the time sink of serialization during the grid search, so shut it off manually
-		args = list(...)
-		args$serialize = FALSE
+
 		
    		#build bart object
 		bart_machine_cv = do.call(build_bart_machine, c(list(

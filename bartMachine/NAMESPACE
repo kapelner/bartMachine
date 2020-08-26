@@ -6,6 +6,7 @@ import(missForest)
 import(graphics)
 import(grDevices)
 import(stats)
+importFrom("utils", "packageVersion")
 
 export(bartMachine)
 export(build_bart_machine)

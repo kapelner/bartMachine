@@ -261,6 +261,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	#load the number of cores the user set
 	num_cores = get("BART_NUM_CORES", bartMachine_globals)
+
 	
 	#build bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
@@ -279,9 +280,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	.jcall(java_bart_machine, "V", "setFlushIndicesToSaveRAM", flush_indices_to_save_RAM)
 	
+#	cat("seed", seed, "\n")
 	if (!is.null(seed)){
 		#set the seed in Java
 		.jcall(java_bart_machine, "V", "setSeed", as.integer(seed))
+		if (num_cores > 1){
+			warning("Setting the seed when using parallelization does not result in deterministic output.\nIf you need deterministic output, you must run \"set_bart_machine_num_cores(1)\" and then build the BART model with the set seed.")
+		}
 	}
 	
 	#now we need to set random samples

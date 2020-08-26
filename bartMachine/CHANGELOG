@@ -1,3 +1,11 @@
+v1.2.5.2
+* During building, when seed was set and num_cores > 1, a warning is fired saying that you won't get deterministic output.
+
+v1.2.5.1
+* Downgraded Java to v7 for Solaris-x86 platform compatibility (a CRAN requirement). 
+* bartMachineJARs Java version was set to 5 (I checked all its JARs to make sure). No need to release an update there.
+* During building, when seed was set, set.seed in R is no longer called (a call to set.seed is unexpected for the user and should only be done by the user consciously).
+
 v1.2.5
 * Major speedups to all places where data is passed from Java -> R
 * A function that provides the observations in each node for all post-burn-in nodes. 
@@ -7,7 +15,7 @@ v1.2.5
 v1.2.4
 * Prints message during classification indicating clearly the level of y = 1 to prevent user confusion
 * As pertains to the above, added a verbose FLAG to predict that lets user know which level is y = 1 to prevent user confusion
-* Compatibility with data.table
+* Compatibility with the data.table package
 * Function "calc_prediction_intervals" returns all prediction samples
 * Fixed Java version error (by making it a warning)
 
