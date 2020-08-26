@@ -1,5 +1,5 @@
 v1.2.5.2
-* During building, when seed was set and num_cores > 1, a warning is fired saying that you won't get deterministic output.
+* During building, when seed was set and num_cores > 1, a warning is fired saying that you won't get deterministic output (thanks to Dr. Michael H Schwartz).
 
 v1.2.5.1
 * Downgraded Java to v7 for Solaris-x86 platform compatibility (a CRAN requirement). 
