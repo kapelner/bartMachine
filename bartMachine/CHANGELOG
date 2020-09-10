@@ -1,4 +1,5 @@
 v1.2.5.2
+* interaction_investigator was fixed thanks to @bernicecu
 * During building, when seed was set and num_cores > 1, a warning is fired saying that you won't get deterministic output (thanks to Dr. Michael H Schwartz).
 
 v1.2.5.1

@@ -450,7 +450,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	iter = 1
 	for (i in 1 : bart_machine$p){
 		for (j in 1 : bart_machine$p){
-			if (j <= i){
+			if (i <= j){
 				avg_counts[iter] = interaction_counts_avg[i, j]
 				sd_counts[iter] = interaction_counts_sd[i, j]
 				names(avg_counts)[iter] = paste(rownames(interaction_counts_avg)[i], "x", rownames(interaction_counts_avg)[j])
