@@ -22,10 +22,10 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	protected void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(bartMachineTreeNode node, double sigsq) {
 		if (node.isLeaf){
 			//update ypred
-			double posterior_var = calcLeafPosteriorVar(node, sigsq);
+			node.posterior_var = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
-			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
-			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			node.posterior_mean = calcLeafPosteriorMean(node, sigsq, node.posterior_var);
+			node.y_pred = StatToolbox.sample_from_norm_dist(node.posterior_mean, node.posterior_var);
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
@@ -48,7 +48,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return					The posterior mean for this node
 	 */
 	protected double calcLeafPosteriorMean(bartMachineTreeNode node, double sigsq, double posterior_var) {
-//		node.y_avg = node.avgResponse();
+		node.y_avg = node.avgResponse();
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
 

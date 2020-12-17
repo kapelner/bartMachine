@@ -80,7 +80,5 @@ bart_machine = bartMachine(X, y)
 bart_machine
 table(y, predict(bart_machine, X, type = "class"))
 
-
-##try to extract data
-extract_raw_node_data(bart_machine)
-
+raw_node_data = extract_raw_node_data(bart_machine, g = 37)
+raw_node_data[[17]]

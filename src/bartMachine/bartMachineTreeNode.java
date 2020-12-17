@@ -41,15 +41,19 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** is this node a terminal node? */
 	public boolean isLeaf;
 	/** the attribute this node makes a decision on */
-	public int splitAttributeM;
+	public int splitAttributeM = BAD_FLAG_int;
 	/** the value this node makes a decision on */
-	public double splitValue;
+	public double splitValue = BAD_FLAG_double;
 	/** send missing data to the right? */ 
 	public boolean sendMissingDataRight;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	public double y_pred = BAD_FLAG_double;
-//	/** debug only */
-//	public double y_avg = BAD_FLAG_double;
+	/** the average of the node responses if applicable (for research purposes only) */
+	public double y_avg = BAD_FLAG_double;
+	/** the posterior variance in the conditional distribution if applicable (for research purposes only) */
+	public double posterior_var = BAD_FLAG_double;
+	/** the posterior mean in the conditional distribution if applicable (for research purposes only) */
+	public double posterior_mean = BAD_FLAG_double;
 	
 	/** the number of data points in this node */
 	public transient int n_eta;

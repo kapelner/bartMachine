@@ -35,6 +35,8 @@ get_projection_weights = function(bart_machine, new_data = NULL, regression_klud
 	}
 }
 
+BAD_FLAG_INT = -2147483647
+BAD_FLAG_DOUBLE = -1.7976931348623157e+308
 extract_raw_node_data = function(bart_machine, g = 1){
 	if (g < 1 | g > bart_machine$num_iterations_after_burn_in){
 		stop("g is the gibbs sample number i.e. it must be a natural number between 1 and the number of iterations after burn in")
@@ -55,14 +57,49 @@ extract_node_data = function(node_java){
 	node_data$right_java_obj = node_java$right
 	node_data$depth = node_java$depth
 	node_data$isLeaf = node_java$isLeaf
-	node_data$splitAttributeM = node_java$splitAttributeM
-	node_data$splitValue = node_java$splitValue
+
 	node_data$sendMissingDataRight = node_java$sendMissingDataRight
-	node_data$y_pred = node_java$y_pred
+
 	node_data$n_eta = node_java$n_eta
 	node_data$string_id = node_java$stringID()
 	node_data$is_stump = node_java$isStump()
 	node_data$string_location = node_java$stringLocation()
+	
+	if (node_java$splitAttributeM == BAD_FLAG_INT){
+		node_data$splitAttributeM = NA
+	} else {
+		node_data$splitAttributeM = node_java$splitAttributeM
+	}
+	
+	if (node_java$splitValue == BAD_FLAG_DOUBLE){
+		node_data$splitValue = NA
+	} else {
+		node_data$splitValue = node_java$splitValue
+	}
+	
+	if (node_java$y_pred == BAD_FLAG_DOUBLE){
+		node_data$y_pred = NA
+	} else {
+		node_data$y_pred = node_java$y_pred
+	}
+	
+	if (node_java$y_avg == BAD_FLAG_DOUBLE){
+		node_data$y_avg = NA
+	} else {
+		node_data$y_avg = node_java$y_avg
+	}
+	
+	if (node_java$posterior_var == BAD_FLAG_DOUBLE){
+		node_data$posterior_var = NA
+	} else {
+		node_data$posterior_var = node_java$posterior_var
+	}
+	
+	if (node_java$posterior_mean == BAD_FLAG_DOUBLE){
+		node_data$posterior_mean = NA
+	} else {
+		node_data$posterior_mean = node_java$posterior_mean
+	}
 	
 	if (!is.jnull(node_java$left)){
 		node_data$left = extract_node_data(node_java$left)
