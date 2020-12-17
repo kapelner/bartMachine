@@ -52,7 +52,6 @@ extract_raw_node_data = function(bart_machine, g = 1){
 extract_node_data = function(node_java){
 	node_data = list()
 	node_data$java_obj = node_java
-	node_data$parent = node_java$parent
 	node_data$left_java_obj = node_java$left
 	node_data$right_java_obj = node_java$right
 	node_data$depth = node_java$depth
@@ -99,6 +98,12 @@ extract_node_data = function(node_java){
 		node_data$posterior_mean = NA
 	} else {
 		node_data$posterior_mean = node_java$posterior_mean
+	}
+	
+	if (!is.jnull(node_java$parent)){
+		node_data$parent_java_obj = node_java$parent
+	} else {
+		node_data$parent_java_obj = NA	
 	}
 	
 	if (!is.jnull(node_java$left)){
