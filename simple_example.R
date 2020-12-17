@@ -1,7 +1,6 @@
 
 
 ## try using built-in jcache
-R
 options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 n = 500
@@ -72,6 +71,7 @@ yhat = predict(bart_machine, Xtest)
 q("no")
 
 
+options(java.parameters = "-Xmx1500m")
 library(bartMachine)
 data("Pima.te", package = "MASS")
 X <- data.frame(Pima.te[, -8])
@@ -81,5 +81,6 @@ bart_machine
 table(y, predict(bart_machine, X, type = "class"))
 
 
-
+##try to extract data
+extract_raw_node_data(bart_machine)
 

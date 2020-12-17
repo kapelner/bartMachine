@@ -47,6 +47,8 @@ export(k_fold_cv)
 export(var_selection_by_permute)
 export(var_selection_by_permute_cv)
 
+export(extract_raw_node_data)
+
 S3method(predict, bartMachine)
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print

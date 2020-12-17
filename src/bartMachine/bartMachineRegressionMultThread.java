@@ -654,4 +654,12 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	
 	/** Must be implemented, but does nothing */
 	public void StopBuilding() {}	
+	
+	public bartMachineTreeNode[] extractRawNodeInformation(int g){
+		bartMachineTreeNode[] all_trees = new bartMachineTreeNode[num_trees];
+		for (int m = 0; m < num_trees; m++) {
+			all_trees[m] = gibbs_samples_of_bart_trees_after_burn_in[g][m];
+		}
+		return all_trees;
+	}
 }

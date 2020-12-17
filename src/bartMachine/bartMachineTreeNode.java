@@ -753,6 +753,10 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			return this.parent.stringLocation(false) + "?";
 		}
 	}	
+	
+	public String stringLocation() {
+		return stringLocation(true);
+	}
 
 	/**
 	 * Prints debug information about this node, its parent and its immediate children

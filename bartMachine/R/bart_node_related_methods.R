@@ -34,3 +34,47 @@ get_projection_weights = function(bart_machine, new_data = NULL, regression_klud
 		weights
 	}
 }
+
+extract_raw_node_data = function(bart_machine, g = 1){
+	if (g < 1 | g > bart_machine$num_iterations_after_burn_in){
+		stop("g is the gibbs sample number i.e. it must be a natural number between 1 and the number of iterations after burn in")
+	}
+	raw_data_java = .jcall(bart_machine$java_bart_machine, "[LbartMachine/bartMachineTreeNode;", "extractRawNodeInformation", as.integer(g - 1), simplify = TRUE)
+	raw_data = list()
+	for (m in 1 : bart_machine$num_trees){
+		raw_data[[m]] = extract_node_data(raw_data_java[[m]])	
+	}
+	raw_data
+}
+
+extract_node_data = function(node_java){
+	node_data = list()
+	node_data$java_obj = node_java
+	node_data$parent = node_java$parent
+	node_data$left_java_obj = node_java$left
+	node_data$right_java_obj = node_java$right
+	node_data$depth = node_java$depth
+	node_data$isLeaf = node_java$isLeaf
+	node_data$splitAttributeM = node_java$splitAttributeM
+	node_data$splitValue = node_java$splitValue
+	node_data$sendMissingDataRight = node_java$sendMissingDataRight
+	node_data$y_pred = node_java$y_pred
+	node_data$n_eta = node_java$n_eta
+	node_data$string_id = node_java$stringID()
+	node_data$is_stump = node_java$isStump()
+	node_data$string_location = node_java$stringLocation()
+	
+	if (!is.jnull(node_java$left)){
+		node_data$left = extract_node_data(node_java$left)
+	} else {
+		node_data$left = NA
+	}
+	if (!is.jnull(node_java$right)){
+		node_data$right = extract_node_data(node_java$right)
+	} else {
+		node_data$right = NA
+	}
+	node_data
+}
+		
+		
