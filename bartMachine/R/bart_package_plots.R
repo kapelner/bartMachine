@@ -573,7 +573,14 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue", lwd = 1)
 	lines(x_j_quants, bart_avg_predictions_by_quantile, type = "o", lwd = 2)
 	
-	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile, prop_data = prop_data))
+	invisible(list(
+		x_j_quants = x_j_quants, 
+		bart_avg_predictions_by_quantile_by_gibbs = bart_avg_predictions_by_quantile_by_gibbs, 
+		bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile, 
+		bart_avg_predictions_lower = bart_avg_predictions_lower,
+		bart_avg_predictions_upper = bart_avg_predictions_upper,
+		prop_data = prop_data
+	))
 }
 
 ##plot and invisibly return out-of-sample RMSE by the number of trees

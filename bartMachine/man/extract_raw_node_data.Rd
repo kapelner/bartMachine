@@ -1,13 +1,15 @@
 \name{extract_raw_node_data}
+\alias{extract_raw_node_data}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Gets Raw Node data
 }
 \description{
-Returns ...
+Returns a list object that contains all the information for all trees in a given Gibbs sample. Daughter nodes are nested
+in the list structure recursively.
 }
 \usage{
-get_projection_weights(bart_machine, new_data = NULL, regression_kludge = FALSE)
+extract_raw_node_data(bart_machine, g = 1)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,7 +22,7 @@ The gibbs sample number. It must be a natural number between 1 and the number of
 }
 
 \value{
-Returns ...
+Returns a list object that contains all the information for all trees in a given Gibbs sample.
 }
 
 \examples{

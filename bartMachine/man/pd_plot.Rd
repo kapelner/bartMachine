@@ -40,8 +40,12 @@ For regression models, the units on the y-axis are the same as the units of the 
 \value{
 Invisibly, returns a list with the following components:
 
-  \item{x_j_quants}{Quantiles at which the partial dependence function is evaluated.}
-  \item{bart_avg_predictions_by_quantile}{Posterior means for \eqn{\hat{f}(x)} at \code{x_j_quants}.}
+  \item{x_j_quants}{Quantiles at which the partial dependence function is evaluated}
+  \item{bart_avg_predictions_by_quantile_by_gibbs}{All samples of \eqn{\hat{f}(x)}}
+  \item{bart_avg_predictions_by_quantile}{Posterior means for \eqn{\hat{f}(x)} at \code{x_j_quants}}
+  \item{bart_avg_predictions_lower}{Lower bound of the desired confidence of the credible interval of \eqn{\hat{f}(x)}}
+  \item{bart_avg_predictions_upper}{Upper bound of the desired confidence of the credible interval of \eqn{\hat{f}(x)}}
+  \item{prop_data}{The proportion of the training data to use as specified when this function was executed}
 %% ...
 }
 \references{

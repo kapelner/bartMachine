@@ -1,3 +1,8 @@
+v1.2.6
+* raw node information extraction feature
+* posterior mean / variance is now recorded and provided in the raw node information
+* much more information is now returned in the pd_plot function for custom plotting, etc
+
 v1.2.5.2
 * interaction_investigator was fixed thanks to @bernicecu
 * During building, when seed was set and num_cores > 1, a warning is fired saying that you won't get deterministic output (thanks to Dr. Michael H Schwartz).
