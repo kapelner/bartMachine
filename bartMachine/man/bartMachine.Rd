@@ -148,7 +148,9 @@ R sessions if the object is saved and reloaded. Note that serialized objects can
 Thus, the default is \code{FALSE}.  
 }
   \item{seed}{
-Optional: sets the seed in both R and Java. Default is \code{NULL} which does not set the seed in R nor Java.  
+Optional: sets the seed in both R and Java. Default is \code{NULL} which does not set the seed in R nor Java. 
+Setting the seed enforces deterministic behavior only in the case when one core is used (the default before 
+\code{set_bart_machine_num_cores() was invoked}.
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 

@@ -13,7 +13,8 @@ set_bart_machine_num_cores(num_cores)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{num_cores}{
-Number of cores to use
+Number of cores to use. If the number of cores is more than 1, setting the seed during model construction
+cannot be deterministic.
 }
 }
 
