@@ -1,3 +1,7 @@
+v1.3
+* interaction constraints feature
+
+
 v1.2.6
 * raw node information extraction feature
 * posterior mean / variance is now recorded and provided in the raw node information

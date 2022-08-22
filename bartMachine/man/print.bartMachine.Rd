@@ -4,7 +4,7 @@
 Summarizes information about a \code{bartMachine} object.
 }
 \description{
-This is an alias for the \code{\link{summary}} function. See description in that section.
+This is an alias for the \code{\link{summary.bartMachine}} function. See description in that section.
 }
 \usage{
 \method{print}{bartMachine}(x, ...)

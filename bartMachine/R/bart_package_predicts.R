@@ -22,6 +22,21 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 	}	
 }
 
+#S3 predict method
+predict.additiveBartMachine = function(object, new_data, verbose = TRUE, ...){	
+	for (mod in object$models){
+		check_serialization(mod) #ensure the Java object exists and fire an error if not
+	}	
+	#piggy back off the original predict method
+	y_hat = rep(0, nrow(new_data))
+	for (a in 1 : length(object$constraints)){
+		vars_a = object$constraints[[a]]
+		new_data_a = new_data[, vars_a, drop = FALSE]
+		y_hat = y_hat + predict(object$models[[a]], new_data_a)
+	}
+	y_hat	
+}
+
 ##private function
 labels_to_y_levels = function(bart_machine, labels){
 	factor(ifelse(labels == TRUE, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)

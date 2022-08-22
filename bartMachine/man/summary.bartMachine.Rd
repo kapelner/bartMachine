@@ -20,7 +20,7 @@ Provides a quick summary of the BART model.
 }
 }
 \details{
-Gives the version number of the \code{bartMachine} package used to build this \code{bartMachine} object and if the object
+Gives the version number of the \code{bartMachine} package used to build this \code{additiveBartMachine} object and if the object
 models either ``regression'' or ``classification.'' Gives the amount of training data and the dimension of feature space. Prints 
 the amount of time it took to build the model, how many processor cores were used to during its construction, as well as the 
 number of burn-in and posterior Gibbs samples were used. 
@@ -36,7 +36,7 @@ None.
 }
 
 \author{
-Adam Kapelner and Justin Bleich
+Adam Kapelner
 }
 
 \examples{

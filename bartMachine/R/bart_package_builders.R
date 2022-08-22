@@ -173,7 +173,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	factor_lengths = pre_process_obj$factor_lengths
 	if (verbose){
-		cat("bartMachine after preprocess...", ncol(model_matrix_training_data), "total features...\n")
+		cat("bartMachine after preprocess...", p, "total features...\n")
 	}
 	#now create a default cov_prior_vec that factors in the levels of the factors
 	null_cov_prior_vec = is.null(cov_prior_vec)
