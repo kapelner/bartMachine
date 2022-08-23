@@ -498,7 +498,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		par(mar = c(5.1, 4.1, 4.1, 2.1))		
 	}
 	
-	invisible(list(interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd))
+	invisible(list(interaction_counts = interaction_counts, interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd))
 }
 
 ##partial dependence plot

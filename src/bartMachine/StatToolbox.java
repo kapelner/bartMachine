@@ -28,7 +28,8 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.util.Arrays;
-import java.util.Random;
+
+import OpenSourceExtensions.MersenneTwisterFast;
 
 /**
  * This is a class where we're going to put all sorts of useful functions
@@ -37,7 +38,7 @@ import java.util.Random;
 public class StatToolbox {
 	
 	/** A convenience for a Random object */
-	private static final Random R = new Random();
+	private static final MersenneTwisterFast R = new MersenneTwisterFast();
 	/** A flag that indicates an illegal value or failed operation */
 	public static final double ILLEGAL_FLAG = -999999999;	
 
