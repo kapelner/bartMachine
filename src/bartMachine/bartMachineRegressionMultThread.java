@@ -1,10 +1,12 @@
 package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,6 +70,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	/** saves indices in nodes (useful for computing weights) */
 	protected boolean flush_indices_to_save_ram = true;
 	private boolean tree_illust;
+	private HashMap<Integer, TIntHashSet> interaction_constraints;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -130,6 +133,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		//set features
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
+		}
+		//set interaction constraints
+		if (interaction_constraints != null) {
+			bart.setInteractionConstraints(interaction_constraints);
 		}
 		//do special stuff for regression model
 		if (!(bart instanceof bartMachineClassification)){
@@ -589,6 +596,19 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
 		this.cov_split_prior = cov_split_prior;
+	}
+	
+	public void intializeInteractionConstraints(int num_constraints) {
+		interaction_constraints = new HashMap<Integer, TIntHashSet>(num_constraints);
+	}
+	public void addInteractionConstraint(int constrained_feature, int[] constrained_features) {
+		if (interaction_constraints.get(constrained_feature) == null) {
+			interaction_constraints.put(constrained_feature, new TIntHashSet());
+		}
+		TIntHashSet current_constrained_features = interaction_constraints.get(constrained_feature);
+		for (int j : constrained_features) {
+			current_constrained_features.add(j);
+		}		
 	}
 	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){

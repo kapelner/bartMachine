@@ -121,7 +121,7 @@ pre_process_new_data = function(new_data, bart_machine){
 			#tack on the rest of the stuff
 			if (ncol(new_data) >= j){
 				rhs = new_data[, j : ncol(new_data)]
-				if (class(rhs) == "numeric"){
+				if (inherits(rhs, "numeric")){
 					rhs = as.matrix(rhs)
 					colnames(rhs)[1] = new_data_feature
 				}

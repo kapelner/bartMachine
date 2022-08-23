@@ -17,8 +17,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
 		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
-		#print_tree_illustrations = FALSE,
+#		print_tree_illustrations = FALSE, #only for power users who want to edit the code themselves
 		cov_prior_vec = NULL,
+		interaction_constraints = NULL,
 		use_missing_data = FALSE,
 		covariates_to_permute = NULL, #PRIVATE
 		num_rand_samps_in_library = 10000, #give the user the option to make a bigger library of random samples of normals and inv-gammas
@@ -47,7 +48,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("You cannot specify both X,y and Xy simultaneously.")		
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		#first ensure it's a dataframe
-		if (class(Xy) != "data.frame"){
+		if (!inherits(Xy, "data.frame")){
 			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
 		}
 		y = Xy[, ncol(Xy)]
@@ -61,7 +62,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#make sure it's a data frame
-	if (class(X) != "data.frame"){
+	if (!inherits(X, "data.frame")){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)	
 	}
 	if (verbose){
@@ -75,18 +76,18 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 
 	#now take care of classification or regression
 	y_levels = levels(y)
-	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
 		#java expects doubles, not ints, so we need to cast this now to avoid errors later
-		if (class(y) == "integer"){
+		if (inherits(y, "integer")){
 			y = as.numeric(y)
 		}		
 		java_bart_machine = .jnew("bartMachine.bartMachineRegressionMultThread")
 		y_remaining = y
 		pred_type = "regression"
-		if (class(y) == "integer"){
+		if (inherits(y, "integer")){
 			cat("Warning: The response y is integer, bartMachine will run regression.\n")
 		}
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
+	} else if (inherits(y, "factor") & length(y_levels) == 2){ #if y is a factor and binary
 		java_bart_machine = .jnew("bartMachine.bartMachineClassificationMultThread")
 		y_remaining = ifelse(y == y_levels[1], 1, 0)
 		pred_type = "classification"
@@ -186,13 +187,49 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			cov_prior_vec[j_factor_begin : (j_factor_begin + factor_length - 1)] = 1 / factor_length
 			j_factor_begin = j_factor_begin + factor_length
 		}
+	}	
+	
+	if (!is.null(interaction_constraints)){
+		if (!mem_cache_for_speed){
+			stop("In order to use interaction constraints, \"mem_cache_for_speed\" must be set to TRUE.")
+		}
+		if (!inherits(interaction_constraints, "list")){
+			stop("specified parameter \"interaction_constraints\" must be a list")
+		} else if (length(interaction_constraints) == 0){
+			stop("interaction_constraints list cannot be empty")
+		}		
+		
+		for (a in 1 : length(interaction_constraints)){
+			vars_a = interaction_constraints[[a]]
+			#check if the constraint components are valid features
+			for (b in 1 : length(vars_a)){
+				var = vars_a[b]
+				if ((inherits(var, "numeric") | inherits(var, "integer")) & !(var %in% (1 : p))){
+					stop(paste("Element", var, "in interaction_constraints vector number", a, "is numeric but not one of 1, ...,", p, "where", p, "is the number of columns in X."))
+				}
+				if (inherits(var, "factor")){
+					var = as.character(var)
+				}
+				if (inherits(var, "character")  & !(var %in% colnames(X))){
+					stop(paste("Element", var, "in interaction_constraints vector number", a, "is a string but not one of the column names of X."))
+				}
+				#force all it be integers and begin index at zero
+				if (inherits(var, "integer") | inherits(var, "numeric")){
+					vars_a[b] = var - 1
+				} else if (inherits(var, "character")){
+					vars_a[b] = which(colnames(X) == var) - 1
+				}
+			}
+			interaction_constraints[[a]] = as.integer(vars_a)
+		}
 	}
+	#print("interaction_constraints:"); print(interaction_constraints)
 
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
 		#first check if these covariates are even in the matrix to begin with
 		for (cov in covariates_to_permute){
-			if (!(cov %in% colnames(model_matrix_training_data)) && class(cov) == "character"){
+			if (!(cov %in% colnames(model_matrix_training_data)) && inherits(cov, "character")){
 				stop("Covariate \"", cov, "\" not found in design matrix.")
 			}
 		}
@@ -312,6 +349,17 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", .jarray(as.numeric(cov_prior_vec)))
 	}
 	
+	if (!is.null(interaction_constraints)){
+		.jcall(java_bart_machine, "V", "intializeInteractionConstraints", length(interaction_constraints))
+		for (interaction_constraint_vector in interaction_constraints){
+			for (b in 1 : length(interaction_constraint_vector)){
+				.jcall(java_bart_machine, "V", "addInteractionConstraint",
+						as.integer(interaction_constraint_vector[b]),
+						.jarray(as.integer(interaction_constraint_vector[-b])))
+			}
+		}
+	}
+	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){
 		row_as_char = as.character(model_matrix_training_data[i, ])
@@ -374,6 +422,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			run_in_sample = run_in_sample,
 			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
+			cov_prior_vec = cov_prior_vec,
+			interaction_constraints = interaction_constraints,
 			use_missing_data = use_missing_data,
 			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
 			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
@@ -518,7 +568,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
 		stop("You cannot specify both X,y and Xy simultaneously.")	
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
-		if (class(Xy) != "data.frame"){
+		if (!inherits(Xy, "data.frame")){
 			stop(paste("The training data Xy must be a data frame."), call. = FALSE)	
 		}
 		y = Xy$y
@@ -527,9 +577,9 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	y_levels = levels(y)
-	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
 		pred_type = "regression"
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
+	} else if (inherits(y, "factor") & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
 		pred_type = "classification"
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
@@ -626,7 +676,7 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 		for (j in 1 : ncol(X_with_missing)){
 			if (is.na(X_with_missing[i, j])){
 				#mode for factors, otherwise average
-				if (class(X_with_missing[, j]) == "factor"){
+				if (inherits(X_with_missing[, j], "factor")){
 					X_with_missing[i, j] = names(which.max(table(X_for_calculating_avgs[, j])))
 				} else {
 					X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
@@ -648,5 +698,5 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 }
 
 destroy_bart_machine = function(bart_machine){
-	#does nothing anymore...
+	warning("the method \"destroy_bart_machine\" does not do anything anymore")
 }

@@ -8,7 +8,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 	if (is.null(covariates)){
 		title = "bartMachine omnibus test for covariate importance\n"
 	} else if (length(covariates) <= 3){
-		if (class(covariates[1]) == "numeric"){
+		if (inherits(covariates[1], "numeric")){
 			cov_names = paste(all_covariates[covariates], collapse = ", ")
 		} else {
 			cov_names = paste(covariates, collapse = ", ")

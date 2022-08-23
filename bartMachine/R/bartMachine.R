@@ -15,6 +15,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	sig_sq_est = NULL,
     #print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
     cov_prior_vec = NULL,
+	interaction_constraints = NULL,
     use_missing_data = FALSE,
     covariates_to_permute = NULL, #PRIVATE
     num_rand_samps_in_library = 10000, #give the user the option to make a bigger library of random samples of normals and inv-gammas
@@ -27,35 +28,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	serialize = FALSE,
 	seed = NULL,
     verbose = TRUE){
- 
-    build_bart_machine(X, y, Xy, 
-	    num_trees, #
-	    num_burn_in, 
-	    num_iterations_after_burn_in, 
-	    alpha,
-	    beta,
-	    k,
-	    q,
-	    nu,
-	    prob_rule_class,
-	    mh_prob_steps,
-	    debug_log,
-	    run_in_sample,
-	    s_sq_y,
-		sig_sq_est,
-	    cov_prior_vec,
-	    use_missing_data,
-	    covariates_to_permute, 
-	    num_rand_samps_in_library, 
-	    use_missing_data_dummies_as_covars,
-	    replace_missing_data_with_x_j_bar,
-	    impute_missingness_with_rf_impute,
-	    impute_missingness_with_x_j_bar_for_lm,
-	    mem_cache_for_speed,
-		flush_indices_to_save_RAM,
-		serialize,
-		seed,
-	    verbose)
+ 		do.call(build_bart_machine, as.list(match.call())[-1])
 }
 
 
@@ -68,6 +41,6 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
   	build_bart_machine_cv(X, y, Xy, 
 	   num_tree_cvs,
 	   k_cvs,
-	   nu_q_cvs ,
+	   nu_q_cvs,
 	   k_folds, ...)
 }

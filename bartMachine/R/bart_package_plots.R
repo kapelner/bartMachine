@@ -504,14 +504,14 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 ##partial dependence plot
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	if (class(j) == "integer"){
+	if (inherits(j, "integer")){
 		j = as.numeric(j)
 	}
-	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
+	if (inherits(j, "numeric") && (j < 1 || j > bart_machine$p)){
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
-	} else if (class(j) == "character" && !(j %in% bart_machine$training_data_features)){
+	} else if (inherits(j, "character") && !(j %in% bart_machine$training_data_features)){
 		stop("j must be the name of one of the training features (see \"<bart_model>$training_data_features\")")
-	} else if (!(class(j) == "numeric" || class(j) == "character")){
+	} else if (!(inherits(j, "numeric") || inherits(j, "character"))){
 		stop("j must be a column number or column name")
 	}
 	

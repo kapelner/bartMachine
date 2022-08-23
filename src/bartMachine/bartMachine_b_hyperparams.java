@@ -1,9 +1,11 @@
 package bartMachine;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
@@ -55,6 +57,8 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected double y_range_sq;
 	/** the sample variance of the response variable on its original scale */
 	protected Double sample_var_y;
+	/** if a covariate is a key here, the value defines interaction between the variables that are legal */
+	protected HashMap<Integer, TIntHashSet> interaction_constraints;
 		
 	/** A wrapper to set data which also calculates hyperparameters and statistics about the repsonse variable */
 	public void setData(ArrayList<double[]> X_y){
@@ -194,7 +198,11 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 			y[i] = un_transform_y_and_round(yt[i]);
 		}
 		return y;
-	}		
+	}	
+	
+	public void setInteractionConstraints(HashMap<Integer, TIntHashSet> interaction_constraints) {
+		this.interaction_constraints = interaction_constraints;
+	}
 
 	/**
 	 * Untransforms many response values on the transformed scale back to the original scale and rounds them to one decimal digit

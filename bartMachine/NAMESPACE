@@ -49,12 +49,6 @@ export(var_selection_by_permute_cv)
 
 export(extract_raw_node_data)
 
-export(additiveBartMachine)
-
 S3method(predict, bartMachine)
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print
-
-S3method(predict, additiveBartMachine)
-S3method(print, additiveBartMachine)
-S3method(summary, additiveBartMachine) #alias for print

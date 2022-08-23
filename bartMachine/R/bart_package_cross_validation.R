@@ -5,18 +5,20 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	args$serialize = FALSE
 
 	
-	if (class(X) != "data.frame"){
+	if (!inherits(X, "data.frame")){
 		stop("The training data X must be a data frame.")
 	}
 	if (!(class(y) %in% c("numeric", "integer", "factor"))){
 		stop("Your response must be either numeric, an integer or a factor with two levels.\n")
 	}	
-  if(!is.null(folds_vec) & class(folds_vec)!= "integer") stop("folds_vec must be an a vector of integers specifying the indexes of each folds.")
+    if (!is.null(folds_vec) & !inherits(folds_vec, "integer")){
+	  stop("folds_vec must be an a vector of integers specifying the indexes of each folds.")  
+   }
 	
 	y_levels = levels(y)
-	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
 		pred_type = "regression"
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
+	} else if (inherits(y, "factor") & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
 		pred_type = "classification"
 	}
 	

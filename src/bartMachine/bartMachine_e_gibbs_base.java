@@ -23,6 +23,10 @@ public abstract class bartMachine_e_gibbs_base extends bartMachine_d_init implem
 			DoOneGibbsSample();
 			//now flush the previous previous gibbs sample to not leak memory
 			FlushDataForSample(gibbs_samples_of_bart_trees[gibbs_sample_num - 1]);
+			//keep one previous for interaction constraints
+//			if (gibbs_sample_num > 1) {
+//				FlushDataForSample(gibbs_samples_of_bart_trees[gibbs_sample_num - 2]);
+//			}			
 			DeleteBurnInsOnPreviousSamples();
 			gibbs_sample_num++;
 		}

@@ -16,7 +16,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	/** Do we use this feature in this BART model? */
 	protected boolean use_prior_cov_spec;
 	/** This is a probability vector which is the prior on which covariates to split instead of the uniform discrete distribution by default */
-	protected double[] cov_split_prior;	
+	protected double[] cov_split_prior;
 
 	
 	/**
