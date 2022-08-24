@@ -50,7 +50,7 @@ plot_convergence_diagnostics(bart_machine_cv)
 ##### section 4.4
 
 round(calc_credible_intervals(bart_machine_cv, X[100, ], ci_conf = 0.95), 2)
-round(calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95), 2)
+round(calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)$interval, 2)
 
 #Figure 5a
 plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
@@ -69,7 +69,8 @@ cov_importance_test(bart_machine_cv, covariates = c("width"))
 #Figure 7b
 cov_importance_test(bart_machine_cv, covariates = c("body_style"))
 #Figure 7c
-cov_importance_test(bart_machine_cv, covariates = c("width",
+cov_importance_test(bart_machine_cv, covariates = c(
+  "width",
 	"curb_weight",
 	"city_mpg",
 	"length",
@@ -78,7 +79,8 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 	"engine_size", 
 	"highway_mpg", 
 	"peak_rpm", 
-	"normalized_losses"))
+	"normalized_losses")
+)
 #Figure 7d
 cov_importance_test(bart_machine_cv)
 

@@ -1,8 +1,5 @@
 package bartMachine;
 
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import OpenSourceExtensions.UnorderedPair;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * This class handles the parallelization of many Gibbs chains over many CPU cores
@@ -70,7 +69,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	/** saves indices in nodes (useful for computing weights) */
 	protected boolean flush_indices_to_save_ram = true;
 	private boolean tree_illust;
-	private HashMap<Integer, TIntHashSet> interaction_constraints;
+	private HashMap<Integer, IntOpenHashSet> interaction_constraints;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -395,9 +394,9 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	}	
 	
 	public double[] getGibbsSamplesSigsqs(){
-		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
+		DoubleArrayList sigsqs_to_export = new DoubleArrayList(num_gibbs_total_iterations);
 		for (int t = 0; t < num_cores; t++){
-			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
+			DoubleArrayList sigsqs_to_export_by_thread = new DoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
 			if (t == 0){
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
 			}
@@ -405,7 +404,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
 			}
 		}
-		return sigsqs_to_export.toArray();
+		return sigsqs_to_export.elements();
 	}
 	
 	/**
@@ -599,13 +598,13 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	}
 	
 	public void intializeInteractionConstraints(int num_constraints) {
-		interaction_constraints = new HashMap<Integer, TIntHashSet>(num_constraints);
+		interaction_constraints = new HashMap<Integer, IntOpenHashSet>(num_constraints);
 	}
 	public void addInteractionConstraint(int constrained_feature, int[] constrained_features) {
 		if (interaction_constraints.get(constrained_feature) == null) {
-			interaction_constraints.put(constrained_feature, new TIntHashSet());
+			interaction_constraints.put(constrained_feature, new IntOpenHashSet());
 		}
-		TIntHashSet current_constrained_features = interaction_constraints.get(constrained_feature);
+		IntOpenHashSet current_constrained_features = interaction_constraints.get(constrained_feature);
 		for (int j : constrained_features) {
 			current_constrained_features.add(j);
 		}		

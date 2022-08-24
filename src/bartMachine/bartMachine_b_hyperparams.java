@@ -1,14 +1,14 @@
 package bartMachine;
 
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * This portion of the code controls hyperparameters for the BART
@@ -58,7 +58,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	/** the sample variance of the response variable on its original scale */
 	protected Double sample_var_y;
 	/** if a covariate is a key here, the value defines interaction between the variables that are legal */
-	protected HashMap<Integer, TIntHashSet> interaction_constraints;
+	protected HashMap<Integer, IntOpenHashSet> interaction_constraints;
 		
 	/** A wrapper to set data which also calculates hyperparameters and statistics about the repsonse variable */
 	public void setData(ArrayList<double[]> X_y){
@@ -200,7 +200,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 		return y;
 	}	
 	
-	public void setInteractionConstraints(HashMap<Integer, TIntHashSet> interaction_constraints) {
+	public void setInteractionConstraints(HashMap<Integer, IntOpenHashSet> interaction_constraints) {
 		this.interaction_constraints = interaction_constraints;
 	}
 
@@ -210,8 +210,8 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	 * @param yt	The transformed response values
 	 * @return		The original response values rounded to one decimal digit
 	 */
-	public double[] un_transform_y_and_round(TDoubleArrayList yt){
-		return un_transform_y_and_round(yt.toArray());
+	public double[] un_transform_y_and_round(DoubleArrayList yt){
+		return un_transform_y_and_round(yt.elements());
 	}	
 	
 	public void setK(double hyper_k) {

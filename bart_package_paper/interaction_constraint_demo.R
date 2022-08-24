@@ -3,26 +3,19 @@ library(bartMachine)
 set_bart_machine_num_cores(10)
 
 
-
-data("automobile", package = "bartMachine")
-automobile <- na.omit(automobile)
-y <- automobile$log_price
-X <- automobile; X$log_price <- NULL
-bart_machine <- bartMachine(X, y)
-bart_machine
-
 cov_dgp = function(n, p){
   data.frame(matrix(runif(n * p), ncol = p))
 }
+
 response_function = function(X, sigma = 0.3){
   # 10 * sin(pi * X[ ,1] * X[,2]) + 20 * (X[,3] -.5)^2 + 10 * X[, 4] + 5 * X[, 5] + rnorm(nrow(X), 0, 0.01) #Friedman
-  X[ ,1] * X[,2] + X[ ,3] * X[,4] + X[ ,5] + rnorm(nrow(X), 0, sigma)
-  # X[ ,1] + X[,2] + X[ ,3] + X[,4] + X[ ,5] + rnorm(nrow(X), 0, sigma)
+  # X[ ,1] * X[,2] + X[ ,3] * X[,4] + X[ ,5] + rnorm(nrow(X), 0, sigma)
+  X[ ,1] + X[,2] + X[ ,3] + X[,4] + X[ ,5] + rnorm(nrow(X), 0, sigma)
 }
 
 SEED = 1984
 set.seed(SEED)
-ntrain = 250
+ntrain = 500
 p = 5
 Xtrain = cov_dgp(ntrain, p)
 ytrain = response_function(Xtrain)

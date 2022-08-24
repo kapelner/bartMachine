@@ -1,5 +1,6 @@
-v1.2.7.1
-* Mersenne Twister for randomness
+v1.3
+* fastutil is now used instead of trove for supposedly a 2x speedup of many operations (see https://fastutil.di.unimi.it/) the downside being Java 8 is now required
+* Mersenne Twister for randomness which is faster than Java's Random implementation
 
 v1.2.7
 * interaction constraints

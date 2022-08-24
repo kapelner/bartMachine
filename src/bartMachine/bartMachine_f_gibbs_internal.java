@@ -2,7 +2,7 @@ package bartMachine;
 
 import java.io.Serializable;
 
-import gnu.trove.list.array.TIntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
  * This portion of the code that performs the posterior sampling
@@ -87,8 +87,8 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return		The index of the picked predictor
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(bartMachineTreeNode node){
-        TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
-        return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj(node)));
+        IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+        return predictors.getInt((int)Math.floor(StatToolbox.rand() * pAdj(node)));
 	}
 	
 	/**

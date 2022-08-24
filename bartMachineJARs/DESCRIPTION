@@ -1,11 +1,11 @@
 Package: bartMachineJARs
-Version: 1.1
+Version: 1.2
 Title: bartMachine JARs
 Type: Package
-Date: 2020-08-09
+Date: 2022-08-23
 Author: Adam Kapelner and Justin Bleich (R package), see COPYRIGHTS file for the authors of the java libraries
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Description: These are bartMachine's Java dependency libraries. Note: this package has no functionality of its own and should not be installed as a standalone package without bartMachine.
 License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.9-8)
-SystemRequirements: Java (>= 5.0)
+SystemRequirements: Java (>=8.0)
