@@ -4,7 +4,7 @@ bartMachine
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
-Copyright (C) 2020 
+Copyright (C) 2022
 Adam Kapelner  
 Department of Mathematics, Queens College, City University of New York 
 & 
@@ -16,11 +16,16 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 2010 4(1): 266-298](http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdfview_1&handle=euclid.aoas/1273584455 "PDF download of the BART paper") as well as many other features.
 
 
+Recent News
+---------
+8/25/22
+
+v1.3 is released (and should be on CRAN soon) which comes from some nice speedups. Note it is not backwards compatible with previous versions. To use previous versions' models, install a previous version manually e.g. via `install.packages("https://cran.r-project.org/src/contrib/Archive/bartMachine/bartMachine_1.2.1.tar.gz", repos=NULL, type="source")`.
+
 The Paper
 ---------
 
-For a vignette describing the BART model and bartMachine's features, see our [vignette](http://cran.r-project.org/web/packages/bartMachine/vignettes/bartMachine_vignette.pdf) 
-which is also on arXiv and is currently being reviewed by the Journal of Statistical Software.
+For a vignette describing the BART model and bartMachine's features, see our [JSS paper](https://www.jstatsoft.org/article/view/v070i04).
 
 
 The Manual
@@ -38,7 +43,7 @@ can install the package from CRAN or compile from source.
 
 ### Install Java JDK (not the JRE)
 
-Download the latest [Java JDK](https://jdk.java.net/14/) and install it properly. (Java 7 or above is required). bartMachine requires rJava which requires the JDK; you cannot just have a JRE!
+Download the latest [Java JDK](https://jdk.java.net/) and install it properly. (Java 7 or above is required for v1.2.x and Java 8 or above is required for v1.3 and above). bartMachine requires rJava which requires the JDK; you cannot just have a JRE!
 
 ### Install rJava
 
@@ -69,4 +74,4 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 Acknowledgements
 ------------------
 
-We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.
+We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation. We also thank the Laboratory for Web Algorithmics at the Università degli studi di Milano for [fastutil](https://fastutil.di.unimi.it/).
