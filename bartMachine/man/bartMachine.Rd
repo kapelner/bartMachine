@@ -18,6 +18,7 @@ debug_log = FALSE,
 run_in_sample = TRUE,  
 s_sq_y = "mse",
 sig_sq_est = NULL,
+print_tree_illustrations = FALSE,
 cov_prior_vec = NULL, 
 interaction_constraints = NULL,
 use_missing_data = FALSE, 
@@ -44,6 +45,7 @@ debug_log = FALSE,
 run_in_sample = TRUE,  
 s_sq_y = "mse",
 sig_sq_est = NULL,
+print_tree_illustrations = FALSE,
 cov_prior_vec = NULL, 
 interaction_constraints = NULL,
 use_missing_data = FALSE, 
@@ -111,6 +113,9 @@ If ``mse'', a data-based estimated of the error variance is computed as the MSE 
 }
 \item{sig_sq_est}{
 Pass in an estimate of the maximum sig_sq of the model. This is useful to cache somewhere and then pass in during cross-validation since the default method of estimation is a linear model. In large dimensions, linear model estimation is slow.
+}
+\item{print_tree_illustrations}{
+For every Gibbs iteration, print out an illustration of the trees side-by-side. This is excruciatingly SLOW!
 }
   \item{cov_prior_vec}{
 Vector assigning relative weights to how often a particular variable should be proposed as a candidate for a split. The vector is internally normalized so that the weights sum to 1. Note that the length of this vector must equal the length of the design matrix after dummification and augmentation of indicators of missingness (if used). To see what the dummified matrix looks like, use \code{\link{dummify_data}}. See Bleich et al. (2013) for more details on when this feature is most appropriate. 

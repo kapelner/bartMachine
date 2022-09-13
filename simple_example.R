@@ -82,3 +82,25 @@ table(y, predict(bart_machine, X, type = "class"))
 
 raw_node_data = extract_raw_node_data(bart_machine, g = 37)
 raw_node_data[[17]]
+
+
+
+
+
+options(java.parameters = "-Xmx20000m")
+library(bartMachine)
+set_bart_machine_num_cores(10)
+set.seed(1)
+data(iris)
+iris2 = iris[51 : 150, ] #do not include the third type of flower for this example
+iris2$Species = factor(iris2$Species)  
+X = iris2[ ,1:4]
+y = iris2$Species
+
+
+
+bart_machine = bartMachine(X, y, num_trees = 50, seed = 1)
+bart_machine
+##make probability predictions on the training data
+p_hat = predict(bart_machine, iris2[ ,1:4])
+p_hat

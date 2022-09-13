@@ -17,7 +17,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
 		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
-#		print_tree_illustrations = FALSE, #only for power users who want to edit the code themselves
+		print_tree_illustrations = FALSE, #only for power users who want to edit the code themselves
 		cov_prior_vec = NULL,
 		interaction_constraints = NULL,
 		use_missing_data = FALSE,
@@ -243,10 +243,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
 	}
 	#set whether we want there to be tree illustrations
-#	if (print_tree_illustrations){
-#		cat("warning: printing tree illustrations is excruciatingly slow.\n")
-#		.jcall(java_bart_machine, "V", "printTreeIllustations")
-#	}
+	if (print_tree_illustrations){
+		cat("warning: printing tree illustrations is excruciatingly slow.\n")
+		.jcall(java_bart_machine, "V", "printTreeIllustations")
+	}
 	
 	#set the std deviation of y to use
 	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
@@ -281,9 +281,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 				stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
 			}
 			sig_sq_est = sig_sq_est * y_range^2		
-		}
-		if (verbose){
-			cat("bartMachine sigsq estimated...\n")
+			if (verbose){
+				cat("bartMachine sigsq estimated...\n") #only print for regression
+			}
 		}		
 	} else {
 		if (verbose){

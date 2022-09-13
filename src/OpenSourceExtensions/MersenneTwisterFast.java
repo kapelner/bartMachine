@@ -863,7 +863,7 @@ public class MersenneTwisterFast implements Serializable, Cloneable
 
     /** Returns a random double in the half-open range from [0.0,1.0).  Thus 0.0 is a valid
         result but 1.0 is not. */
-    public double nextDouble()
+    public synchronized double nextDouble()
         {
         int y;
         int z;

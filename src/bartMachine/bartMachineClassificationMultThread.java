@@ -2,6 +2,8 @@ package bartMachine;
 
 import java.io.Serializable;
 
+import OpenSourceExtensions.StatUtil;
+
 /**
  * This class handles the parallelization of many Gibbs chains over many CPU cores
  * to create one BART regression model. It also handles all operations on the completed model.
@@ -50,7 +52,7 @@ public class bartMachineClassificationMultThread extends bartMachineRegressionMu
 		double[][] y_gibbs_samples_probs = new double[y_gibbs_samples.length][y_gibbs_samples[0].length];
 		for (int g = 0; g < y_gibbs_samples.length; g++){
 			for (int i = 0; i < y_gibbs_samples[0].length; i++){
-				y_gibbs_samples_probs[g][i] = StatToolbox.normal_cdf(y_gibbs_samples[g][i]);
+				y_gibbs_samples_probs[g][i] = StatUtil.normal_cdf(y_gibbs_samples[g][i]);
 			}			
 		}
 		return y_gibbs_samples_probs;

@@ -6,8 +6,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import OpenSourceExtensions.DoubleOpenHashSetAndArrayList;
+import OpenSourceExtensions.TDoubleHashSetAndArray;
 import OpenSourceExtensions.UnorderedPair;
+import gnu.trove.list.array.TIntArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -71,7 +72,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** this caches the possible split variables populated only if the <code>mem_cache_for_speed</code> feature is set to on */
 	private transient IntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient HashMap<Integer, DoubleOpenHashSetAndArrayList> possible_split_vals_by_attr;
+	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this number of possible split variables at this node */
 	protected transient Integer padj;
 	/** a tabulation of the counts of attributes being used in split points in this tree */
@@ -326,8 +327,8 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 		
 		//split the data correctly
-		IntArrayList left_indices = new IntArrayList(n_eta); 
-		IntArrayList right_indices = new IntArrayList(n_eta);
+		TIntArrayList left_indices = new TIntArrayList(n_eta);  ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
+		TIntArrayList right_indices = new TIntArrayList(n_eta); ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
 		DoubleArrayList left_responses = new DoubleArrayList(n_eta);
 		DoubleArrayList right_responses = new DoubleArrayList(n_eta);
 		
@@ -356,11 +357,11 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		//populate the left daughter
 		left.n_eta = left_responses.size();
 		left.responses = left_responses.elements();
-		left.indicies = left_indices.elements();
+		left.indicies = left_indices.toArray();
 		//populate the right daughter
 		right.n_eta = right_responses.size();
 		right.responses = right_responses.elements();
-		right.indicies = right_indices.elements();
+		right.indicies = right_indices.toArray();
 		//recursively propagate to children
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
@@ -557,10 +558,10 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of split values
 	 */
-	protected DoubleOpenHashSetAndArrayList possibleSplitValuesGivenAttribute() {
+	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
 		if (bart.mem_cache_for_speed){
 			if (possible_split_vals_by_attr == null){
-				possible_split_vals_by_attr = new HashMap<Integer, DoubleOpenHashSetAndArrayList>();
+				possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
 			}
 			if (possible_split_vals_by_attr.get(splitAttributeM) == null){
 				possible_split_vals_by_attr.put(splitAttributeM, tabulatePossibleSplitValuesGivenAttribute());
@@ -577,7 +578,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of split values
 	 */
-	private DoubleOpenHashSetAndArrayList tabulatePossibleSplitValuesGivenAttribute() {
+	private TDoubleHashSetAndArray tabulatePossibleSplitValuesGivenAttribute() {
 		double[] x_dot_j = bart.X_y_by_col.get(splitAttributeM);
 		double[] x_dot_j_node = new double[n_eta];
 		for (int i = 0; i < n_eta; i++){
@@ -590,7 +591,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			}
 		}		
 		
-		DoubleOpenHashSetAndArrayList unique_x_dot_j_node = new DoubleOpenHashSetAndArrayList(x_dot_j_node);
+		TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
 		unique_x_dot_j_node.remove(BAD_FLAG_double); //kill all missings immediately
 		double max = Tools.max(x_dot_j_node);
 		unique_x_dot_j_node.remove(max); //kill the max
@@ -603,7 +604,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * @return		The randomly selected split value
 	 */
 	public double pickRandomSplitValue() {	
-		DoubleOpenHashSetAndArrayList split_values = possibleSplitValuesGivenAttribute();
+		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
 		if (split_values.size() == 0){
 			return bartMachineTreeNode.BAD_FLAG_double;
 		}
@@ -822,7 +823,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			System.out.println("possible_split_vals_by_attr: {");
 			if (possible_split_vals_by_attr != null){
 				for (int key : possible_split_vals_by_attr.keySet()){
-					double[] array = possible_split_vals_by_attr.get(key).elements();
+					double[] array = possible_split_vals_by_attr.get(key).toArray();
 					Arrays.sort(array);
 					System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
 				}

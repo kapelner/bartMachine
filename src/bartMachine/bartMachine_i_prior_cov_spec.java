@@ -58,7 +58,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 		//find index inside predictor vector
 		int index = bartMachineTreeNode.BAD_FLAG_int;
 		for (int i = 0; i < predictors.size(); i++){
-			if (predictors.getInt(i) == node.splitAttributeM){
+			if (predictors.get(i) == node.splitAttributeM){
 				index = i;
 				break;
 			}

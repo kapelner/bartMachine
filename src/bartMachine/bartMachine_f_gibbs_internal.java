@@ -26,6 +26,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 			//draw from posterior distribution
 			node.posterior_mean = calcLeafPosteriorMean(node, sigsq, node.posterior_var);
 			node.y_pred = StatToolbox.sample_from_norm_dist(node.posterior_mean, node.posterior_var);
+//			System.out.println("  assignLeaf " + node.y_pred + " (mean = " + node.posterior_mean + " var = " + node.posterior_var + " sigsq = " + sigsq + ")");
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
@@ -48,7 +49,9 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return					The posterior mean for this node
 	 */
 	protected double calcLeafPosteriorMean(bartMachineTreeNode node, double sigsq, double posterior_var) {
+//		System.out.println("      node.responses " + Tools.StringJoin(node.responses));
 		node.y_avg = node.avgResponse();
+//		System.out.println("    node.y_avg " + node.y_avg);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
 
@@ -87,7 +90,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return		The index of the picked predictor
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(bartMachineTreeNode node){
-        IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+		IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
         return predictors.getInt((int)Math.floor(StatToolbox.rand() * pAdj(node)));
 	}
 	

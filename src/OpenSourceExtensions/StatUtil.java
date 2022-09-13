@@ -1,9 +1,9 @@
 package OpenSourceExtensions;
 /**
  * Class contains the implementation of:
- * - Inverse Normal Cummulative Distribution Function Algorythm
+ * - Inverse Normal Cumulative Distribution Function Algorithm
  * - Error Function Algorythm
- * - Complimentary Error Function Algorythm
+ * - Complimentary Error Function Algorithm
  *
  * @author Sherali Karimov (sherali.karimov@proxima-tech.com)
  */
@@ -42,6 +42,13 @@ public class StatUtil
 
   public static double getInvCDF(double d, boolean highPrecision)
   {
+	    /////kludge!!!
+		if (d == 0) {
+			d = d + 1e-14;
+		} 
+		if (d == 1) {
+			d = d - 1e-14;
+		}	  
     // Define break-points.
     // variable for result
     double z = 0;
@@ -71,6 +78,9 @@ public class StatUtil
       z = (((((ICDF_A[0]*r+ICDF_A[1])*r+ICDF_A[2])*r+ICDF_A[3])*r+ICDF_A[4])*r+ICDF_A[5])*q / (((((ICDF_B[0]*r+ICDF_B[1])*r+ICDF_B[2])*r+ICDF_B[3])*r+ICDF_B[4])*r+1);
     }
     if(highPrecision) z = refine(z, d);
+	if (Double.isInfinite(z) || Double.isNaN(z)) {
+		System.err.println("getInvCDF(" + d + ") is infinite or NaN");
+	}    
     return z;
   }
 
@@ -291,4 +301,51 @@ C------------------------------------------------------------------
     }
     return x;
   }
+  
+  
+  
+	// constants for the {@link normal_cdf} function
+  private static double NORM_CDF_a1 =  0.254829592;
+  private static double NORM_CDF_a2 = -0.284496736;
+  private static double NORM_CDF_a3 =  1.421413741;
+  private static double NORM_CDF_a4 = -1.453152027;
+  private static double NORM_CDF_a5 =  1.061405429;
+  private static double NORM_CDF_p  =  0.3275911;	
+	
+  /**
+   * Calculate the cumulative density under a standard normal to a point of interest.
+   *      
+   * @param x	The point of interest on the standard normal density support
+   * @return	The probability of interest
+   * 
+   * @see {@link http://www.johndcook.com/cpp_phi.html}
+   */
+	public static double normal_cdf(double x) {
+	    // Save the sign of x
+	    int sign = 1;
+	    if (x < 0){
+	        sign = -1;
+	    }
+	    x = Math.abs(x) / Math.sqrt(2.0);
+
+	    // A&S formula 7.1.26
+	    double t = 1.0 / (1.0 + NORM_CDF_p * x);
+	    double y = 1.0 - (((((NORM_CDF_a5 * t + NORM_CDF_a4) * t) + NORM_CDF_a3) * t + NORM_CDF_a2) * t + NORM_CDF_a1) * t * Math.exp(-x * x);
+
+	    double p = 0.5 * (1.0 + sign * y);
+//		if (Double.isInfinite(p) || Double.isNaN(p)) {
+//			System.err.println("normal_cdf(" + x + ") is infinite or NaN");
+//		}
+	    /////kludge!!!
+		if (p == 0) {
+			p = p + 1e-14;
+		} 
+		if (p == 1) {
+			p = p - 1e-14;
+		}
+//		if (p == 0 || p == 1) {
+//			System.err.println("normal_cdf(" + x + ") is 0 or 1");
+//		}		
+	    return p;
+	}
 }

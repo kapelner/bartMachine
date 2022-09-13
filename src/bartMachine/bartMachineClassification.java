@@ -28,7 +28,8 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
 
 		//get Z's
-		SampleZs();
+		if (SampleZs()) {return;}
+//		System.out.println("g = " + gibbs_sample_num + " y_trans = " + Tools.StringJoin(y_trans));
 		for (int t = 0; t < num_trees; t++){
 			if (verbose){
 				GibbsSampleDebugMessage(t);
@@ -36,22 +37,31 @@ public class bartMachineClassification extends bartMachineRegression implements 
 			SampleTree(gibbs_sample_num, t, bart_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
+		if (tree_illust){
+			illustrate(tree_array_illustration);
+		}		
 	}
 	
 	/** We sample the latent variables, Z, for each of the n observations
 	 * 
 	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
-	private void SampleZs() {
+	private boolean SampleZs() {
 		for (int i = 0; i < n; i++){
 			double g_x_i = 0;
 			bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees[gibbs_sample_num - 1];
 			for (int t = 0; t < num_trees; t++){
-				g_x_i += trees[t].Evaluate(X_y.get(i));
+				double g_x_i_t = trees[t].Evaluate(X_y.get(i));
+				if (Double.isInfinite(g_x_i_t) || Double.isNaN(g_x_i_t)) {
+					return true;
+				}
+				g_x_i += g_x_i_t;
 			}
 			//y_trans is the Z's from the paper
 			y_trans[i] = SampleZi(g_x_i, y_orig[i]);
+			
 		}
+		return false;
 	}
 
 	/** We sample one latent variable, Z_i
@@ -60,11 +70,16 @@ public class bartMachineClassification extends bartMachineRegression implements 
 	 */
 	private double SampleZi(double g_x_i, double y_i) {
 		double u = StatToolbox.rand();
+//		System.out.println("       u = " + u);
 		if (y_i == 1){ 
-			return g_x_i + StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(-g_x_i) + u, false);
+			double p_i = StatUtil.normal_cdf(-g_x_i);
+//			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
+			return g_x_i + StatUtil.getInvCDF((1 - u) * p_i + u, false);
 		} 
 		else if (y_i == 0){
-			return g_x_i - StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(g_x_i) + u, false);
+			double p_i = StatUtil.normal_cdf(g_x_i);
+//			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
+			return g_x_i - StatUtil.getInvCDF((1 - u) * p_i + u, false);
 		}
 		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
 		System.exit(0);

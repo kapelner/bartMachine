@@ -13,7 +13,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
     run_in_sample = TRUE,
     s_sq_y = "mse", # "mse" or "var"
 	sig_sq_est = NULL,
-    #print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
+    print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
     cov_prior_vec = NULL,
 	interaction_constraints = NULL,
     use_missing_data = FALSE,

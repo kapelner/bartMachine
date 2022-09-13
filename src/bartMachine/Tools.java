@@ -3,6 +3,8 @@ package bartMachine;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -35,12 +37,18 @@ public class Tools {
 	 * @param joinby	the token that joins the substrings
 	 * @return			the final product: str1 + joinby + str2 + . . . + strN
 	 */	
-	public static String StringJoin(IntArrayList all, String joinby){
+	public static String StringJoin(TIntArrayList all, String joinby){
 		if (all == null){
 			return " NULL ARRAY ";
 		}		
 		return StringJoin(all.toArray(), joinby);
-	}	
+	}
+	public static String StringJoin(IntArrayList all, String joinby){
+		if (all == null){
+			return " NULL ARRAY ";
+		}		
+		return StringJoin(all.elements(), joinby);
+	}
 	
 	/**
 	 * Joins a collection of strings into one string
@@ -88,9 +96,12 @@ public class Tools {
 	 * @param all		the collection of substrings
 	 * @return			the final product: str1 + joinby + str2 + . . . + strN
 	 */	
-	public static String StringJoin(IntArrayList all){
+	public static String StringJoin(TIntArrayList all){
 		return StringJoin(all.toArray(), ", ");
-	}	
+	}
+	public static String StringJoin(IntArrayList all){
+		return StringJoin(all.elements(), ", ");
+	}
 	
 	/**
 	 * Joins a collection of strings into one string with commas
@@ -122,9 +133,12 @@ public class Tools {
 	 * @param all		the collection of substrings
 	 * @return			the final product: str1 + joinby + str2 + . . . + strN
 	 */	
-	public static String StringJoin(DoubleArrayList all){
+	public static String StringJoin(TDoubleArrayList all){
 		return StringJoin(all.toArray(), ", ");
-	}	
+	}
+	public static String StringJoin(DoubleArrayList all){
+		return StringJoin(all.elements(), ", ");
+	}
 	
 	/**
 	 * Joins a collection of strings into one string with commas

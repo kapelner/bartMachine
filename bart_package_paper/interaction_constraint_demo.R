@@ -31,7 +31,7 @@ summary(bart_machine)
 
 
 ####now oos
-ntest = 10000
+ntest = 1000
 Xtest = cov_dgp(ntest, p)
 
 y_hat_test_gam = predict(gam, Xtest)

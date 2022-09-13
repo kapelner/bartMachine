@@ -18,6 +18,10 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 
 Recent News
 ---------
+9/13/22
+
+v1.3.1 is released and fixed bugs in v1.3 due to something I can't figure out in the fastutil library. Please don't use v1.3 --- upgrade to v1.3.1 or downgrade to v1.2.7
+
 8/25/22
 
 v1.3 is released (and should be on CRAN soon) which comes from some nice speedups. Note it is not backwards compatible with previous versions. To use previous versions' models, install a previous version manually e.g. via `install.packages("https://cran.r-project.org/src/contrib/Archive/bartMachine/bartMachine_1.2.1.tar.gz", repos=NULL, type="source")`.
@@ -74,4 +78,4 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 Acknowledgements
 ------------------
 
-We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation. We also thank the Laboratory for Web Algorithmics at the Università degli studi di Milano for [fastutil](https://fastutil.di.unimi.it/).
+We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.

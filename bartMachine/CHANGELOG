@@ -1,3 +1,8 @@
+v1.3.1
+* Fixed prediction in classification due to an error in it.unimi.dsi.fastutil.ints.IntArrayList. I've traced the error down to two calls in the bartMachineTreeNode file that are clearly marked. We lost a tiny speedup there.
+* Fixed concurrency error by synchronizing the MersenneTwister call. Hope this doesn't impact performance too much.
+* Reenabled printing of tree illustrations for those who are crazy enough to use it. Good luck.
+
 v1.3
 * fastutil is now used instead of trove for supposedly a 2x speedup of many operations (see https://fastutil.di.unimi.it/) the downside being Java 8 is now required
 * Mersenne Twister for randomness which is faster than Java's Random implementation
