@@ -11,11 +11,11 @@ Builds a BART-CV model by cross-validating over a grid of hyperparameter choices
 \usage{
 bartMachineCV(X = NULL, y = NULL, Xy = NULL, 
 num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
-nu_q_cvs = NULL, k_folds = 5, verbose = FALSE, ...)
+nu_q_cvs = NULL, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...)
 
 build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, 
 num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), 
-nu_q_cvs = NULL, k_folds = 5, verbose = FALSE, ...)
+nu_q_cvs = NULL, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,6 +39,9 @@ Only for regression. List of vectors containing (\code{nu}, \code{q}) ordered pa
 }
   \item{k_folds}{
 Number of folds for cross-validation
+}
+  \item{folds_vec}{
+An integer vector of indices specifying which fold each observation belongs to.   
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 

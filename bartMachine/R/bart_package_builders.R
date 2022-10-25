@@ -560,6 +560,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = NULL,
 		k_folds = 5, 
+		folds_vec = NULL, 
 		verbose = FALSE,
 		...){
 	
@@ -574,6 +575,9 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		y = Xy$y
 		Xy$y = NULL
 		X = Xy
+	}	
+	if (!is.null(folds_vec) & !inherits(folds_vec, "integer")){
+		stop("folds_vec must be an a vector of integers specifying the indexes of each folds.")  
 	}
 	
 	y_levels = levels(y)
@@ -605,10 +609,24 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = matrix(NA, nrow = length(k_cvs) * length(nu_q_cvs) * length(num_tree_cvs), ncol = 6)
 	colnames(cv_stats) = c("k", "nu", "q", "num_trees", "oos_error", "% diff with lowest")
 	
-  ##generate a single set of folds to keep using
-	temp = rnorm(length(y))
-	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
-	                include.lowest= T, labels = F)
+	#set up k folds
+	if (is.null(folds_vec)){ ##if folds were not pre-set:
+		n = nrow(X)
+	    if (k_folds == Inf){ #leave-one-out
+			k_folds = n
+	    }
+	  
+	    if (k_folds <= 1 || k_folds > n){
+			stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
+	    }
+	  
+	    temp = rnorm(n)
+	  
+	    folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+			  include.lowest= T, labels = FALSE)
+	  } else {
+		  k_folds = length(unique(folds_vec)) ##otherwise we know the folds, so just get k
+	  }
   
     #cross-validate
 	run_counter = 1

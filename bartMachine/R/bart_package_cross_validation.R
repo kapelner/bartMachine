@@ -13,7 +13,7 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	}	
     if (!is.null(folds_vec) & !inherits(folds_vec, "integer")){
 	  stop("folds_vec must be an a vector of integers specifying the indexes of each folds.")  
-   }
+    }
 	
 	y_levels = levels(y)
 	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
@@ -28,22 +28,22 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	p = ncol(Xpreprocess)
 	
 	#set up k folds
-  if(is.null(folds_vec)){ ##if folds were not pre-set:
-  	if (k_folds == Inf){ #leave-one-out
-  		k_folds = n
-  	}
-  	
-  	if (k_folds <= 1 || k_folds > n){
-  		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
-  	}
-	
-  	temp = rnorm(n)
-	
-  	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+    if (is.null(folds_vec)){ ##if folds were not pre-set:
+	  	if (k_folds == Inf){ #leave-one-out
+	  		k_folds = n
+	  	}
+	  	
+	  	if (k_folds <= 1 || k_folds > n){
+	  		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
+	  	}
+		
+	  	temp = rnorm(n)
+		
+	  	folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
   	                include.lowest= T, labels = F)
-  }else{
-    k_folds = length(unique(folds_vec)) ##otherwise we know the folds, so just get k
-  }	
+    } else {
+    	k_folds = length(unique(folds_vec)) ##otherwise we know the folds, so just get k
+    }	
 
 	if (pred_type == "regression"){
 		L1_err = 0

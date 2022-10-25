@@ -142,7 +142,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 ##var selection -- choose best method via CV
-var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
+var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NULL, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
@@ -152,9 +152,28 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_a
 	if (k_folds == Inf){ #leave-one-out
 		k_folds = bart_machine$n
 	}	
+	if (!is.null(folds_vec) & !inherits(folds_vec, "integer")){
+		stop("folds_vec must be an a vector of integers specifying the indexes of each folds.")  
+	}
 	
-	holdout_size = round(bart_machine$n / k_folds)
-	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
+	#set up k folds
+	if (is.null(folds_vec)){ ##if folds were not pre-set:
+		n = nrow(bart_machine$X)
+		if (k_folds == Inf){ #leave-one-out
+			k_folds = n
+		}
+		
+		if (k_folds <= 1 || k_folds > n){
+			stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
+		}
+		
+		temp = rnorm(n)
+		
+		folds_vec = cut(temp, breaks = quantile(temp, seq(0, 1, length.out = k_folds + 1)), 
+				include.lowest= T, labels = FALSE)
+	} else {
+		k_folds = length(unique(folds_vec)) ##otherwise we know the folds, so just get k
+	}
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
 	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global_se_names")
@@ -162,12 +181,12 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_a
 	for (k in 1 : k_folds){
 		cat("cv #", k, "\n", sep = "")
 		#find out the indices of the holdout sample
-		holdout_index_i = split_points[k]
-		holdout_index_f = ifelse(k == k_folds, bart_machine$n, split_points[k + 1] - 1)
+		train_idx = which(folds_vec != k)
+		test_idx = setdiff(1 : n, train_idx)
 		
 		#pull out training data
-		training_X_k = bart_machine$model_matrix_training_data[-c(holdout_index_i : holdout_index_f), -ncol(bart_machine$model_matrix_training_data)] ##toss last col bc its response
-		training_y_k = bart_machine$y[-c(holdout_index_i : holdout_index_f)]		
+		training_X_k = bart_machine$model_matrix_training_data[train_idx, -ncol(bart_machine$model_matrix_training_data)] ##toss last col bc its response
+		training_y_k = bart_machine$y[train_idx]		
 		
 		#make a temporary bart machine just so we can run the var selection for all three methods
 		bart_machine_temp = bart_machine_duplicate(bart_machine, X = as.data.frame(training_X_k), y = training_y_k, run_in_sample = FALSE, verbose = FALSE)
@@ -181,8 +200,8 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, num_reps_for_a
 				plot = FALSE)
 		
 		#pull out test data
-		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, -ncol(bart_machine$model_matrix_training_data)]
-		test_y_k = bart_machine$y[holdout_index_i : holdout_index_f]
+		test_X_k = bart_machine$model_matrix_training_data[test_idx, -ncol(bart_machine$model_matrix_training_data)]
+		test_y_k = bart_machine$y[test_idx]
 		
 		cat("method")
 		for (method in colnames(L2_err_mat)){

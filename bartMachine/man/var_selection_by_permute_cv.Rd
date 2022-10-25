@@ -8,7 +8,7 @@ Perform Variable Selection Using Cross-validation Procedure
 Performs variable selection by cross-validating over the three threshold-based procedures outlined in Bleich et al. (2013) and selecting the single procedure that returns the lowest cross-validation RMSE. 
 }
 \usage{
-var_selection_by_permute_cv(bart_machine, k_folds = 5, 
+var_selection_by_permute_cv(bart_machine, k_folds = 5, folds_vec = NULL, 
 num_reps_for_avg = 5, num_permute_samples = 100, 
 num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50)
 }
@@ -19,6 +19,9 @@ An object of class ``bartMachine''.
 }
   \item{k_folds}{
 Number of folds to be used in cross-validation.
+}
+  \item{folds_vec}{
+An integer vector of indices specifying which fold each observation belongs to.   
 }
   \item{num_reps_for_avg}{
 Number of replicates to over over to for the BART model's variable inclusion proportions.
