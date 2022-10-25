@@ -17,7 +17,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
 		sig_sq_est = NULL, #you can pass this in to speed things up if you have an idea about what you want to use a priori
-		print_tree_illustrations = FALSE, #only for power users who want to edit the code themselves
+		print_tree_illustrations = FALSE, #POWER USERS ONLY
 		cov_prior_vec = NULL,
 		interaction_constraints = NULL,
 		use_missing_data = FALSE,

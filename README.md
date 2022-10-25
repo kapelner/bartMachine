@@ -78,4 +78,4 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 Acknowledgements
 ------------------
 
-We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.
+We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.  We also thank the Laboratory for Web Algorithmics at the Università degli studi di Milano for [fastutil](https://fastutil.di.unimi.it/).

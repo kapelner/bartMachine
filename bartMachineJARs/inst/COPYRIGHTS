@@ -2,18 +2,18 @@ The following open source Java libraries are included in this package:
 
 - Commons Math: The Apache Commons Mathematics Library under the Apache License 2.0, 
   Version 2.1, March 2010,
-  http://commons.apache.org/proper/commons-math/, 
-  Copyright 2003-2014 The Apache Software Foundation
+  http://commons.apache.org/proper/commons-math/
 
 - Trove under Lesser GNU Public License (LGPL) 2.1,
   Version 3.0.3, February 2012, 
   http://trove.starlight-systems.com/
+  
+- Fastutil under Apache-2.0 license,
+  Version 8.5.8, February 2022, 
+  https://fastutil.di.unimi.it/
 
 License
 =======
-
-You may obtain a copy of the Eclipse Public License 1.0 at
-https://www.eclipse.org/legal/epl-v10.html
 
 You may obtain a copy of the Apache License, Version 2.0 at
 http://www.apache.org/licenses/LICENSE-2.0
