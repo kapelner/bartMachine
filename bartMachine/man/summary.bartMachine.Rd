@@ -40,6 +40,7 @@ Adam Kapelner
 }
 
 \examples{
+\dontrun{
 #Regression example
 
 #generate Friedman data
@@ -57,4 +58,5 @@ summary(bart_machine)
 
 ##Also, the default print works too
 bart_machine
+}
 }

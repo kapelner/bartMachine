@@ -53,6 +53,7 @@ Adam Kapelner and Justin Bleich
 \code{\link{predict}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 250 
@@ -72,5 +73,5 @@ bart_machine = bartMachine(train_X, train_y)
 #explore performance on test data
 oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)
 print(oos_perf$rmse)
-
+}
 }

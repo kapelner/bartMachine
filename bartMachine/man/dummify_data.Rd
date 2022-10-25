@@ -34,6 +34,7 @@ BART handles dummification internally. This function is provided as a utility fu
 
 
 \examples{
+\dontrun{
 #generate data
 set.seed(11)
 x1 = rnorm(20)
@@ -43,4 +44,5 @@ X = data.frame(x1,x2,x3)
 #dummify data
 X_dummified = dummify_data(X)
 print(X_dummified)
+}
 }

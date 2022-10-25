@@ -44,6 +44,8 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{calc_prediction_intervals}}, \code{\link{bart_machine_get_posterior}}
 }
 \examples{
+
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -57,4 +59,5 @@ bart_machine = bartMachine(X, y)
 #get credible interval
 cred_int = calc_credible_intervals(bart_machine, X)
 print(head(cred_int))
+}
 }

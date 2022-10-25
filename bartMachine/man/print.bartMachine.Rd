@@ -30,6 +30,8 @@ Adam Kapelner and Justin Bleich
 
 
 \examples{
+
+\dontrun{
 #Regression example
 
 #generate Friedman data
@@ -47,4 +49,5 @@ print(bart_machine)
 
 ##Also, the default print works too
 bart_machine
+}
 }

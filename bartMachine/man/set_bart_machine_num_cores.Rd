@@ -34,7 +34,7 @@ Adam Kapelner and Justin Bleich
 }
 \examples{
 \dontrun{
-## set all parallelized functions to use 4 cores
-## set_bart_machine_num_cores(4) 
+#set all parallelized functions to use 4 cores
+set_bart_machine_num_cores(4) 
 }
 }

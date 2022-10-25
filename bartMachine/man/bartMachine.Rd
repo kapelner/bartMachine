@@ -223,6 +223,7 @@ independent MCMC chain of size \cr
 \code{\link{bartMachineCV}}
 }
 \examples{
+\dontrun{
 ##regression example
 
 ##generate Friedman data
@@ -236,7 +237,6 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 bart_machine = bartMachine(X, y)
 summary(bart_machine)
 
-\dontrun{
 ##Build another BART regression model
 bart_machine = bartMachine(X,y, num_trees = 200, num_burn_in = 500,
 num_iterations_after_burn_in = 1000)

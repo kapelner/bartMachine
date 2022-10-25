@@ -35,6 +35,7 @@ Adam Kapelner and Justin Bleich
 \code{\link{get_var_counts_over_chain}}
 }
 \examples{
+\dontrun{
 #generate Friedman data
 set.seed(11)
 n  = 200 
@@ -48,4 +49,5 @@ bart_machine = bartMachine(X, y, num_trees = 20)
 #Get variable inclusion proportions
 var_props = get_var_props_over_chain(bart_machine)
 print(var_props)
+}
 }
