@@ -97,7 +97,7 @@ Quantile of the prior on the error variance at which the data-based estimate is 
 Degrees of freedom for the inverse \eqn{\chi^2} prior. Not used for classification.
 }
   \item{prob_rule_class}{
-Threshold for classification. Any observation with a conditional probability greater than \code{prob_class_rule} is assigned the ``positive'' outcome. Note that the first level of the response is treated as the ``negative'' outcome and the second is treated as the ``positive'' outcome.  
+Threshold for classification. Any observation with a conditional probability greater than \code{prob_class_rule} is assigned the ``positive'' outcome. Note that the first level of the response is treated as the ``positive'' outcome and the second is treated as the ``negative'' outcome.  
 }
   \item{mh_prob_steps}{
 Vector of prior probabilities for proposing changes to the tree structures: (GROW, PRUNE, CHANGE)
