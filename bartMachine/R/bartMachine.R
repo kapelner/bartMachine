@@ -28,7 +28,7 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	serialize = FALSE,
 	seed = NULL,
     verbose = TRUE){
- 		do.call(build_bart_machine, as.list(match.call())[-1])
+ 		do.call(build_bart_machine, as.list(match.call())[-1], envir = parent.frame(2))
 }
 
 
