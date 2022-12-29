@@ -28,8 +28,7 @@ import java.util.Arrays;
 
 import OpenSourceExtensions.MersenneTwisterFast;
 import gnu.trove.list.array.TDoubleArrayList;
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * This is a class where we're going to put all sorts of useful functions
@@ -92,13 +91,6 @@ public class StatToolbox {
 		double y_bar = 0;
 		for (int i = 0; i < y.size(); i++){
 			y_bar += y.get(i);
-		}
-		return y_bar / (double)y.size();
-	}	
-	public static final double sample_average(DoubleArrayList y){
-		double y_bar = 0;
-		for (int i = 0; i < y.size(); i++){
-			y_bar += y.getDouble(i);
 		}
 		return y_bar / (double)y.size();
 	}	
@@ -276,17 +268,17 @@ public class StatToolbox {
 	 * @param probs		The probabilities with which to sample the labels (must be the same length of the vals)
 	 * @return			The integer label of the value that was drawn from this multinomial distribution
 	 */
-	public static int multinomial_sample(IntArrayList vals, double[] probs) {
+	public static int multinomial_sample(TIntArrayList vals, double[] probs) {
 		double r = StatToolbox.rand();
 		double cum_prob = 0;
 		int index = 0;
 		if (r < probs[0]){
-			return vals.getInt(0);
+			return vals.get(0);
 		}
 		while (true){			
 			cum_prob += probs[index];
 			if (r > cum_prob && r < cum_prob + probs[index + 1]){
-				return vals.getInt(index + 1);
+				return vals.get(index + 1);
 			}
 			index++;
 		}

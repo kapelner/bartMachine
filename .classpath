@@ -8,6 +8,5 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="commons-math-2.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/kapel/workspace/bartMachine/trove-3.0.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/kapel/workspace/bartMachine/fastutil-core-8.5.8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

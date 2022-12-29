@@ -18,6 +18,10 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 
 Recent News
 ---------
+12/29/22
+
+v1.3.3 is released --- fastutil is no longer used and we have now downgraded back to trove losing the 2x speedup. I'm really sorry for the people who've used the package between Aug 25 and now as there were probably bugs.
+
 9/13/22
 
 v1.3.1 is released and fixed bugs in v1.3 due to something I can't figure out in the fastutil library. Please don't use v1.3 --- upgrade to v1.3.1 or downgrade to v1.2.7

@@ -2,7 +2,7 @@ package bartMachine;
 
 import java.io.Serializable;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * This portion of the code implements the informed prior information on covariates feature.
@@ -27,7 +27,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	 * @return		The index of the column to split on
 	 */
 	private int pickRandomPredictorThatCanBeAssignedF1(bartMachineTreeNode node){
-		IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);
 		//choose predictor based on random prior value	
@@ -51,7 +51,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 			return node.padj;
 		}			
 		//pull out weighted cov split prior subset vector
-		IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);	
 		
@@ -75,10 +75,10 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	 * @param predictors	The indices of the valid covariates
 	 * @return				The updated and renormalized prior probability vector on the covariates to split
 	 */
-	private double[] getWeightedCovSplitPriorSubset(IntArrayList predictors) {
+	private double[] getWeightedCovSplitPriorSubset(TIntArrayList predictors) {
 		double[] weighted_cov_split_prior_subset = new double[predictors.size()];
 		for (int i = 0; i < predictors.size(); i++){
-			weighted_cov_split_prior_subset[i] = cov_split_prior[predictors.getInt(i)];
+			weighted_cov_split_prior_subset[i] = cov_split_prior[predictors.get(i)];
 		}
 		Tools.normalize_array(weighted_cov_split_prior_subset);
 		return weighted_cov_split_prior_subset;

@@ -1,3 +1,6 @@
+v1.3.3
+* Gave up on fastutil --- too many reported bugs. The code is reverted to using trove. I have no idea why. If anyone could help that would be great. So we lost the 2x speedup.
+
 v1.3.2
 * folds_vec param now works for the bartMachineCV and var_selection_by_permute_cv functions as suggested by Paul Rathouz of UT Austin
 
