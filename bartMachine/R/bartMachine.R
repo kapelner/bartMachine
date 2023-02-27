@@ -1,4 +1,7 @@
-bartMachine = function(X = NULL, y = NULL, Xy = NULL, 
+bartMachine = function(
+	X = NULL, 
+	y = NULL, 
+	Xy = NULL, 
     num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
     num_burn_in = 250, 
     num_iterations_after_burn_in = 1000, 
@@ -27,8 +30,42 @@ bartMachine = function(X = NULL, y = NULL, Xy = NULL,
 	flush_indices_to_save_RAM = TRUE,
 	serialize = FALSE,
 	seed = NULL,
-    verbose = TRUE){
- 		do.call(build_bart_machine, as.list(match.call())[-1], envir = parent.frame(2))
+    verbose = TRUE
+	){
+	build_bart_machine(
+			X = X, 
+			y = y, 
+			Xy = Xy, 
+			num_trees = num_trees,
+			num_burn_in = num_burn_in, 
+			num_iterations_after_burn_in = num_iterations_after_burn_in, 
+			alpha = alpha,
+			beta = beta,
+			k = k,
+			q = q,
+			nu = nu,
+			prob_rule_class = prob_rule_class,
+			mh_prob_steps = mh_prob_steps,
+			debug_log = debug_log,
+			run_in_sample = run_in_sample,
+			s_sq_y = s_sq_y,
+			sig_sq_est = sig_sq_est,
+			print_tree_illustrations = print_tree_illustrations, 
+			cov_prior_vec = cov_prior_vec,
+			interaction_constraints = interaction_constraints,
+			use_missing_data = use_missing_data,
+			covariates_to_permute = covariates_to_permute, 
+			num_rand_samps_in_library = num_rand_samps_in_library, #give the user the option to make a bigger library of random samples of normals and inv-gammas
+			use_missing_data_dummies_as_covars = use_missing_data_dummies_as_covars,
+			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
+			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
+			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,
+			mem_cache_for_speed = mem_cache_for_speed,
+			flush_indices_to_save_RAM = flush_indices_to_save_RAM,
+			serialize = serialize,
+			seed = seed,
+			verbose = verbose			
+	)
 }
 
 

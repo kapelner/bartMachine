@@ -4,7 +4,7 @@ bartMachine
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
-Copyright (C) 2022
+Copyright (C) 2023
 Adam Kapelner  
 Department of Mathematics, Queens College, City University of New York 
 & 
@@ -16,8 +16,12 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 2010 4(1): 266-298](http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdfview_1&handle=euclid.aoas/1273584455 "PDF download of the BART paper") as well as many other features.
 
 
-Recent News
+News from the Past Year
 ---------
+2/27/23
+
+v1.3.3.1 released -- fixed bug in bartMachine constructor call that prevented local variables from being passed in.
+
 12/29/22
 
 v1.3.3 is released --- fastutil is no longer used and we have now downgraded back to trove losing the 2x speedup. I'm really sorry for the people who've used the package between Aug 25 and now as there were probably bugs.
@@ -82,4 +86,4 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 Acknowledgements
 ------------------
 
-We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.  We also thank the Laboratory for Web Algorithmics at the Università degli studi di Milano for [fastutil](https://fastutil.di.unimi.it/).
+We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.
