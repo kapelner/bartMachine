@@ -89,7 +89,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		pred_type = "regression"
 	} else if (inherits(y, "factor") & length(y_levels) == 2){ #if y is a factor and binary
 		#convenience for users that use 0/1 variables to ensure positive category is first as a level and a label (i.e. the naive expectation)
-		if (all(sort(levels(factor(ytrain_bin))) == c("0", "1"))){
+		if (all(sort(levels(factor(y))) == c("0", "1"))){
 			y = factor(y, levels = c(1, 0), labels = c(1, 0))
 			y_levels = levels(y)
 		}		
