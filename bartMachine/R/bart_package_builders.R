@@ -77,6 +77,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now take care of classification or regression
 	y_levels = levels(y)
 	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
+		if (inherits(y, "integer")){
+			cat("Warning: The response y is integer, bartMachine will run regression.\n")
+		}
 		#java expects doubles, not ints, so we need to cast this now to avoid errors later
 		if (inherits(y, "integer")){
 			y = as.numeric(y)
@@ -84,10 +87,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		java_bart_machine = .jnew("bartMachine.bartMachineRegressionMultThread")
 		y_remaining = y
 		pred_type = "regression"
-		if (inherits(y, "integer")){
-			cat("Warning: The response y is integer, bartMachine will run regression.\n")
-		}
 	} else if (inherits(y, "factor") & length(y_levels) == 2){ #if y is a factor and binary
+		#convenience for users that use 0/1 variables to ensure positive category is first as a level and a label (i.e. the naive expectation)
+		if (all(sort(levels(factor(ytrain_bin))) == c("0", "1"))){
+			y = factor(y, levels = c(1, 0), labels = c(1, 0))
+			y_levels = levels(y)
+		}		
 		java_bart_machine = .jnew("bartMachine.bartMachineClassificationMultThread")
 		y_remaining = ifelse(y == y_levels[1], 1, 0)
 		pred_type = "classification"

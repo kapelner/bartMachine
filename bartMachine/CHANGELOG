@@ -1,4 +1,8 @@
-v.1.3.3.1
+v1.3.4
+* If you are now doing binary classification for a 0/1 vector, we handle the labeling automatically (message produced)
+* For interaction_investigator, there is now a useful long data.frame returned (interaction_counts_avg_and_sd_long) that tabulates the mean and sd of interactions for the variable pair in order of approximate importance
+
+v1.3.3.1
 * Fixed bug in bartMachine
 
 v1.3.3

@@ -18,21 +18,18 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 
 News from the Past Year
 ---------
+6/25/23
+
+v1.3.4 released - better interaction investigator, convenient relabeling for classification
+
 2/27/23
 
 v1.3.3.1 released -- fixed bug in bartMachine constructor call that prevented local variables from being passed in.
 
 12/29/22
 
-v1.3.3 is released --- fastutil is no longer used and we have now downgraded back to trove losing the 2x speedup. I'm really sorry for the people who've used the package between Aug 25 and now as there were probably bugs.
+v1.3.3 is released --- fastutil is no longer used and we have now downgraded back to trove losing the 2x speedup. I'm really sorry for the people who've used the package between Aug 25, 2022 - Dec 29, 2022 as there were probably bugs.
 
-9/13/22
-
-v1.3.1 is released and fixed bugs in v1.3 due to something I can't figure out in the fastutil library. Please don't use v1.3 --- upgrade to v1.3.1 or downgrade to v1.2.7
-
-8/25/22
-
-v1.3 is released (and should be on CRAN soon) which comes from some nice speedups. Note it is not backwards compatible with previous versions. To use previous versions' models, install a previous version manually e.g. via `install.packages("https://cran.r-project.org/src/contrib/Archive/bartMachine/bartMachine_1.2.1.tar.gz", repos=NULL, type="source")`.
 
 The Paper
 ---------

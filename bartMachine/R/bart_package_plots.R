@@ -433,39 +433,62 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	}
 	cat("\n")
 	
-	interaction_counts_avg = apply(interaction_counts, 1 : 2, mean)
+	interaction_counts_avg = matrix(NA, nrow = bart_machine$p, ncol = bart_machine$p)
+	interaction_counts_sd = matrix(NA, nrow = bart_machine$p, ncol = bart_machine$p)
 	
-	if (bart_machine$use_missing_data == T){
+	if (bart_machine$use_missing_data){
 		rownames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
 	    colnames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
+		rownames(interaction_counts_sd) = bart_machine$training_data_features_with_missing_features
+		colnames(interaction_counts_sd) = bart_machine$training_data_features_with_missing_features
 	} else {
 	    rownames(interaction_counts_avg) = bart_machine$training_data_features
-	    colnames(interaction_counts_avg) = bart_machine$training_data_features	
+	    colnames(interaction_counts_avg) = bart_machine$training_data_features
+		rownames(interaction_counts_sd) = bart_machine$training_data_features
+		colnames(interaction_counts_sd) = bart_machine$training_data_features	
 	}
-	interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
 	
 	#now vectorize the interaction counts
-	avg_counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
-	sd_counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
+	n_interactions = bart_machine$p * (bart_machine$p - 1) / 2
+	avg_counts = array(NA, n_interactions)
+	sd_counts = array(NA, n_interactions)
+	interaction_counts_avg_and_sd_long = data.frame(
+		var1 = character(rep(NA, n_interactions)),
+		var2 = character(rep(NA, n_interactions)),
+		avg_interaction = numeric(rep(NA, n_interactions)),
+		se_interaction = numeric(rep(NA, n_interactions))
+	)
 	iter = 1
 	for (i in 1 : bart_machine$p){
 		for (j in 1 : bart_machine$p){
 			if (i <= j){
+				interactions_i_j = c(interaction_counts[i, j, ], interaction_counts[j, i, ]) #triangularize the data
+				interaction_counts_avg[i, j] = mean(interactions_i_j)
+				interaction_counts_sd[i, j] = sd(interactions_i_j)
+				
 				avg_counts[iter] = interaction_counts_avg[i, j]
 				sd_counts[iter] = interaction_counts_sd[i, j]
 				names(avg_counts)[iter] = paste(rownames(interaction_counts_avg)[i], "x", rownames(interaction_counts_avg)[j])
+				
+				interaction_counts_avg_and_sd_long[iter, ] = c(
+					rownames(interaction_counts_avg)[i],
+					rownames(interaction_counts_avg)[j],
+					interaction_counts_avg[i, j],
+					interaction_counts_sd[i, j] / sqrt(num_replicates_for_avg)
+				)
 				iter = iter + 1
 			}
 		}
 	}
-	num_total_interactions = bart_machine$p * (bart_machine$p + 1) / 2
-	if (num_var_plot == Inf || num_var_plot > num_total_interactions){
-		num_var_plot = num_total_interactions
+	
+	if (num_var_plot == Inf || num_var_plot > n_interactions){
+		num_var_plot = n_interactions
 	}
 	
 	avg_counts_sorted_indices = sort(avg_counts, decreasing = TRUE, index.return = TRUE)$ix
 	avg_counts = avg_counts[avg_counts_sorted_indices][1 : num_var_plot]
 	sd_counts = sd_counts[avg_counts_sorted_indices][1 : num_var_plot]
+	interaction_counts_avg_and_sd_long = interaction_counts_avg_and_sd_long[avg_counts_sorted_indices, ]
 	
 	if (is.null(cut_bottom)){
 		ylim_bottom = 0
@@ -497,8 +520,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		}
 		par(mar = c(5.1, 4.1, 4.1, 2.1))		
 	}
-	
-	invisible(list(interaction_counts = interaction_counts, interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd))
+		
+	invisible(list(interaction_counts = interaction_counts, interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd, interaction_counts_avg_and_sd_long = interaction_counts_avg_and_sd_long))
 }
 
 ##partial dependence plot
