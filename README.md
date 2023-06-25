@@ -1,3 +1,9 @@
+IMPORTANT
+===========
+
+* Before even loading this package you must set the memory option via e.g. `options(java.parameters = "-Xmx5g")` to set a larger amount of RAM than the default of 500MB which will get you intro trouble. Only then invoke `library(bartMachine)`. If you don't do this YOU WILL GET OUT OF MEMORY ERRORS OR STUFF THAT LOOKS LIKE THIS `Error in validObject(.Object) : invalid class “jobjRef” object: invalid object for slot "jobj" in class "jobjRef": got class "NULL", should be or extend class "externalptr"`.
+
+
 bartMachine
 ===========
 
@@ -14,7 +20,6 @@ Department of Statistics, The Wharton School of the University of Pennsylvania
 This is a Java implementation of the algorithm found in Chipman, George, & McCulloch 
 [BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics. 
 2010 4(1): 266-298](http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdfview_1&handle=euclid.aoas/1273584455 "PDF download of the BART paper") as well as many other features.
-
 
 News from the Past Year
 ---------
@@ -60,7 +65,7 @@ Use `install.packages("rJava")` within R. If you experience errors, make sure yo
 
 ### Install bartMachine via CRAN
 
-Use `install.packages("bartMachine")` within R and then `options(java.parameters = "-Xmx2500m")` to set a larger amount of RAM than the default of 500MB and then `library(bartMachine)`.
+Use `install.packages("bartMachine")` within R.
 
 ### Install bartMachine via compilation from source
 
