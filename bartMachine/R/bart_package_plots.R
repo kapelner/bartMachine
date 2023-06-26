@@ -453,10 +453,10 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	avg_counts = array(NA, n_interactions)
 	sd_counts = array(NA, n_interactions)
 	interaction_counts_avg_and_sd_long = data.frame(
-		var1 = character(rep(NA, n_interactions)),
-		var2 = character(rep(NA, n_interactions)),
-		avg_interaction = numeric(rep(NA, n_interactions)),
-		se_interaction = numeric(rep(NA, n_interactions))
+		var1 = as.character(rep(NA, n_interactions)),
+		var2 = as.character(rep(NA, n_interactions)),
+		avg_interaction = as.numeric(rep(NA, n_interactions)),
+		se_interaction = as.numeric(rep(NA, n_interactions))
 	)
 	iter = 1
 	for (i in 1 : bart_machine$p){
