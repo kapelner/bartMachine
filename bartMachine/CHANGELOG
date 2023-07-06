@@ -1,3 +1,7 @@
+v1.3.4.1
+* Fixed bug for interaction_investigator due to previous release
+* We now comply with CRAN policy to not change the user's graphical parameters
+
 v1.3.4
 * If you are now doing binary classification for a 0/1 vector, we handle the labeling automatically (message produced)
 * For interaction_investigator, there is now a useful long data.frame returned (interaction_counts_avg_and_sd_long) that tabulates the mean and sd of interactions for the variable pair in order of approximate importance

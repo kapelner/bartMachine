@@ -37,13 +37,14 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
 	important_vars_simul_se_names = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se & var_true_props_avg > 0)])	
 	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
+	oldpar <- par(no.readonly = TRUE)   # code line i
+	on.exit(par(oldpar))            	# code line i + 1
 	
 	if (plot){
 		par(mar = c(bottom_margin, 6, 3, 0))
 		if (num_var_plot == Inf | num_var_plot > bart_machine$p){
 			num_var_plot = bart_machine$p
 		}
-		
 		par(mfrow = c(2, 1))
 		##pointwise plot
     non_zero_idx = which(var_true_props_avg > 0)[1: min(num_var_plot, length(which(var_true_props_avg > 0)))]
@@ -69,6 +70,7 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] < max_cut, ifelse(var_true_props_avg[j] > perm_mean[j] + cover_constant * perm_se[j], 8, 1), 16))
 		}		
 		sapply(non_zero_idx, function(s){segments(s,0, x1 = s, perm_mean[s] + cover_constant * perm_se[s], col = "blue")})
+
 		par(mar = c(5.1, 4.1, 4.1, 2.1))
 		par(mfrow = c(1, 1))
 	}
