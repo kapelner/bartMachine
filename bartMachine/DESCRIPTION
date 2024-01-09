@@ -10,3 +10,4 @@ License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.9-8), bartMachineJARs (>= 1.2.1), randomForest, missForest
 Imports: graphics, grDevices, stats
 SystemRequirements: Java (>= 8.0)
+BugReports: https://github.com/kapelner/bartMachine/issues
