@@ -82,5 +82,7 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
 	   k_cvs,
 	   nu_q_cvs,
 	   k_folds, 
-	   folds_vec, ...)
+	   folds_vec, 
+	   verbose = verbose,
+	   ...)
 }

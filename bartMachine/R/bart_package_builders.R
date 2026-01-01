@@ -566,7 +566,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		nu_q_cvs = NULL,
 		k_folds = 5, 
 		folds_vec = NULL, 
-		verbose = FALSE,
+		verbose = TRUE,
 		...){
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
@@ -639,10 +639,12 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
 				
-				if (pred_type == "regression"){
-					cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
-				} else {
-					cat(paste("  bartMachine CV try: k:", k, "m:", num_trees, "\n"))
+				if (verbose){
+					if (pred_type == "regression"){
+						cat(paste("  bartMachine CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
+					} else {
+						cat(paste("  bartMachine CV try: k:", k, "m:", num_trees, "\n"))
+					}					
 				}
 				
 				k_fold_results = k_fold_cv(X, y, 
@@ -673,17 +675,21 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 			}
 		}
 	}
-	if (pred_type == "regression"){
-		cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
-	} else {
-		cat(paste("  bartMachine CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
+	if (verbose){
+		if (pred_type == "regression"){
+			cat(paste("  bartMachine CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
+		} else {
+			cat(paste("  bartMachine CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
+		}
 	}
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	bart_machine_cv = build_bart_machine(X, y,
 			num_trees = min_rmse_num_tree,
 			k = min_rmse_k,
 			nu = min_rmse_nu_q[1],
-			q = min_rmse_nu_q[2], ...)
+			q = min_rmse_nu_q[2], 
+			verbose = verbose,
+			...)
 	
 	#give the user some cv_stats ordered by the best (ie lowest) oosrmse
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]

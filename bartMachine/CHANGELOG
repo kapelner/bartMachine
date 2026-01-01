@@ -1,3 +1,6 @@
+v1.3.4.2
+* bartMachineCV with verbose = FALSE now behaves as expected
+
 v1.3.4.1
 * Fixed bug for interaction_investigator due to previous release
 * We now comply with CRAN policy to not change the user's graphical parameters

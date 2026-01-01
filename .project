@@ -27,4 +27,15 @@
 		<nature>org.eclipse.statet.r.resourceProjects.R</nature>
 		<nature>org.eclipse.statet.docmlet.resourceProjects.Tex</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1767230669706</id>
+			<name></name>
+			<type>30</type>
+			<matcher>
+				<id>org.eclipse.core.resources.regexFilterMatcher</id>
+				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

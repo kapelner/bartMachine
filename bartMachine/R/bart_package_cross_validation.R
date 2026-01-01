@@ -60,9 +60,12 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	Xy = data.frame(Xpreprocess, y) ##set up data
 	
 	for (k in 1 : k_folds){
-		cat(".")
-    train_idx = which(folds_vec != k)
-    test_idx = setdiff(1 : n, train_idx)
+		if (verbose){
+			cat(".")
+		}
+		
+	    train_idx = which(folds_vec != k)
+	    test_idx = setdiff(1 : n, train_idx)
 		test_data_k = Xy[test_idx, ]
 		training_data_k = Xy[train_idx, ]
 
@@ -88,7 +91,9 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 			confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + tab
 		}
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
 	if (pred_type == "regression"){
 		list(y_hat = yhat_cv, L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2), folds = folds_vec)
 	} else {		
