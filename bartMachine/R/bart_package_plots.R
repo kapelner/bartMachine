@@ -40,11 +40,6 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
 	}	
-	graphics.off()
-	oldpar <- par(no.readonly = TRUE)   # code line i
-	on.exit(par(oldpar))            	# code line i + 1
-	
-	par(mfrow = c(2, 1))
 	es = bart_machine$residuals
 	y_hat = bart_machine$y_hat
 	
@@ -54,46 +49,96 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	} else {
 		normal_p_val = shapiro.test(es)$p.value
 	}
+
+	n = length(es)
+	qq_df = data.frame(
+		theoretical = qnorm(ppoints(n)),
+		sample = sort(es)
+	)
+	qq_plot = ggplot2::ggplot(qq_df, ggplot2::aes(x = theoretical, y = sample)) +
+		ggplot2::geom_point(color = "blue") +
+		ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+		ggplot2::labs(
+			title = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
+			x = "Theoretical Quantiles",
+			y = "Sample Quantiles"
+		)
 	
-	qqnorm(es, col = "blue",
-			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
-			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")	
-	
-	#plot for heteroskedasticity
 	if (hetero_plot == "yhats"){
-		plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
-	} else if (hetero_plot == "ys") {
-		plot(bart_machine$y, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Actual Values", ylab = "Residuals", col = "blue")
+		hetero_df = data.frame(x = y_hat, residual = es)
+		x_label = "Fitted Values"
+	} else {
+		hetero_df = data.frame(x = bart_machine$y, residual = es)
+		x_label = "Actual Values"
 	}
+	hetero_plot_obj = ggplot2::ggplot(hetero_df, ggplot2::aes(x = x, y = residual)) +
+		ggplot2::geom_point(color = "blue") +
+		ggplot2::geom_hline(yintercept = 0, color = "black") +
+		ggplot2::labs(
+			title = "Assessment of Heteroskedasticity\nFitted vs residuals",
+			x = x_label,
+			y = "Residuals"
+		)
 	
-	abline(h = 0, col = "black")
-	par(mfrow = c(1, 1))
+	print(qq_plot)
+	print(hetero_plot_obj)
+	invisible(list(qq_plot = qq_plot, hetero_plot = hetero_plot_obj))
 }
 
 ##private function for plotting tree depths
 plot_tree_depths = function(bart_machine){
 	
 	tree_depths_after_burn_in = get_tree_depths(bart_machine)
+
+	num_after_burn_in = nrow(tree_depths_after_burn_in)
+	num_trees = ncol(tree_depths_after_burn_in)
+	iter = seq_len(num_after_burn_in)
+	tree_df = data.frame(
+		iter = rep(iter, times = num_trees),
+		tree = factor(rep(seq_len(num_trees), each = num_after_burn_in)),
+		depth = as.vector(tree_depths_after_burn_in)
+	)
+	summary_df = data.frame(
+		iter = iter,
+		mean = apply(tree_depths_after_burn_in, 1, mean),
+		min = apply(tree_depths_after_burn_in, 1, min),
+		max = apply(tree_depths_after_burn_in, 1, max)
+	)
 	
-	num_after_burn_in_per_core = nrow(tree_depths_after_burn_in)
-	
-	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Depth by MCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
-		ylab = paste("Tree Depth for all cores"), ylim = c(0, max(tree_depths_after_burn_in)))
-	#plot burn in
-	for (t in 1 : ncol(tree_depths_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_depths_after_burn_in[, t], col = rgb(0.9,0.9,0.9))
-	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, max), col = "black")
-	
+	p = ggplot2::ggplot(tree_df, ggplot2::aes(x = iter, y = depth, group = tree)) +
+		ggplot2::geom_line(color = "gray70", alpha = 0.4) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = mean),
+			color = "blue",
+			linewidth = 1,
+			inherit.aes = FALSE
+		) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = min),
+			color = "black",
+			inherit.aes = FALSE
+		) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = max),
+			color = "black",
+			inherit.aes = FALSE
+		) +
+		ggplot2::labs(
+			title = "Tree Depth by MCMC Iteration After Burn-in",
+			x = "MCMC Iteration",
+			y = "Tree Depth for all cores"
+		)
 	
 	if (bart_machine$num_cores > 1){
-		for (c in 2 : bart_machine$num_cores){
-			abline(v = (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
-		}		
-	}		
+		core_lines = (1 : (bart_machine$num_cores - 1)) *
+			bart_machine$num_iterations_after_burn_in / bart_machine$num_cores
+		p = p + ggplot2::geom_vline(xintercept = core_lines, color = "gray")
+	}
+	
+	p
 }
 
 #private function for getting tree depths to plot
@@ -111,26 +156,56 @@ get_tree_depths = function(bart_machine){
 plot_tree_num_nodes = function(bart_machine){
 	
 	tree_num_nodes_and_leaves_after_burn_in = get_tree_num_nodes_and_leaves(bart_machine)
+
+	num_after_burn_in = nrow(tree_num_nodes_and_leaves_after_burn_in)
+	num_trees = ncol(tree_num_nodes_and_leaves_after_burn_in)
+	iter = seq_len(num_after_burn_in)
+	tree_df = data.frame(
+		iter = rep(iter, times = num_trees),
+		tree = factor(rep(seq_len(num_trees), each = num_after_burn_in)),
+		num_nodes = as.vector(tree_num_nodes_and_leaves_after_burn_in)
+	)
+	summary_df = data.frame(
+		iter = iter,
+		mean = apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean),
+		min = apply(tree_num_nodes_and_leaves_after_burn_in, 1, min),
+		max = apply(tree_num_nodes_and_leaves_after_burn_in, 1, max)
+	)
 	
-	num_after_burn_in_per_core = nrow(tree_num_nodes_and_leaves_after_burn_in)
-	
-	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
-		main = "Tree Num Nodes And Leaves by\nMCMC Iteration After Burn-in", xlab = "MCMC Iteration", 
-		ylab = paste("Tree Num Nodes and Leaves for all cores"), 
-		ylim = c(0, max(tree_num_nodes_and_leaves_after_burn_in)))
-	#plot burn in
-	for (t in 1 : ncol(tree_num_nodes_and_leaves_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_num_nodes_and_leaves_after_burn_in[, t], col = rgb(0.9, 0.9, 0.9))
-	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, max), col = "black")
+	p = ggplot2::ggplot(tree_df, ggplot2::aes(x = iter, y = num_nodes, group = tree)) +
+		ggplot2::geom_line(color = "gray70", alpha = 0.4) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = mean),
+			color = "blue",
+			linewidth = 1,
+			inherit.aes = FALSE
+		) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = min),
+			color = "black",
+			inherit.aes = FALSE
+		) +
+		ggplot2::geom_line(
+			data = summary_df,
+			ggplot2::aes(x = iter, y = max),
+			color = "black",
+			inherit.aes = FALSE
+		) +
+		ggplot2::labs(
+			title = "Tree Num Nodes And Leaves by\nMCMC Iteration After Burn-in",
+			x = "MCMC Iteration",
+			y = "Tree Num Nodes and Leaves for all cores"
+		)
 	
 	if (bart_machine$num_cores > 1){
-		for (c in 2 : bart_machine$num_cores){
-			abline(v = (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
-		}		
-	}	
+		core_lines = (1 : (bart_machine$num_cores - 1)) *
+			bart_machine$num_iterations_after_burn_in / bart_machine$num_cores
+		p = p + ggplot2::geom_vline(xintercept = core_lines, color = "gray")
+	}
+	
+	p
 }
 ##private function for getting the number of nodes in the trees
 get_tree_num_nodes_and_leaves = function(bart_machine){
@@ -158,20 +233,62 @@ plot_mh_acceptance_reject = function(bart_machine){
 	
 	num_after_burn_in_per_core = length(a_r_after_burn_in_avgs_over_trees[[1]])
 	num_gibbs_per_core = bart_machine$num_burn_in + num_after_burn_in_per_core
+
+	burn_in_df = data.frame(
+		iter = 1 : bart_machine$num_burn_in,
+		acceptance = a_r_before_burn_in_avg_over_trees
+	)
+	after_iter = (bart_machine$num_burn_in + 1) : num_gibbs_per_core
+	after_df = do.call(
+		rbind,
+		lapply(1 : bart_machine$num_cores, function(c){
+			data.frame(
+				iter = after_iter,
+				acceptance = a_r_after_burn_in_avgs_over_trees[[c]],
+				core = factor(c)
+			)
+		})
+	)
 	
+	p = ggplot2::ggplot() +
+		ggplot2::geom_point(
+			data = burn_in_df,
+			ggplot2::aes(x = iter, y = acceptance),
+			color = "grey"
+		) +
+		ggplot2::geom_smooth(
+			data = burn_in_df,
+			ggplot2::aes(x = iter, y = acceptance),
+			method = "loess",
+			formula = y ~ x,
+			se = FALSE,
+			color = "black",
+			linewidth = 1
+		) +
+		ggplot2::geom_point(
+			data = after_df,
+			ggplot2::aes(x = iter, y = acceptance, color = core),
+			alpha = 0.7
+		) +
+		ggplot2::geom_smooth(
+			data = after_df,
+			ggplot2::aes(x = iter, y = acceptance, color = core),
+			method = "loess",
+			formula = y ~ x,
+			se = FALSE,
+			linewidth = 1
+		) +
+		ggplot2::geom_vline(xintercept = bart_machine$num_burn_in, color = "grey") +
+		ggplot2::scale_color_manual(values = COLORS[1 : bart_machine$num_cores]) +
+		ggplot2::coord_cartesian(ylim = c(0, 1)) +
+		ggplot2::labs(
+			title = "Percent Acceptance by MCMC Iteration",
+			x = "MCMC Iteration",
+			y = "% of Trees Accepting",
+			color = "Core"
+		)
 	
-	plot(1 : num_gibbs_per_core, rep(0, num_gibbs_per_core), ylim = c(0, 1), type = "n", 
-			main = "Percent Acceptance by MCMC Iteration", xlab = "MCMC Iteration", ylab = "% of Trees Accepting")
-	abline(v = bart_machine$num_burn_in, col = "grey")
-	#plot burn in
-	points(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees, col = "grey")
-	tryCatch(lines(loess.smooth(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees), col = "black", lwd = 4), error = function(e){e})
-	
-	for (c in 1 : bart_machine$num_cores){
-		points((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]], col = COLORS[c])
-		tryCatch(lines(loess.smooth((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]]), col = COLORS[c], lwd = 4), error = function(e){e})
-	}	
-	
+	p
 }
 
 ##private function for getting the MH acceptance proportions by core
@@ -261,6 +378,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		in_sample = FALSE
 	}
 	
+	plot_obj = NULL
 	if (credible_intervals){
 		credible_intervals = calc_credible_intervals(bart_machine, Xtest, interval_confidence_level)
 		ci_a = credible_intervals[, 1]
@@ -268,21 +386,47 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		y_in_ppi = ytest >= ci_a & ytest <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
-		plot(ytest, y_hat, 
-			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Cred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
-			xlab = paste("Actual Values", sep = ""), 
-			ylab = "Fitted Values", 
-			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
-			ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
-			cex = 0)
-		#draw PPI's
-		for (i in 1 : bart_machine$n){
-			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "gray54", lwd = 0.6)	
-		}
-		#draw green dots or red dots depending upon inclusion in the PPI
-		for (i in 1 : bart_machine$n){
-			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkblue", "red"), cex = 0.6, pch = ifelse(y_in_ppi[i], 16, 4))	
-		}		
+		plot_title = paste(
+			ifelse(in_sample, "In-Sample", "Out-of-Sample"),
+			" Fitted vs. Actual Values\nwith ",
+			round(interval_confidence_level * 100),
+			"% Cred. Int.'s (",
+			round(prop_ys_in_ppi * 100, 2),
+			"% coverage)",
+			sep = ""
+		)
+		min_val = min(min(ytest), min(y_hat))
+		max_val = max(max(ytest), max(y_hat))
+		plot_df = data.frame(
+			actual = ytest,
+			fitted = y_hat,
+			lower = ci_a,
+			upper = ci_b,
+			in_interval = factor(y_in_ppi, levels = c(TRUE, FALSE))
+		)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = actual, y = fitted)) +
+			ggplot2::geom_segment(
+				ggplot2::aes(xend = actual, y = lower, yend = upper),
+				color = "gray54",
+				linewidth = 0.3
+			) +
+			ggplot2::geom_point(
+				ggplot2::aes(color = in_interval, shape = in_interval),
+				size = 1.6
+			) +
+			ggplot2::scale_color_manual(values = c("TRUE" = "darkblue", "FALSE" = "red")) +
+			ggplot2::scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 4)) +
+			ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+			ggplot2::coord_cartesian(xlim = c(min_val, max_val), ylim = c(min_val, max_val)) +
+			ggplot2::labs(
+				title = plot_title,
+				x = "Actual Values",
+				y = "Fitted Values",
+				color = "In Interval",
+				shape = "In Interval"
+			)
+		print(p)
+		plot_obj = p
 	} else if (prediction_intervals){
 		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)$interval
 		ci_a = prediction_intervals[, 1]
@@ -290,31 +434,64 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		y_in_ppi = ytest >= ci_a & ytest <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
-		plot(ytest, y_hat, 
-				main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
-				xlab = paste("Actual Values", sep = ""), 
-				ylab = "Fitted Values", 
-				xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
-				ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
-				cex = 0)
-		#draw PPI's
-		for (i in 1 : bart_machine$n){
-			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "gray54", lwd = 0.6)	
-		}
-		#draw green dots or red dots depending upon inclusion in the PPI
-		for (i in 1 : bart_machine$n){
-			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkblue", "red"), cex = 0.6, pch = ifelse(y_in_ppi[i], 16, 4))
-		}		
+		plot_title = paste(
+			ifelse(in_sample, "In-Sample", "Out-of-Sample"),
+			" Fitted vs. Actual Values\nwith ",
+			round(interval_confidence_level * 100),
+			"% Pred. Int.'s (",
+			round(prop_ys_in_ppi * 100, 2),
+			"% coverage)",
+			sep = ""
+		)
+		min_val = min(min(ytest), min(y_hat))
+		max_val = max(max(ytest), max(y_hat))
+		plot_df = data.frame(
+			actual = ytest,
+			fitted = y_hat,
+			lower = ci_a,
+			upper = ci_b,
+			in_interval = factor(y_in_ppi, levels = c(TRUE, FALSE))
+		)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = actual, y = fitted)) +
+			ggplot2::geom_segment(
+				ggplot2::aes(xend = actual, y = lower, yend = upper),
+				color = "gray54",
+				linewidth = 0.3
+			) +
+			ggplot2::geom_point(
+				ggplot2::aes(color = in_interval, shape = in_interval),
+				size = 1.6
+			) +
+			ggplot2::scale_color_manual(values = c("TRUE" = "darkblue", "FALSE" = "red")) +
+			ggplot2::scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 4)) +
+			ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+			ggplot2::coord_cartesian(xlim = c(min_val, max_val), ylim = c(min_val, max_val)) +
+			ggplot2::labs(
+				title = plot_title,
+				x = "Actual Values",
+				y = "Fitted Values",
+				color = "In Interval",
+				shape = "In Interval"
+			)
+		print(p)
+		plot_obj = p
 	} else {
-		plot(ytest, y_hat, 
-			main = "Fitted vs. Actual Values", 
-			xlab = "Actual Values", 
-			ylab = "Fitted Values", 
-			col = "blue", 
-			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
-			ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),)
+		min_val = min(min(ytest), min(y_hat))
+		max_val = max(max(ytest), max(y_hat))
+		plot_df = data.frame(actual = ytest, fitted = y_hat)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = actual, y = fitted)) +
+			ggplot2::geom_point(color = "blue") +
+			ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+			ggplot2::coord_cartesian(xlim = c(min_val, max_val), ylim = c(min_val, max_val)) +
+			ggplot2::labs(
+				title = "Fitted vs. Actual Values",
+				x = "Actual Values",
+				y = "Fitted Values"
+			)
+		print(p)
+		plot_obj = p
 	}
-	abline(a = 0, b = 1, lty = 2)	
+	invisible(plot_obj)
 }
 
 ##get sigsqs and plot a histogram, if desired
@@ -379,20 +556,37 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 
 	  ppi_a = quantile(var_est_to_plot, (.5 - plot_CI/2))
 	  ppi_b = quantile(var_est_to_plot, (.5 + plot_CI/2))
-	  hist(var_est_to_plot, 
-	       br = 100, 
-	       main = paste("Histogram of ", ifelse(plot_sigma ==T, "Sigmas", "Sigma^2s"),  " After Burn-in", sep = ""), 
-	       xlab = paste("Avg = ", round(mean(var_est_to_plot, na.rm = T), 2), ", " , 100*plot_CI, "% Credible Interval = [", round(ppi_a, 2), ", ", round(ppi_b, 2), "]", sep = ""))
-	  abline(v = mean(var_est_to_plot, na.rm = T), col = "blue")
-	  abline(v = ppi_a, col = "red")
-	  abline(v = ppi_b, col = "red")
+	  plot_df = data.frame(var_est = var_est_to_plot)
+	  plot_title = paste("Histogram of ", ifelse(plot_sigma ==T, "Sigmas", "Sigma^2s"),  " After Burn-in", sep = "")
+	  plot_xlab = paste(
+	  	"Avg = ",
+	  	round(mean(var_est_to_plot, na.rm = TRUE), 2),
+	  	", ",
+	  	100 * plot_CI,
+	  	"% Credible Interval = [",
+	  	round(ppi_a, 2),
+	  	", ",
+	  	round(ppi_b, 2),
+	  	"]",
+	  	sep = ""
+	  )
+	  p = ggplot2::ggplot(plot_df, ggplot2::aes(x = var_est)) +
+	  	ggplot2::geom_histogram(bins = 100, fill = "gray70", color = "white") +
+	  	ggplot2::geom_vline(xintercept = mean(var_est_to_plot, na.rm = TRUE), color = "blue") +
+	  	ggplot2::geom_vline(xintercept = c(ppi_a, ppi_b), color = "red") +
+	  	ggplot2::labs(title = plot_title, x = plot_xlab, y = "Count")
+	  print(p)
 	}
   
 	if(after_burn_in == T){
-    return(sigsqs_after_burnin)
+    sigsqs_out = sigsqs_after_burnin
 	}else{
-    return(sigsqs)
+    sigsqs_out = sigsqs
 	}
+	if (plot_hist){
+		attr(sigsqs_out, "plot") = p
+	}
+	return(sigsqs_out)
 }
 
 #private function for plotting convergence diagnostics for sigma^2
@@ -411,26 +605,34 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	#first look at sigsqs
 	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
 	avg_sigsqs_after_burn_in = mean(sigsqs_after_burnin, na.rm = TRUE)
-	
-	plot(sigsqs, 
-		main = paste("Sigsq Estimates over MCMC Iteration"), 
-		xlab = "MCMC Iteration (green lines: after burn-in 95% CI)", 
-		ylab = paste("Sigsq by MCMC Iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
-		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
-		pch = ".", 
-		cex = 3,
-		col = "gray")
-	points(sigsqs, pch = ".", col = "red")
+
 	ppi_sigsqs = quantile(sigsqs[num_burn_in : length(sigsqs)], c(.025, .975))
-	abline(a = ppi_sigsqs[1], b = 0, col = "darkgreen")
-	abline(a = ppi_sigsqs[2], b = 0, col = "darkgreen")
-	abline(a = avg_sigsqs_after_burn_in, b = 0, col = "blue")
-	abline(v = num_burn_in, col = "gray")
+	plot_df = data.frame(
+		iter = seq_along(sigsqs),
+		sigsq = sigsqs
+	)
+	y_limits = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99))
+	
+	p = ggplot2::ggplot(plot_df, ggplot2::aes(x = iter, y = sigsq)) +
+		ggplot2::geom_point(color = "gray70", alpha = 0.5, size = 0.6) +
+		ggplot2::geom_point(color = "red", alpha = 0.4, size = 0.6) +
+		ggplot2::geom_hline(yintercept = ppi_sigsqs, color = "darkgreen") +
+		ggplot2::geom_hline(yintercept = avg_sigsqs_after_burn_in, color = "blue") +
+		ggplot2::geom_vline(xintercept = num_burn_in, color = "gray") +
+		ggplot2::coord_cartesian(ylim = y_limits) +
+		ggplot2::labs(
+			title = "Sigsq Estimates over MCMC Iteration",
+			x = "MCMC Iteration (green lines: after burn-in 95% CI)",
+			y = paste("Sigsq by MCMC Iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3))
+		)
+	
 	if (bart_machine$num_cores > 1){
-		for (c in 2 : bart_machine$num_cores){
-			abline(v = num_burn_in + (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
-		}		
+		core_lines = num_burn_in + (1 : (bart_machine$num_cores - 1)) *
+			bart_machine$num_iterations_after_burn_in / bart_machine$num_cores
+		p = p + ggplot2::geom_vline(xintercept = core_lines, color = "gray")
 	}
+	
+	p
 }
 
 ##function for investigating variable inclusion proportions
@@ -518,29 +720,41 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	avg_var_props = avg_var_props[avg_var_props_sorted_indices][1 : num_var_plot]
 	sd_var_props = sd_var_props[avg_var_props_sorted_indices][1 : num_var_plot]		
 	
+	plot_obj = NULL
 	if (plot){
-		par(mar = c(bottom_margin, 6, 3, 0))
 		if (is.na(sd_var_props[1])){
 			moe = 0
 		} else {
 			moe = 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		}
-		bars = barplot(avg_var_props, 
-			names.arg = names(avg_var_props), 
-			las = 2, 
-#			xlab = "Predictor",
-			ylab = "Inclusion Proportion", 
-#			main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates by", ifelse(type == "splits", "Number of Variable Splits", "Number of Trees")),
-			col = "gray",#rgb(0.39, 0.39, 0.59),
-			ylim = c(0, max(avg_var_props + moe))
-		)
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
-		segments(bars, avg_var_props, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
-		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)
-		par(mar = c(5.1, 4.1, 4.1, 2.1))
-	}	
-	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
+		plot_df = data.frame(
+			variable = factor(names(avg_var_props), levels = names(avg_var_props)),
+			value = as.numeric(avg_var_props),
+			conf_lower = as.numeric(conf_lower),
+			conf_upper = as.numeric(conf_upper)
+		)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = variable, y = value)) +
+			ggplot2::geom_col(fill = "gray") +
+			ggplot2::labs(y = "Inclusion Proportion", x = NULL) +
+			ggplot2::coord_cartesian(ylim = c(0, max(avg_var_props + moe))) +
+			ggplot2::theme(
+				axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1),
+				plot.margin = ggplot2::margin(t = 5.5, r = 5.5, b = bottom_margin, l = 5.5)
+			)
+		if (!is.na(sd_var_props[1])){
+			p = p + ggplot2::geom_errorbar(
+				ggplot2::aes(ymin = conf_lower, ymax = conf_upper),
+				color = rgb(0.59, 0.39, 0.39),
+				width = 0.2,
+				linewidth = 0.6
+			)
+		}
+		print(p)
+		plot_obj = p
+	}
+	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props, plot = plot_obj))	
 }
 
 ##user function calling private plotting methods
@@ -588,34 +802,48 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 #' }
 plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
   check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-  oldpar <- par(no.readonly = TRUE)   # code line i
-  on.exit(par(oldpar))            	# code line i + 1
-  
-  if(length(plots) > 2){
-    par(mfrow = c(2, 2))	  
-	} else if (length(plots) == 2){
-	  par(mfrow = c(1, 2))
-	} else {
-	  par(mfrow = c(1, 1))
-	}    
-
+  plot_list = list()
   if ("sigsqs" %in% plots){
     if (bart_machine$pred_type == "regression"){
-      plot_sigsqs_convergence_diagnostics(bart_machine)
+      plot_list = c(plot_list, list(plot_sigsqs_convergence_diagnostics(bart_machine)))
     }
   }
 	if ("mh_acceptance" %in% plots){
-	  plot_mh_acceptance_reject(bart_machine)
+	  plot_list = c(plot_list, list(plot_mh_acceptance_reject(bart_machine)))
 	}
 	if ("num_nodes" %in% plots){
-	  plot_tree_num_nodes(bart_machine)
+	  plot_list = c(plot_list, list(plot_tree_num_nodes(bart_machine)))
 	}
 	if ("tree_depths" %in% plots){
-	  plot_tree_depths(bart_machine)
+	  plot_list = c(plot_list, list(plot_tree_depths(bart_machine)))
 	}
-	oldpar <- par(no.readonly = TRUE)   # code line i
-	on.exit(par(oldpar))            	# code line i + 1
-	par(mfrow = c(1, 1))
+	num_plots = length(plot_list)
+	if (num_plots == 0){
+		return(invisible(list()))
+	}
+	if (num_plots == 1){
+		print(plot_list[[1]])
+		return(invisible(plot_list))
+	}
+	if (num_plots <= 2){
+		num_cols = 2
+		num_rows = 1
+	} else {
+		num_cols = 2
+		num_rows = 2
+	}
+	grid::grid.newpage()
+	grid::pushViewport(grid::viewport(layout = grid::grid.layout(num_rows, num_cols)))
+	for (i in seq_len(num_plots)){
+		row_idx = ceiling(i / num_cols)
+		col_idx = i - (row_idx - 1) * num_cols
+		suppressMessages(print(
+			plot_list[[i]],
+			vp = grid::viewport(layout.pos.row = row_idx, layout.pos.col = col_idx)
+		))
+	}
+	grid::popViewport()
+	invisible(plot_list)
 }
 
 ##private function
@@ -766,33 +994,49 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	} else {
 		ylim_bottom = cut_bottom * min(avg_counts)
 	}
+	plot_obj = NULL
 	if (plot){
 		#now create the bar plot
-		par(mar = c(bottom_margin, 6, 3, 0))
 		if (is.na(sd_counts[1])){
 			moe = 0
 		} else {
 			moe = 1.96 * sd_counts / sqrt(num_replicates_for_avg)
 		}
-		bars = barplot(avg_counts, 
-			names.arg = names(avg_counts), 
-			las = 2, 
-			ylab = "Relative Importance", 
-			col = "gray",#rgb(0.39, 0.39, 0.59),
-			ylim = c(ylim_bottom, max(avg_counts + moe)),
-#			main = paste("Interactions in bartMachine Model Averaged over", num_replicates_for_avg, "Replicates"),
-			xpd = FALSE #clips the bars outside of the display region (why is this not a default setting?)
+		conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		plot_df = data.frame(
+			interaction = factor(names(avg_counts), levels = names(avg_counts)),
+			value = as.numeric(avg_counts),
+			conf_lower = as.numeric(conf_lower),
+			conf_upper = as.numeric(conf_upper)
 		)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = interaction, y = value)) +
+			ggplot2::geom_col(fill = "gray") +
+			ggplot2::labs(y = "Relative Importance", x = NULL) +
+			ggplot2::coord_cartesian(ylim = c(ylim_bottom, max(avg_counts + moe))) +
+			ggplot2::theme(
+				axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1),
+				plot.margin = ggplot2::margin(t = 5.5, r = 5.5, b = bottom_margin, l = 5.5)
+			)
 		if (!is.na(sd_counts[1])){
-			conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-			conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-			segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
-			segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)			
+			p = p + ggplot2::geom_errorbar(
+				ggplot2::aes(ymin = conf_lower, ymax = conf_upper),
+				color = rgb(0.59, 0.39, 0.39),
+				width = 0.2,
+				linewidth = 0.6
+			)
 		}
-		par(mar = c(5.1, 4.1, 4.1, 2.1))		
+		print(p)
+		plot_obj = p
 	}
 		
-	invisible(list(interaction_counts = interaction_counts, interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd, interaction_counts_avg_and_sd_long = interaction_counts_avg_and_sd_long))
+	invisible(list(
+		interaction_counts = interaction_counts,
+		interaction_counts_avg = interaction_counts_avg,
+		interaction_counts_sd = interaction_counts_sd,
+		interaction_counts_avg_and_sd_long = interaction_counts_avg_and_sd_long,
+		plot = plot_obj
+	))
 }
 
 ##partial dependence plot
@@ -927,16 +1171,27 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	
 	var_name = ifelse(class(j) == "character", j, bart_machine$training_data_features[j])
     ylab_name = ifelse(bart_machine$pred_type == "classification", "Partial Effect (Probits)", "Partial Effect")
-	plot(x_j_quants, bart_avg_predictions_by_quantile, 
-			type = "o", 
-			main = "Partial Dependence Plot",
-			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
-			ylab = ylab_name,
-			xlab = paste(var_name, "plotted at specified quantiles"))
-	polygon(c(x_j_quants, rev(x_j_quants)), c(bart_avg_predictions_upper, rev(bart_avg_predictions_lower)), col = "gray87", border = NA)
-	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue", lwd = 1)
-	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue", lwd = 1)
-	lines(x_j_quants, bart_avg_predictions_by_quantile, type = "o", lwd = 2)
+	pd_df = data.frame(
+		quantile = x_j_quants,
+		avg = bart_avg_predictions_by_quantile,
+		lower = bart_avg_predictions_lower,
+		upper = bart_avg_predictions_upper
+	)
+	y_limits = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper),
+		max(bart_avg_predictions_lower, bart_avg_predictions_upper))
+	p = ggplot2::ggplot(pd_df, ggplot2::aes(x = quantile, y = avg)) +
+		ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = "gray87") +
+		ggplot2::geom_line(color = "blue", ggplot2::aes(y = lower)) +
+		ggplot2::geom_line(color = "blue", ggplot2::aes(y = upper)) +
+		ggplot2::geom_line(linewidth = 1) +
+		ggplot2::geom_point() +
+		ggplot2::coord_cartesian(ylim = y_limits) +
+		ggplot2::labs(
+			title = "Partial Dependence Plot",
+			y = ylab_name,
+			x = paste(var_name, "plotted at specified quantiles")
+		)
+	print(p)
 	
 	invisible(list(
 		x_j_quants = x_j_quants, 
@@ -944,7 +1199,8 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile, 
 		bart_avg_predictions_lower = bart_avg_predictions_lower,
 		bart_avg_predictions_upper = bart_avg_predictions_upper,
-		prop_data = prop_data
+		prop_data = prop_data,
+		plot = p
 	))
 }
 
@@ -1020,25 +1276,51 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 	}
 	cat("\n")
 	
-	rmse_means = colMeans(rmses)
+	rmse_means = colMeans(rmses, na.rm = TRUE)
 
 	if (plot){ ##plotting
-		rmse_sds = apply(rmses, 2, sd)
+		if (num_replicates > 1){
+			rmse_sds = apply(rmses, 2, sd)
+		} else {
+			rmse_sds = rep(0, length(tree_list))
+		}
 		y_mins = rmse_means - 2 * rmse_sds
 		y_maxs = rmse_means + 2 * rmse_sds
-		plot(tree_list, rmse_means, 
-			type = "o", 
-			xlab = "Number of Trees", 
-			ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE"), 
-			main = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE by Number of Trees"), 
-			ylim = c(min(y_mins), max(y_maxs)), ...)
-		if (num_replicates > 1){
-			for (t in 1 : length(tree_list)){
-				lowers = rmse_means[t] - 1.96 * rmse_sds[t] / sqrt(num_replicates)
-				uppers = rmse_means[t] + 1.96 * rmse_sds[t] / sqrt(num_replicates)
-				segments(tree_list[t], lowers, tree_list[t], uppers, col = "grey", lwd = 0.1)
-			}
+		plot_df = data.frame(
+			num_trees = tree_list,
+			rmse = rmse_means,
+			lower = rmse_means - 1.96 * rmse_sds / sqrt(num_replicates),
+			upper = rmse_means + 1.96 * rmse_sds / sqrt(num_replicates)
+		)
+		plot_df = plot_df[is.finite(plot_df$rmse), , drop = FALSE]
+		finite_vals = c(plot_df$rmse, plot_df$lower, plot_df$upper)
+		finite_vals = finite_vals[is.finite(finite_vals)]
+		if (length(finite_vals) == 0){
+			warning("RMSE estimates are not finite; skipping plot.")
+			return(invisible(rmse_means))
 		}
+		y_limits = range(finite_vals)
+		p = ggplot2::ggplot(plot_df, ggplot2::aes(x = num_trees, y = rmse)) +
+			ggplot2::geom_line() +
+			ggplot2::geom_point() +
+			ggplot2::coord_cartesian(ylim = y_limits) +
+			ggplot2::labs(
+				title = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE by Number of Trees"),
+				x = "Number of Trees",
+				y = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE")
+			)
+		if (num_replicates > 1){
+			p = p + ggplot2::geom_errorbar(
+				ggplot2::aes(ymin = lower, ymax = upper),
+				color = "grey",
+				width = 0.2,
+				linewidth = 0.3
+			)
+		}
+		print(p)
+	}
+	if (plot){
+		attr(rmse_means, "plot") = p
 	}
 	invisible(rmse_means)
 }

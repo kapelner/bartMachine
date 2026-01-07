@@ -1,3 +1,6 @@
+v1.3.4.4
+* exported functions use ggplot2 for graphics instead of legacy base R graphics
+
 v1.3.4.3
 * roxygen documentation
 * examples in documentation
