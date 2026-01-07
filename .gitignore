@@ -17,6 +17,7 @@
 *.iso
 *.rar
 *.tar
+bartMachine_*.tar.gz
 
 # Logs and databases #
 ######################

@@ -1,4 +1,34 @@
 
+#' Dummify Design Matrix
+#'
+#' @description
+#' Create a data frame with factors converted to dummies.
+#'
+#' @details
+#' The column names of the dummy variables are given by the ``FactorName_LevelName'' and are augmented to the end of the design matrix. See the example below.
+#' @param data Data frame to be dummified.
+#'
+#' @return
+#' Returns a data frame with factors converted to dummy indicator variables.
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' BART handles dummification internally. This function is provided as a utility function.
+#'
+#' @examples
+#' \dontrun{
+#' #generate data
+#' set.seed(11)
+#' x1 = rnorm(20)
+#' x2 = as.factor(ifelse(x1 > 0, "A", "B"))
+#' x3 = runif(20)
+#' X = data.frame(x1,x2,x3)
+#' #dummify data
+#' X_dummified = dummify_data(X)
+#' print(X_dummified)
+#' }
 dummify_data = function(data){
 	as.data.frame(pre_process_training_data(data)$data)
 }

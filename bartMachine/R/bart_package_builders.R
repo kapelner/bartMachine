@@ -1,6 +1,7 @@
 BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give without throwing an error or crashing
 BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
+#' @rdname bartMachine
 ##build a BART model
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
@@ -560,6 +561,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 }
 
 #build a BART-cv model
+#' @rdname bartMachineCV
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
@@ -726,6 +728,28 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 	X_with_missing
 }
 
+#' Destroy BART Model (deprecated --- do not use!)
+#'
+#' @description
+#' A deprecated function that previously was responsible for cleaning up the RAM
+#' associated with a BART model. This is now handled natively by R's garbage collection.
+#'
+#' @details
+#' Removing a ``bart_machine'' object from \code{R} previously did not free heap space from Java.
+#' Since BART objects can consume a large amount of RAM, it is important to remove
+#' these objects by calling this function if they are no longer needed or many BART
+#' objects are being created. This operation is now taken care of by R's garbage collection.
+#' This function is deprecated and should not be used. However, running it is harmless.
+#' @param bart_machine deprecated --- do not use!
+#'
+#' @return
+#' None.
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @examples
+#' ##None
 destroy_bart_machine = function(bart_machine){
 	warning("the method \"destroy_bart_machine\" does not do anything anymore")
 }

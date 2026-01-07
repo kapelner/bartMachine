@@ -1,5 +1,7 @@
 \documentclass[article,nojss]{jss}
-\usepackage{amsmath,amssymb,enumerate,subcaption,algorithm,algorithmicx,algpseudocode,thumbpdf,lmodern}
+\pdfcompresslevel=9
+\pdfobjcompresslevel=3
+\usepackage{amsmath,amssymb,enumerate,subcaption,thumbpdf,lmodern}
 \graphicspath{{Figures/}}
 
 \author{Adam Kapelner\\Queens College,\\City University of New York \And 

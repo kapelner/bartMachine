@@ -1,4 +1,56 @@
 ##performs out-of-sample error estimation for a BART model
+#' Estimate Out-of-sample Error with K-fold Cross validation
+#'
+#' @description
+#' Builds a BART model using a specified set of arguments to \code{build_bart_machine} and estimates the out-of-sample performance by using k-fold cross validation.
+#'
+#' @details
+#' For each fold, a new BART model is trained (using the same set of arguments) and its performance is evaluated on the holdout piece of that fold.
+#' @param X Data frame of predictors. Factors are automatically converted to dummies internally.
+#' @param y Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
+#' @param k_folds Number of folds to cross-validate over. This argument is ignored if \code{folds_vec} is non-null.
+#' @param folds_vec An integer vector of indices specifying which fold each observation belongs to.
+#' @param verbose Prints information about progress of the algorithm to the screen.
+#' @param \dots Additional arguments to be passed to \code{build_bart_machine}.
+#'
+#' @return
+#' For regression models, a list with the following components is returned:
+#'   \item{y_hat}{Predictions for the observations computed on the fold for which the observation was omitted from the training set.}
+#'   \item{L1_err}{Aggregate L1 error across the folds.}
+#'   \item{L2_err}{Aggregate L1 error across the folds.}
+#'   \item{rmse}{Aggregate RMSE across the folds.}
+#'   \item{folds}{Vector of indices specifying which fold each observation belonged to.}
+#' 
+#' For classification models, a list with the following components is returned:
+#' 
+#'   \item{y_hat}{Class predictions for the observations computed on the fold for which the observation was omitted from the training set.}
+#'     \item{p_hat}{Probability estimates for the observations computed on the fold for which the observation was omitted from the training set.}
+#'   \item{confusion_matrix}{Aggregate confusion matrix across the folds.}
+#'     \item{misclassification_error}{Total misclassification error across the folds.}
+#'     \item{folds}{Vector of indices specifying which fold each observation belonged to.}
+#'
+#' @seealso
+#' \code{\link{bartMachine}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 5
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' #evaluate default BART on 5 folds
+#' k_fold_val = k_fold_cv(X, y)
+#' print(k_fold_val$rmse)
+#' }
 k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	#we cannot afford the time sink of serialization during the grid search, so shut it off manually
 	args = list(...)
@@ -107,4 +159,3 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	}
 	
 }
-

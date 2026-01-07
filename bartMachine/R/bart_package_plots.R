@@ -1,5 +1,36 @@
 
 ##check BART error assumptions via plot
+#' Check BART Error Assumptions
+#'
+#' @description
+#' Diagnostic tools to assess whether the errors of the BART model for regression are normally distributed and homoskedastic, as assumed by the model. This function generates a normal quantile plot of the residuals with a Shapiro-Wilks p-value as well as a residual plot.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param hetero_plot If ``yhats'', the residuals are plotted against the fitted values of the response. If ``ys'', the residuals are plotted against the actual values of the response.
+#'
+#' @return
+#' None.
+#'
+#' @seealso
+#' \code{\link{plot_convergence_diagnostics}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 300
+#' p = 5
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y)
+#' 
+#' #check error diagnostics
+#' check_bart_error_assumptions(bart_machine)
+#' }
 check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -161,6 +192,47 @@ get_mh_acceptance_reject = function(bart_machine){
 }
 
 #plot y vs yhat for training or test data
+#' Plot the fitted Versus Actual Response
+#'
+#' @description
+#' Generates a plot actual versus fitted values and corresponding credible intervals or prediction intervals for the fitted values.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param Xtest Optional argument for test data. If included, BART computes fitted values at the rows of \code{Xtest}. Else, the fitted values from the training data are used.
+#' @param ytest Optional argument for test data. Vector of observed values corresponding to the rows of \code{Xtest} to be plotted against the predictions for the rows of \code{Xtest}.
+#' @param credible_intervals If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}. See \code{\link{calc_credible_intervals}} for details.
+#' @param prediction_intervals If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \code{\link{calc_prediction_intervals}} for details.
+#' @param interval_confidence_level Desired level of confidence for credible or prediction intervals.
+#'
+#' @return
+#' None.
+#'
+#' @seealso
+#' \code{\link{bart_machine_get_posterior}}, \code{\link{calc_credible_intervals}}, \code{\link{calc_prediction_intervals}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
+#'
+#' @examples
+#' \dontrun{
+#' #generate linear data
+#' set.seed(11)
+#' n  = 500
+#' p = 3
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 3*X[ ,1] + 2*X[ ,2] +X[ ,3] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y)
+#' 
+#' ##generate plot
+#' plot_y_vs_yhat(bart_machine)
+#' 
+#' #generate plot with prediction bands
+#' plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
+#' }
 plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -246,6 +318,40 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 }
 
 ##get sigsqs and plot a histogram, if desired
+#' Get Posterior Error Variance Estimates
+#'
+#' @description
+#' Returns the posterior estimates of the error variance from the Gibbs samples with an option to create a histogram of the posterior estimates of the error variance  with a credible interval overlaid.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param after_burn_in If TRUE, only the \eqn{\sigma^2} draws after the burn-in period are returned.
+#' @param plot_hist If TRUE, a histogram of the posterior \eqn{\sigma^2} draws is generated.
+#' @param plot_CI Confidence level for credible interval on histogram.
+#' @param plot_sigma If TRUE, plots \eqn{\sigma} instead of \eqn{\sigma^2}.
+#'
+#' @return
+#' Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).
+#'
+#' @seealso
+#' \code{\link{get_sigsqs}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 300
+#' p = 5
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y)
+#' 
+#' #get posterior sigma^2's after burn-in and plot
+#' sigsqs = get_sigsqs(bart_machine, plot_hist = TRUE)
+#' }
 get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -328,6 +434,62 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 }
 
 ##function for investigating variable inclusion proportions
+#' Explore Variable Inclusion Proportions in BART Model
+#'
+#' @description
+#' Explore the variable inclusion proportions for a BART model to learn about the relative influence of the different covariates. This function includes an option to generate a plot of the variable inclusion proportions.
+#'
+#' @details
+#' In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param type If ``splits'', then the proportion of times each variable is chosen for a splitting rule is computed. If ``trees'', then the proportion of times each variable appears in a tree is computed.
+#' @param plot If TRUE, a plot of the variable inclusion proportions is generated.
+#' @param num_replicates_for_avg The number of replicates of BART to be used to generate variable inclusion proportions. Averaging across multiple BART models improves stability of the estimates. See Bleich et al. (2013) for more details.
+#' @param num_trees_bottleneck Number of trees to be used in the sum-of-trees for computing the variable inclusion proportions. A small number of trees should be used to force the variables to compete for entry into the model. Chipman et al. (2010) recommend 20. See this reference for more details.
+#' @param num_var_plot Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
+#' @param bottom_margin A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
+#'   Higher values allow for more space if the covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
+#'
+#' @return
+#' Invisibly, returns a list with the following components:
+#' \item{avg_var_props}{The average variable inclusion proportions for each variable\cr (across \code{num_replicates_for_avg})}
+#' \item{sd_var_props}{The standard deviation of the variable inclusion proportions for each variable (across \code{num_replicates_for_avg})}
+#'
+#' @references
+#' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+#' with Bayesian Additive Regression Trees. Journal of Statistical
+#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#' 
+#' J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
+#' Additive Regression Trees. ArXiv e-prints, 2013.
+#' 
+#' HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+#' The Annals of Applied Statistics, 4(1): 266--298, 2010.
+#'
+#' @seealso
+#' \code{\link{interaction_investigator}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 10
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y, num_trees = 20)
+#' 
+#' #investigate variable inclusion proportions
+#' investigate_var_importance(bart_machine)
+#' }
 investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -382,6 +544,48 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 }
 
 ##user function calling private plotting methods
+#' Plot Convergence Diagnostics
+#'
+#' @description
+#' A suite of plots to assess convergence diagnostics and features of the BART model.
+#'
+#' @details
+#' The ``sigsqs'' option plots the posterior error variance estimates by the Gibbs sample number. This is a standard tool to assess convergence of MCMC algorithms. This option is not applicable to classification BART models.\cr
+#' The ``mh_acceptance'' option plots the proportion of Metropolis-Hastings steps accepted for each Gibbs sample (number accepted divided by number of trees).\cr
+#' The ``num_nodes'' option plots the average number of nodes across each tree in the sum-of-trees model by the Gibbs sample number (for post burn-in only). The blue line
+#' is the average number of nodes over all trees.\cr
+#' The ``tree_depths'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number (for post burn-in only). The blue line
+#' is the average number of nodes over all trees.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param plots The list of plots to be displayed. The four options are: "sigsqs", "mh_acceptance", "num_nodes", "tree_depths".
+#'
+#' @return
+#' None.
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' The ``sigsqs'' plot separates the burn-in \eqn{\sigma^2}'s for the first core by post burn-in \eqn{\sigma^2}'s estimates for all cores by grey vertical lines.
+#' The ``mh_acceptance'' plot separates burn-in from post-burn in by a grey vertical line. Post burn-in, the different core proportions plot in different colors.
+#' The ``num_nodes'' plot separates different core estimates by vertical lines (post burn-in only).
+#' The `tree_depths'' plot separates different core estimates by vertical lines (post burn-in only).
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 5
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y)
+#' 
+#' #plot convergence diagnostics
+#' plot_convergence_diagnostics(bart_machine)
+#' }
 plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
   check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
   oldpar <- par(no.readonly = TRUE)   # code line i
@@ -420,6 +624,67 @@ shapiro_wilk_p_val = function(vec){
 }
 
 ##function for investigating interactions
+#' Explore Pairwise Interactions in BART Model
+#'
+#' @description
+#' Explore the pairwise interaction counts for a BART model to learn about interactions fit by the model. This function includes an option to generate a plot of the pairwise interaction counts.
+#'
+#' @details
+#' An interaction between two variables is considered to occur whenever a path from any node of a tree to
+#' any of its terminal node contains splits using those two variables. See Kapelner and Bleich, 2013, Section 4.11.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param plot If TRUE, a plot of the pairwise interaction counts is generated.
+#' @param num_replicates_for_avg The number of replicates of BART to be used to generate pairwise interaction inclusion counts.
+#'   Averaging across multiple BART models improves stability of the estimates.
+#' @param num_trees_bottleneck Number of trees to be used in the sum-of-trees model for computing pairwise interactions counts.
+#'   A small number of trees should be used to force the variables to compete for entry into the model.
+#' @param num_var_plot Number of variables to be shown on the plot. If ``Inf,'' all variables are plotted (not recommended if
+#'   the number of predictors is large). Default is 50.
+#' @param cut_bottom A display parameter between 0 and 1 that controls where the y-axis is plotted. A value of 0 would begin the y-axis at 0; a value of 1 begins
+#'   the y-axis at the minimum of the average pairwise interaction inclusion count (the smallest bar in the bar plot). Values between 0 and 1 begin the
+#'   y-axis as a percentage of that minimum.
+#' @param bottom_margin A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
+#'   Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
+#'
+#' @return
+#' \item{interaction_counts}{For each of the \eqn{p \times p}{p times p} interactions, what is the count across all \code{num_replicates_for_avg}
+#' BART model replicates' post burn-in Gibbs samples in all trees.}
+#' 	\item{interaction_counts_avg}{For each of the \eqn{p \times p}{p times p} interactions, what is the average count across all \code{num_replicates_for_avg}
+#' BART model replicates' post burn-in Gibbs samples in all trees.}
+#' 	\item{interaction_counts_sd}{For each of the \eqn{p \times p}{p times p} interactions, what is the sd of the interaction counts across the \code{num_replicates_for_avg}
+#' BART models replicates.}
+#' 	\item{interaction_counts_avg_and_sd_long}{For each of the \eqn{p \times p}{p times p} interactions, what is the average and sd of the interaction counts across the \code{num_replicates_for_avg}
+#' BART models replicates. The output is organized as a convenient long table of class \code{data.frame}.}
+#'
+#' @references
+#' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+#' with Bayesian Additive Regression Trees. Journal of Statistical
+#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#'
+#' @seealso
+#' \code{\link{investigate_var_importance}}
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates (since multiple replicates were used).
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 10
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y, num_trees = 20)
+#' 
+#' #investigate interactions
+#' interaction_investigator(bart_machine)
+#' }
 interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -531,6 +796,77 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 }
 
 ##partial dependence plot
+#' Partial Dependence Plot
+#'
+#' @description
+#' Creates a partial dependence plot for a BART model for regression or classification.
+#'
+#' @details
+#' For regression models, the units on the y-axis are the same as the units of the response. For classification models, the units on the y-axis are probits.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param j The number or name of the column in the design matrix for which the partial dependence plot is to be created.
+#' @param levs Quantiles at which the partial dependence function should be evaluated. Linear extrapolation is performed between these points.
+#' @param lower_ci Lower limit for credible interval
+#' @param upper_ci Upper limit for credible interval
+#' @param prop_data The proportion of the training data to use. Default is 1. Use a lower proportion for speedier pd_plots. The closer to 1, the more resolution
+#'   the PD plot will have; the closer to 0, the lower but faster.
+#'
+#' @return
+#' Invisibly, returns a list with the following components:
+#' 
+#'   \item{x_j_quants}{Quantiles at which the partial dependence function is evaluated}
+#'   \item{bart_avg_predictions_by_quantile_by_gibbs}{All samples of \eqn{\hat{f}(x)}}
+#'   \item{bart_avg_predictions_by_quantile}{Posterior means for \eqn{\hat{f}(x)} at \code{x_j_quants}}
+#'   \item{bart_avg_predictions_lower}{Lower bound of the desired confidence of the credible interval of \eqn{\hat{f}(x)}}
+#'   \item{bart_avg_predictions_upper}{Upper bound of the desired confidence of the credible interval of \eqn{\hat{f}(x)}}
+#'   \item{prop_data}{The proportion of the training data to use as specified when this function was executed}
+#' %% ...
+#'
+#' @references
+#' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
+#' with Bayesian Additive Regression Trees. Journal of Statistical
+#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#' 
+#' HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+#' The Annals of Applied Statistics, 4(1): 266--298, 2010.
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
+#'
+#' @examples
+#' \dontrun{
+#' #Regression example
+#' 
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 5
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y)
+#' 
+#' #partial dependence plot for quadratic term
+#' pd_plot(bart_machine, "X3")
+#' 
+#' 
+#' #Classification example
+#' 
+#' #get data and only use 2 factors
+#' data(iris)
+#' iris2 = iris[51:150,]
+#' iris2$Species = factor(iris2$Species)
+#' 
+#' #build BART classification model
+#' bart_machine = bartMachine(iris2[ ,1:4], iris2$Species)
+#' 
+#' #partial dependence plot
+#' pd_plot(bart_machine, "Petal.Width")
+#' }
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	if (inherits(j, "integer")){
@@ -613,6 +949,43 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 }
 
 ##plot and invisibly return out-of-sample RMSE by the number of trees
+#' Assess the Out-of-sample RMSE by Number of Trees
+#'
+#' @description
+#' Assess out-of-sample RMSE of a BART model for varying numbers of trees in the sum-of-trees model.
+#' @param bart_machine An object of class ``bartMachine''.
+#' @param tree_list List of sizes for the sum-of-trees models.
+#' @param in_sample If TRUE, the RMSE is computed on in-sample data rather than an out-of-sample holdout.
+#' @param plot If TRUE, a plot of the RMSE by the number of trees in the ensemble is created.
+#' @param holdout_pctg Percentage of the data to be treated as an out-of-sample holdout.
+#' @param num_replicates Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).
+#' @param ... Other arguments to be passed to the plot function.
+#'
+#' @return
+#' Invisibly, returns the out-of-sample average RMSEs for each tree size.
+#'
+#' @author
+#' Adam Kapelner and Justin Bleich
+#'
+#' @note
+#' Since using a large number of trees can substantially increase computation time, this plot can help assess whether a smaller ensemble size is sufficient to obtain desirable predictive performance.
+#' This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
+#'
+#' @examples
+#' \dontrun{
+#' #generate Friedman data
+#' set.seed(11)
+#' n  = 200
+#' p = 10
+#' X = data.frame(matrix(runif(n * p), ncol = p))
+#' y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+#' 
+#' ##build BART regression model
+#' bart_machine = bartMachine(X, y, num_trees = 20)
+#' 
+#' #explore RMSE by number of trees
+#' rmse_by_num_trees(bart_machine)
+#' }
 rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, ...){
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
@@ -669,4 +1042,3 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 	}
 	invisible(rmse_means)
 }
-
