@@ -10,6 +10,7 @@ linearity_test(
   y = NULL,
   num_permutation_samples = 100,
   plot = TRUE,
+  verbose = TRUE,
   ...
 )
 }
@@ -24,6 +25,8 @@ Default is \code{NULL} which should be used if you pass in \code{lin_mode}.}
 \item{num_permutation_samples}{This function relies on \code{\link{cov_importance_test}} (see documentation there for details).}
 
 \item{plot}{This function relies on \code{\link{cov_importance_test}} (see documentation there for details).}
+
+\item{verbose}{If TRUE, prints progress and summary messages.}
 
 \item{...}{Additional parameters to be passed to \code{bartMachine}, the model constructed on the residuals of the linear model.}
 }

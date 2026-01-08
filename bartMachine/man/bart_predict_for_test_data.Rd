@@ -4,7 +4,13 @@
 \alias{bart_predict_for_test_data}
 \title{Predict for Test Data with Known Outcomes}
 \usage{
-bart_predict_for_test_data(bart_machine, Xtest, ytest, prob_rule_class = NULL)
+bart_predict_for_test_data(
+  bart_machine,
+  Xtest,
+  ytest,
+  prob_rule_class = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{bart_machine}{An object of class ``bartMachine''.}
@@ -14,6 +20,8 @@ bart_predict_for_test_data(bart_machine, Xtest, ytest, prob_rule_class = NULL)
 \item{ytest}{Actual outcomes for test data.}
 
 \item{prob_rule_class}{Threshold for classification.}
+
+\item{verbose}{If TRUE, prints prediction-related messages.}
 }
 \value{
 For regression models, a list with the following components is returned:

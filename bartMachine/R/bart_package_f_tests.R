@@ -24,6 +24,7 @@
 #'   the \code{num_permutations} BART models created with the \code{covariates} permuted. The plot also illustrates
 #'   the observed Pseudo-Rsq's / total misclassification error rate from the original training data and indicates
 #'   the test's p-value.
+#' @param verbose If TRUE, prints progress and summary messages.
 #'
 #' @return
 #' \item{permutation_samples_of_error}{A vector which records the error metric of the BART models with the covariates permuted (see details).}
@@ -63,7 +64,19 @@
 #' ## note the plot and the printed p-value
 #' 
 #' }
-cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE){
+#' @export
+cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_samples = 100, plot = TRUE, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  # covariates can be numeric (indices) or character (names) or NULL
+  assert(
+    check_numeric(covariates, null.ok = TRUE, min.len = 1, lower = 1),
+    check_character(covariates, null.ok = TRUE, min.len = 1),
+    combine = "or"
+  )
+  assert_int(num_permutation_samples, lower = 1)
+  assert_flag(plot)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	#be able to handle regular expressions to find the covariates
 	
@@ -81,14 +94,18 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 	} else {
 		title = paste("bartMachine test for importance of", length(covariates), "covariates", "\n")
 	}
-	cat(title)
+	if (verbose){
+		cat(title)
+	}
 	observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)
 		
 	permutation_samples_of_error = array(NA, num_permutation_samples)
 	for (nsim in 1 : num_permutation_samples){
-		cat(".")
-		if (nsim %% 50 == 0){
-			cat("\n")
+		if (verbose){
+			cat(".")
+			if (nsim %% 50 == 0){
+				cat("\n")
+			}
 		}	
 		#omnibus F-like test - just permute y (same as permuting ALL the columns of X and it's faster)
 		if (is.null(covariates)){
@@ -111,21 +128,45 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 		#record permutation result
 		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)	
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
   
 	##compute p-value
 	pval = ifelse(bart_machine$pred_type == "regression", sum(observed_error_estimate < permutation_samples_of_error), sum(observed_error_estimate > permutation_samples_of_error)) / (num_permutation_samples + 1)
 	
+	plot_obj = NULL
 	if (plot){
-		hist(permutation_samples_of_error, 
-				xlim = c(min(permutation_samples_of_error, 0.99 * observed_error_estimate), max(permutation_samples_of_error, 1.01 * observed_error_estimate)),
-				xlab = paste("permutation samples\n pval = ", round(pval, 3)),
-				br = num_permutation_samples / 10,
-				main = paste(title, "Null Samples of", ifelse(bart_machine$pred_type == "regression", "Pseudo-R^2's", "Misclassification Errors")))
-		abline(v = observed_error_estimate, col = "blue", lwd = 3)
+		x_min = min(c(permutation_samples_of_error, 0.99 * observed_error_estimate), na.rm = TRUE)
+		x_max = max(c(permutation_samples_of_error, 1.01 * observed_error_estimate), na.rm = TRUE)
+		bins = max(1, floor(num_permutation_samples / 10))
+		plot_df = data.frame(error = permutation_samples_of_error)
+		plot_obj = ggplot2::ggplot(plot_df, ggplot2::aes(x = error)) +
+			ggplot2::geom_histogram(bins = bins, fill = "gray70", color = "white") +
+			ggplot2::geom_vline(xintercept = observed_error_estimate, color = "blue", linewidth = 1) +
+			ggplot2::coord_cartesian(xlim = c(x_min, x_max)) +
+			ggplot2::labs(
+				title = paste(title, "Null Samples of", ifelse(bart_machine$pred_type == "regression", "Pseudo-R^2's", "Misclassification Errors")),
+				x = paste("permutation samples\n pval =", round(pval, 3)),
+				y = "count"
+			) +
+			ggplot2::theme_minimal()
+		if (verbose){
+			print(plot_obj)
+		}
 	}
-	cat("p_val = ", pval, "\n")
-	invisible(list(permutation_samples_of_error = permutation_samples_of_error, observed_error_estimate = observed_error_estimate, pval = pval))
+	if (verbose){
+		cat("p_val = ", pval, "\n")
+	}
+	result = list(
+		permutation_samples_of_error = permutation_samples_of_error,
+		observed_error_estimate = observed_error_estimate,
+		pval = pval
+	)
+	if (!is.null(plot_obj)){
+		attr(result, "plot") = plot_obj
+	}
+	invisible(result)
 }
 
 #' Test of Linearity
@@ -140,6 +181,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 #'   Default is \code{NULL} which should be used if you pass in \code{lin_mode}.
 #' @param num_permutation_samples This function relies on \code{\link{cov_importance_test}} (see documentation there for details).
 #' @param plot This function relies on \code{\link{cov_importance_test}} (see documentation there for details).
+#' @param verbose If TRUE, prints progress and summary messages.
 #' @param ... Additional parameters to be passed to \code{bartMachine}, the model constructed on the residuals of the linear model.
 #'
 #' @return
@@ -177,11 +219,22 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 #' ## note the plot and the printed p-value.. should be > 0.05
 #' 
 #' }
-linearity_test = function(lin_mod = NULL, X = NULL, y = NULL, num_permutation_samples = 100, plot = TRUE, ...){
+#' @export
+linearity_test = function(lin_mod = NULL, X = NULL, y = NULL, num_permutation_samples = 100, plot = TRUE, verbose = TRUE, ...){
+  assert_class(lin_mod, "lm", null.ok = TRUE)
+  assert_data_frame(X, null.ok = TRUE)
+  if (!is.null(y)) assert_atomic_vector(y)
+  assert_int(num_permutation_samples, lower = 1)
+  assert_flag(plot)
+  assert_flag(verbose)
+  if (is.null(lin_mod) && (is.null(X) || is.null(y))) {
+      stop("If lin_mod is not provided, both X and y must be provided.")
+  }
+
 	if (is.null(lin_mod)){
 		lin_mod = lm(y ~ as.matrix(X))
 	}
 	y_hat = predict(lin_mod, X)
-	bart_mod = bartMachine(X, y - y_hat, ...)
-	cov_importance_test(bart_mod, num_permutation_samples = num_permutation_samples, plot = plot)	
+	bart_mod = bartMachine(X, y - y_hat, verbose = verbose, ...)
+	cov_importance_test(bart_mod, num_permutation_samples = num_permutation_samples, plot = plot, verbose = verbose)	
 }

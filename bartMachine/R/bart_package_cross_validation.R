@@ -51,7 +51,15 @@
 #' k_fold_val = k_fold_cv(X, y)
 #' print(k_fold_val$rmse)
 #' }
+#' @export
 k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
+  # Validate arguments
+  assert_data_frame(X)
+  assert_atomic_vector(y)
+  assert_number(k_folds, lower = 2) # Inf is allowed as it is > 2, but wait assert_number(Inf) works.
+  assert_integerish(folds_vec, null.ok = TRUE)
+  assert_flag(verbose)
+
 	#we cannot afford the time sink of serialization during the grid search, so shut it off manually
 	args = list(...)
 	args$serialize = FALSE
@@ -129,7 +137,12 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 							y = training_data_k[, (p + 1)], 
 							run_in_sample = FALSE, 
 							verbose = verbose), args))
-		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p, drop = FALSE], test_data_k[, (p + 1)])
+		predict_obj = bart_predict_for_test_data(
+			bart_machine_cv,
+			test_data_k[, 1 : p, drop = FALSE],
+			test_data_k[, (p + 1)],
+			verbose = verbose
+		)
 		
 		#tabulate errors
 		if (pred_type == "regression"){

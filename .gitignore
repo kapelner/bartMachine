@@ -91,3 +91,7 @@ bartMachine/install_instructions.txt
 bartMachine/vignettes/bartMachine.pdf
 bartMachine/vignettes/bartMachine.tex
 bartMachine/inst/scripts/bartmachine_ggplot_tests.pdf
+.Rlib/
+bartMachine/tests/testthat/Rplots.pdf
+inst/benchmarks/results/*
+bartMachine/tests/testthat/*.png

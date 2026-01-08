@@ -2,6 +2,7 @@ BART_MAX_MEM_MB_DEFAULT = 1100 #1.1GB is the most a 32bit machine can give witho
 BART_NUM_CORES_DEFAULT = 1 #Stay conservative as a default
 
 #' @rdname bartMachine
+#' @export
 ##build a BART model
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
@@ -33,6 +34,39 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		serialize = FALSE,
 		seed = NULL,
 		verbose = TRUE){
+
+  # Validate arguments
+  assert_data_frame(X, null.ok = TRUE)
+  if (!is.null(y)) assert_atomic_vector(y)
+  assert_data_frame(Xy, null.ok = TRUE)
+  assert_int(num_trees, lower = 1)
+  assert_int(num_burn_in, lower = 0)
+  assert_int(num_iterations_after_burn_in, lower = 1)
+  assert_number(alpha, lower = 0, upper = 1)
+  assert_number(beta, lower = 0)
+  assert_number(k, lower = .Machine$double.eps)
+  assert_number(q, lower = .Machine$double.eps, upper = 1 - .Machine$double.eps)
+  assert_number(nu, lower = .Machine$double.eps)
+  assert_number(prob_rule_class, lower = 0, upper = 1)
+  assert_numeric(mh_prob_steps, len = 3, lower = .Machine$double.eps)
+  assert_flag(debug_log)
+  assert_flag(run_in_sample)
+  assert_choice(s_sq_y, c("mse", "var"))
+  assert_number(sig_sq_est, lower = .Machine$double.eps, null.ok = TRUE)
+  assert_flag(print_tree_illustrations)
+  assert_numeric(cov_prior_vec, lower = .Machine$double.eps, null.ok = TRUE)
+  assert_list(interaction_constraints, null.ok = TRUE)
+  assert_flag(use_missing_data)
+  assert_int(num_rand_samps_in_library, lower = 1)
+  assert_flag(use_missing_data_dummies_as_covars)
+  assert_flag(replace_missing_data_with_x_j_bar)
+  assert_flag(impute_missingness_with_rf_impute)
+  assert_flag(impute_missingness_with_x_j_bar_for_lm)
+  assert_flag(mem_cache_for_speed)
+  assert_flag(flush_indices_to_save_RAM)
+  assert_flag(serialize)
+  assert_int(seed, null.ok = TRUE)
+  assert_flag(verbose)
 
 	if (verbose){
 		cat("bartMachine initializing with", num_trees, "trees...\n")	
@@ -79,7 +113,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	y_levels = levels(y)
 	if (inherits(y, "numeric") || inherits(y, "integer")){ #if y is numeric, then it's a regression problem
 		if (inherits(y, "integer")){
-			cat("Warning: The response y is integer, bartMachine will run regression.\n")
+			if (verbose){
+				cat("Warning: The response y is integer, bartMachine will run regression.\n")
+			}
 		}
 		#java expects doubles, not ints, so we need to cast this now to avoid errors later
 		if (inherits(y, "integer")){
@@ -148,8 +184,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			predictor_colnums_with_missingness = names(which(colSums(is.na(X)) > 0))
 			
 			rf_imputations_for_missing = rfImpute(X, y)
-			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]
-			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
+			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing), drop = FALSE]
+			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness, drop = FALSE]
 		}
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
 		if (verbose){
@@ -250,7 +286,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	#set whether we want there to be tree illustrations
 	if (print_tree_illustrations){
-		cat("warning: printing tree illustrations is excruciatingly slow.\n")
+		if (verbose){
+			cat("warning: printing tree illustrations is excruciatingly slow.\n")
+		}
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 	
@@ -501,9 +539,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#Let's serialize the object if the user wishes
 	if (serialize){
-		cat("serializing in order to be saved for future R sessions...")
+		if (verbose){
+			cat("serializing in order to be saved for future R sessions...")
+		}
 		.jcache(bart_machine$java_bart_machine)
-		cat("done\n")
+		if (verbose){
+			cat("done\n")
+		}
 	}
 	
 	#use R's S3 object orientation
@@ -562,6 +604,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 
 #build a BART-cv model
 #' @rdname bartMachineCV
+#' @export
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
@@ -571,6 +614,17 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		verbose = TRUE,
 		...){
 	
+  # Validate arguments
+  assert_data_frame(X, null.ok = TRUE)
+  if (!is.null(y)) assert_atomic_vector(y)
+  assert_data_frame(Xy, null.ok = TRUE)
+  assert_integerish(num_tree_cvs, lower = 1, min.len = 1)
+  assert_numeric(k_cvs, lower = 0, min.len = 1)
+  assert_list(nu_q_cvs, null.ok = TRUE)
+  assert_count(k_folds, positive = TRUE)
+  assert_integerish(folds_vec, null.ok = TRUE)
+  assert_flag(verbose)
+
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give bartMachine a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (!is.null(X) && !is.null(y) && !is.null(Xy)){
@@ -697,7 +751,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	cv_stats = cv_stats[order(cv_stats[, "oos_error"]), ]
 	cv_stats[, 6] = (cv_stats[, 5] - cv_stats[1, 5]) / cv_stats[1, 5] * 100
 	bart_machine_cv$cv_stats = cv_stats
-  	bart_machine_cv$folds = folds_vec
+  bart_machine_cv$folds = folds_vec
 	bart_machine_cv
 }
 
@@ -726,30 +780,4 @@ imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_c
 		X_with_missing[, j] = NULL
 	}
 	X_with_missing
-}
-
-#' Destroy BART Model (deprecated --- do not use!)
-#'
-#' @description
-#' A deprecated function that previously was responsible for cleaning up the RAM
-#' associated with a BART model. This is now handled natively by R's garbage collection.
-#'
-#' @details
-#' Removing a ``bart_machine'' object from \code{R} previously did not free heap space from Java.
-#' Since BART objects can consume a large amount of RAM, it is important to remove
-#' these objects by calling this function if they are no longer needed or many BART
-#' objects are being created. This operation is now taken care of by R's garbage collection.
-#' This function is deprecated and should not be used. However, running it is harmless.
-#' @param bart_machine deprecated --- do not use!
-#'
-#' @return
-#' None.
-#'
-#' @author
-#' Adam Kapelner and Justin Bleich
-#'
-#' @examples
-#' ##None
-destroy_bart_machine = function(bart_machine){
-	warning("the method \"destroy_bart_machine\" does not do anything anymore")
 }

@@ -18,16 +18,39 @@
 #' bart_machine = bartMachine(X, y, flush_indices_to_save_RAM = FALSE)
 #' idx = node_prediction_training_data_indices(bart_machine)
 #' }
+#' @export
 node_prediction_training_data_indices = function(bart_machine, new_data = NULL){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data, null.ok = TRUE)
+
 	if (bart_machine$flush_indices_to_save_RAM){
 		stop("Node prediction training data indices cannot be computed if \"flush_indices_to_save_RAM\" was used to construct the BART model.")
 	}
 	
+	call_java <- function(arg){
+		res <- .jcall(
+			bart_machine$java_bart_machine,
+			"[[[[Z",
+			"getNodePredictionTrainingIndicies",
+			arg,
+			simplify = TRUE
+		)
+		if (is.null(res)){
+			stop(
+				"Java failed to produce node prediction training data indices. ",
+				"Ensure the model was built with flush_indices_to_save_RAM = FALSE ",
+				"and that the Java object is still valid.",
+				call. = FALSE
+			)
+		}
+		res
+	}
+
 	if (is.null(new_data)){
 		double_vec_null = .jcast(.jnull(), new.class = "[[D", check = FALSE, convert.array = FALSE)
-		.jcall(bart_machine$java_bart_machine, "[[[[Z", "getNodePredictionTrainingIndicies", double_vec_null, simplify = TRUE)
+		call_java(double_vec_null)
 	} else {
-		.jcall(bart_machine$java_bart_machine, "[[[[Z", "getNodePredictionTrainingIndicies", .jarray(new_data, dispatch = TRUE), simplify = TRUE)
+		call_java(.jarray(new_data, dispatch = TRUE))
 	}	
 }
 
@@ -97,7 +120,12 @@ node_prediction_training_data_indices = function(bart_machine, new_data = NULL){
 #'   geom_abline(slope = 1, intercept = 0)
 #' 
 #' }
+#' @export
 get_projection_weights = function(bart_machine, new_data = NULL, regression_kludge = FALSE){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data, null.ok = TRUE)
+  assert_flag(regression_kludge)
+
 	if (bart_machine$flush_indices_to_save_RAM){
 		stop("Node prediction training data indices cannot be computed if \"flush_indices_to_save_RAM\" was used to construct the BART model.")
 	}
@@ -157,7 +185,11 @@ BAD_FLAG_DOUBLE = -1.7976931348623157e+308
 #' raw_node_data = extract_raw_node_data(bart_mod)
 #' 
 #' }
+#' @export
 extract_raw_node_data = function(bart_machine, g = 1){
+  assert_class(bart_machine, "bartMachine")
+  assert_int(g, lower = 1)
+  
 	if (g < 1 | g > bart_machine$num_iterations_after_burn_in){
 		stop("g is the gibbs sample number i.e. it must be a natural number between 1 and the number of iterations after burn in")
 	}

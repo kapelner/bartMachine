@@ -128,6 +128,7 @@
 #' }
 #'
 #' @aliases build_bart_machine
+#' @export
 bartMachine = function(
 	X = NULL, 
 	y = NULL, 
@@ -161,8 +162,41 @@ bartMachine = function(
 	serialize = FALSE,
 	seed = NULL,
     verbose = TRUE
-	){
-	build_bart_machine(
+    	){
+  # Validate arguments
+  assert_data_frame(X, null.ok = TRUE)
+  if (!is.null(y)) assert_atomic_vector(y)
+  assert_data_frame(Xy, null.ok = TRUE)
+  assert_int(num_trees, lower = 1)
+  assert_int(num_burn_in, lower = 0)
+  assert_int(num_iterations_after_burn_in, lower = 1)
+  assert_number(alpha, lower = 0, upper = 1)
+  assert_number(beta, lower = 0)
+  assert_number(k, lower = .Machine$double.eps)
+  assert_number(q, lower = .Machine$double.eps, upper = 1 - .Machine$double.eps)
+  assert_number(nu, lower = .Machine$double.eps)
+  assert_number(prob_rule_class, lower = 0, upper = 1)
+  assert_numeric(mh_prob_steps, len = 3, lower = .Machine$double.eps)
+  assert_flag(debug_log)
+  assert_flag(run_in_sample)
+  assert_choice(s_sq_y, c("mse", "var"))
+  assert_number(sig_sq_est, lower = .Machine$double.eps, null.ok = TRUE)
+  assert_flag(print_tree_illustrations)
+  assert_numeric(cov_prior_vec, lower = .Machine$double.eps, null.ok = TRUE)
+  assert_list(interaction_constraints, null.ok = TRUE)
+  assert_flag(use_missing_data)
+  assert_int(num_rand_samps_in_library, lower = 1)
+  assert_flag(use_missing_data_dummies_as_covars)
+  assert_flag(replace_missing_data_with_x_j_bar)
+  assert_flag(impute_missingness_with_rf_impute)
+  assert_flag(impute_missingness_with_x_j_bar_for_lm)
+  assert_flag(mem_cache_for_speed)
+  assert_flag(flush_indices_to_save_RAM)
+  assert_flag(serialize)
+  assert_int(seed, null.ok = TRUE)
+  assert_flag(verbose)
+
+    	build_bart_machine(    
 			X = X, 
 			y = y, 
 			Xy = Xy, 
@@ -195,7 +229,7 @@ bartMachine = function(
 			serialize = serialize,
 			seed = seed,
 			verbose = verbose			
-	)
+	   )
 }
 
 
@@ -250,6 +284,7 @@ bartMachine = function(
 #' }
 #'
 #' @aliases build_bart_machine_cv
+#' @export
 bartMachineCV = function(X = NULL, y = NULL, Xy = NULL, 
    num_tree_cvs = c(50, 200),
    k_cvs = c(2, 3, 5),
@@ -257,7 +292,17 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
    k_folds = 5, 
    folds_vec = NULL,    
    verbose = FALSE, ...){
-  
+  # Validate arguments
+  assert_data_frame(X, null.ok = TRUE)
+  if (!is.null(y)) assert_atomic_vector(y)
+  assert_data_frame(Xy, null.ok = TRUE)
+  assert_integerish(num_tree_cvs, lower = 1, min.len = 1)
+  assert_numeric(k_cvs, lower = 0, min.len = 1)
+  assert_list(nu_q_cvs, null.ok = TRUE)
+  assert_count(k_folds, positive = TRUE)
+  assert_integerish(folds_vec, null.ok = TRUE)
+  assert_flag(verbose)
+
   	build_bart_machine_cv(X, y, Xy, 
 	   num_tree_cvs,
 	   k_cvs,

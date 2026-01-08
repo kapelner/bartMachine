@@ -29,7 +29,10 @@
 #' X_dummified = dummify_data(X)
 #' print(X_dummified)
 #' }
+#' @export
 dummify_data = function(data){
+  assert_data_frame(data)
+
 	as.data.frame(pre_process_training_data(data)$data)
 }
 
@@ -121,7 +124,13 @@ pre_process_new_data = function(new_data, bart_machine){
 	}
 	
 	#The new data features has to be a superset of the training data features, so pare it down even more
-	new_data_features_before = colnames(new_data)	
+	new_data_features_before = colnames(new_data)
+	missing_features = setdiff(training_data_features, new_data_features_before)
+	if (length(missing_features) > 0){
+		missing_matrix = matrix(0, nrow = n, ncol = length(missing_features))
+		colnames(missing_matrix) = missing_features
+		new_data = cbind(new_data, missing_matrix)
+	}
 	
 	new_data = new_data[1 : n, training_data_features, drop = FALSE]
 	

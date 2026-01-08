@@ -4,10 +4,12 @@
 \alias{summary.bartMachine}
 \title{Summarizes information about a \code{bartMachine} object.}
 \usage{
-\method{summary}{bartMachine}(object, ...)
+\method{summary}{bartMachine}(object, verbose = TRUE, ...)
 }
 \arguments{
 \item{object}{An object of class ``bartMachine''.}
+
+\item{verbose}{If TRUE, prints summary output.}
 
 \item{...}{Parameters that are ignored.}
 }

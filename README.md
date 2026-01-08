@@ -10,7 +10,7 @@ bartMachine
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
-Copyright (C) 2023
+Copyright (C) 2026
 Adam Kapelner  
 Department of Mathematics, Queens College, City University of New York 
 & 
@@ -23,17 +23,9 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 
 News from the Past Year
 ---------
-6/25/23
+1/7/26
 
-v1.3.4 released - better interaction investigator, convenient relabeling for classification
-
-2/27/23
-
-v1.3.3.1 released -- fixed bug in bartMachine constructor call that prevented local variables from being passed in.
-
-12/29/22
-
-v1.3.3 is released --- fastutil is no longer used and we have now downgraded back to trove losing the 2x speedup. I'm really sorry for the people who've used the package between Aug 25, 2022 - Dec 29, 2022 as there were probably bugs.
+v1.3.5 released - verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, benchmarks
 
 
 The Paper

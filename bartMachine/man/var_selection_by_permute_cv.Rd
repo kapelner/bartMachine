@@ -12,7 +12,8 @@ var_selection_by_permute_cv(
   num_permute_samples = 100,
   num_trees_for_permute = 20,
   alpha = 0.05,
-  num_trees_pred_cv = 50
+  num_trees_pred_cv = 50,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ var_selection_by_permute_cv(
 \item{alpha}{Cut-off level for the thresholds.}
 
 \item{num_trees_pred_cv}{Number of trees to use for prediction on the hold-out portion of each fold. Once variables have been selected using the training portion of each fold, a new model is built using only those variables with \code{num_trees_pred_cv} trees in the sum-of-trees model. Forecasts for the holdout sample are made using this model. A larger number of trees is recommended to exploit the full forecasting power of BART.}
+
+\item{verbose}{If TRUE, prints progress messages.}
 }
 \value{
 Returns a list with the following components:

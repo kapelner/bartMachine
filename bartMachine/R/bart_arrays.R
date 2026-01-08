@@ -35,7 +35,11 @@
 #' bart_machine = bartMachine(iris2[ ,1:4], iris2$Species)
 #' bart_machine_arr = bartMachineArr(bart_machine)
 #' }
+#' @export
 bartMachineArr = function(bart_machine, R = 10){
+  assert_class(bart_machine, "bartMachine")
+  assert_count(R, positive = TRUE)
+
 	arr = list()
 	arr[[1]] = bart_machine
 	for (i in 2 : R){
@@ -97,7 +101,11 @@ bartMachineArr = function(bart_machine, R = 10){
 #' ##make probability predictions on the training data
 #' p_hat = predict_bartMachineArr(bart_machine_arr, iris2[ ,1:4])
 #' }
+#' @export
 predict_bartMachineArr = function(object, new_data, ...){
+  assert_class(object, "bartMarchineArr")
+  assert_data_frame(new_data)
+
 	R = length(object)
 	n_star = nrow(new_data)
 	predicts = matrix(NA, nrow = n_star, ncol = R)

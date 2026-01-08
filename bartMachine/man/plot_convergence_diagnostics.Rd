@@ -6,13 +6,16 @@
 \usage{
 plot_convergence_diagnostics(
   bart_machine,
-  plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")
+  plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"),
+  verbose = TRUE
 )
 }
 \arguments{
 \item{bart_machine}{An object of class ``bartMachine''.}
 
 \item{plots}{The list of plots to be displayed. The four options are: "sigsqs", "mh_acceptance", "num_nodes", "tree_depths".}
+
+\item{verbose}{If TRUE, prints plots to the active device.}
 }
 \value{
 None.

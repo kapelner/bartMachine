@@ -4,11 +4,13 @@
 \alias{set_bart_machine_num_cores}
 \title{Set the Number of Cores for BART}
 \usage{
-set_bart_machine_num_cores(num_cores)
+set_bart_machine_num_cores(num_cores, verbose = TRUE)
 }
 \arguments{
 \item{num_cores}{Number of cores to use. If the number of cores is more than 1, setting the seed during model construction
 cannot be deterministic.}
+
+\item{verbose}{If TRUE, prints the updated core count.}
 }
 \value{
 None.

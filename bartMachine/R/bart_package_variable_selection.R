@@ -15,6 +15,7 @@
 #' @param num_var_plot Number of variables (in order of decreasing variable inclusion proportion) to be plotted.
 #' @param bottom_margin A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
 #'   Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
+#' @param verbose If TRUE, prints progress messages.
 #'
 #' @return
 #' Invisibly, returns a list with the following components:
@@ -63,23 +64,40 @@
 #' print(var_sel$important_vars_local_names)
 #' print(var_sel$important_vars_global_max_names)
 #' }
-var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){	
+#' @export
+var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10, verbose = TRUE){	
+  assert_class(bart_machine, "bartMachine")
+  assert_int(num_reps_for_avg, lower = 1)
+  assert_int(num_permute_samples, lower = 1)
+  assert_int(num_trees_for_permute, lower = 1)
+  assert_number(alpha, lower = 0, upper = 1)
+  assert_flag(plot)
+  assert_number(num_var_plot, lower = 1)
+  assert_number(bottom_margin, lower = 0)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
 	
-	cat("avg")
-	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute) ##get props from actual data
+	if (verbose){
+		cat("avg")
+	}
+	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute, verbose = verbose) ##get props from actual data
 	
 	#now sort from high to low
 	var_true_props_avg = sort(var_true_props_avg, decreasing = TRUE) ##sort props
 	
-	cat("null")
-	for (b in 1 : num_permute_samples){
-		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute) ##build null permutation distribution
+	if (verbose){
+		cat("null")
 	}
-	cat("\n")
+	for (b in 1 : num_permute_samples){
+		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute, verbose = verbose) ##build null permutation distribution
+	}
+	if (verbose){
+		cat("\n")
+	}
 	
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
@@ -101,42 +119,83 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
 	important_vars_simul_se_names = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se & var_true_props_avg > 0)])	
 	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-	oldpar <- par(no.readonly = TRUE)   # code line i
-	on.exit(par(oldpar))            	# code line i + 1
-	
 	if (plot){
-		par(mar = c(bottom_margin, 6, 3, 0))
-		if (num_var_plot == Inf | num_var_plot > bart_machine$p){
+		if (is.infinite(num_var_plot) || num_var_plot > bart_machine$p){
 			num_var_plot = bart_machine$p
 		}
-		par(mfrow = c(2, 1))
-		##pointwise plot
-    non_zero_idx = which(var_true_props_avg > 0)[1: min(num_var_plot, length(which(var_true_props_avg > 0)))]
-    plot_n = length(non_zero_idx)
-    if(length(non_zero_idx) < length(var_true_props_avg)) warning(paste(length(which(var_true_props_avg == 0)), "covariates with inclusion proportions of 0 omitted from plots."))
-    
-		plot(1 : plot_n, var_true_props_avg[non_zero_idx], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
-				main = "Local Procedure", ylab = "proportion included")
-		axis(1, at = 1 : plot_n, labels = names(var_true_props_avg[non_zero_idx]), las = 2)
-		for (j in non_zero_idx){
-			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] <= quantile(permute_mat[, j], 1 - alpha), 1, 16))
+		non_zero_idx = which(var_true_props_avg > 0)
+		if (length(non_zero_idx) < length(var_true_props_avg)) {
+			warning(paste(length(which(var_true_props_avg == 0)), "covariates with inclusion proportions of 0 omitted from plots."))
 		}
-		
-		sapply(non_zero_idx, function(s){segments(s, 0, x1 = s, quantile(permute_mat[, s], 1 - alpha), col = "forestgreen")})
-		
-		##simul plots
-		plot(1 : plot_n, var_true_props_avg[non_zero_idx], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
-				main = "Simul. Max and SE Procedures", ylab = "proportion included")
-		axis(1, at = 1 : plot_n, labels = names(var_true_props_avg[non_zero_idx]), las = 2)
-		
-		abline(h = max_cut, col = "red")		
-		for (j in non_zero_idx){
-			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] < max_cut, ifelse(var_true_props_avg[j] > perm_mean[j] + cover_constant * perm_se[j], 8, 1), 16))
-		}		
-		sapply(non_zero_idx, function(s){segments(s,0, x1 = s, perm_mean[s] + cover_constant * perm_se[s], col = "blue")})
+		if (length(non_zero_idx) > 0){
+			non_zero_idx = non_zero_idx[seq_len(min(num_var_plot, length(non_zero_idx)))]
+			plot_df = data.frame(
+				index = seq_len(length(non_zero_idx)),
+				variable = names(var_true_props_avg)[non_zero_idx],
+				prop = as.numeric(var_true_props_avg[non_zero_idx]),
+				pointwise_cutoff = as.numeric(pointwise_cutoffs[non_zero_idx]),
+				perm_mean = as.numeric(perm_mean[non_zero_idx]),
+				perm_se = as.numeric(perm_se[non_zero_idx])
+			)
+			plot_df$pointwise_selected = plot_df$prop > plot_df$pointwise_cutoff
+			plot_df$simul_threshold = plot_df$perm_mean + cover_constant * plot_df$perm_se
+			plot_df$simul_marker = ifelse(
+				plot_df$prop >= max_cut,
+				"global_max",
+				ifelse(plot_df$prop > plot_df$simul_threshold, "global_se", "none")
+			)
 
-		par(mar = c(5.1, 4.1, 4.1, 2.1))
-		par(mfrow = c(1, 1))
+			y_max = max(c(plot_df$prop, plot_df$pointwise_cutoff, plot_df$simul_threshold, max_cut * 1.1), na.rm = TRUE)
+			margin_cfg = ggplot2::margin(t = 5.5, r = 5.5, b = bottom_margin, l = 5.5)
+
+			local_plot = ggplot2::ggplot(plot_df, ggplot2::aes(x = index, y = prop)) +
+				ggplot2::geom_segment(
+					ggplot2::aes(xend = index, y = 0, yend = pointwise_cutoff),
+					color = "forestgreen"
+				) +
+				ggplot2::geom_point(ggplot2::aes(shape = pointwise_selected)) +
+				ggplot2::scale_shape_manual(values = c(`TRUE` = 16, `FALSE` = 1)) +
+				ggplot2::scale_x_continuous(breaks = plot_df$index, labels = plot_df$variable) +
+				ggplot2::scale_y_continuous(limits = c(0, y_max)) +
+				ggplot2::labs(title = "Local Procedure", y = "proportion included", x = NULL) +
+				ggplot2::theme_minimal() +
+				ggplot2::theme(
+					legend.position = "none",
+					axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5),
+					plot.margin = margin_cfg
+				)
+
+			simul_plot = ggplot2::ggplot(plot_df, ggplot2::aes(x = index, y = prop)) +
+				ggplot2::geom_segment(
+					ggplot2::aes(xend = index, y = 0, yend = simul_threshold),
+					color = "blue"
+				) +
+				ggplot2::geom_hline(yintercept = max_cut, color = "red") +
+				ggplot2::geom_point(ggplot2::aes(shape = simul_marker)) +
+				ggplot2::scale_shape_manual(values = c(global_max = 16, global_se = 8, none = 1)) +
+				ggplot2::scale_x_continuous(breaks = plot_df$index, labels = plot_df$variable) +
+				ggplot2::scale_y_continuous(limits = c(0, y_max)) +
+				ggplot2::labs(title = "Simul. Max and SE Procedures", y = "proportion included", x = NULL) +
+				ggplot2::theme_minimal() +
+				ggplot2::theme(
+					legend.position = "none",
+					axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5),
+					plot.margin = margin_cfg
+				)
+
+			plot_list = list(local_plot, simul_plot)
+			if (verbose){
+				grid::grid.newpage()
+				grid::pushViewport(grid::viewport(layout = grid::grid.layout(2, 1)))
+				for (i in seq_len(length(plot_list))){
+					suppressMessages(print(
+						plot_list[[i]],
+						vp = grid::viewport(layout.pos.row = i, layout.pos.col = 1)
+					))
+				}
+				grid::popViewport()
+			}
+		}
 	}
 	
   #return an invisible list
@@ -153,19 +212,21 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
 }
 
 ##private
-get_averaged_true_var_props = function(bart_machine, num_reps_for_avg, num_trees_for_permute){
+get_averaged_true_var_props = function(bart_machine, num_reps_for_avg, num_trees_for_permute, verbose = TRUE){
 	var_props = rep(0, bart_machine$p)
 	for (i in 1 : num_reps_for_avg){
 		bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_for_permute)
 		var_props = var_props + get_var_props_over_chain(bart_machine_dup)
-		cat(".")
+		if (verbose){
+			cat(".")
+		}
 	}
 	#average over many runs
 	var_props / num_reps_for_avg
 }
 
 ##private
-get_null_permute_var_importances = function(bart_machine, num_trees_for_permute){
+get_null_permute_var_importances = function(bart_machine, num_trees_for_permute, verbose = TRUE){
 	#permute the responses to disconnect x and y
 	y_permuted = sample(bart_machine$y, replace = FALSE)
 	
@@ -184,7 +245,9 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute)
 			verbose = FALSE)
 	#just return the variable proportions	
 	var_props = get_var_props_over_chain(bart_machine_with_permuted_y)
-	cat(".")
+	if (verbose){
+		cat(".")
+	}
 	var_props
 }
 
@@ -223,6 +286,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 #' @param num_trees_for_permute Number of trees to use in the variable selection procedure. As with \cr \code{\link{investigate_var_importance}}, a small number of trees should be used to force variables to compete for entry into the model. Note that this number is used to estimate both the ``true'' and ``null'' variable inclusion proportions.
 #' @param alpha Cut-off level for the thresholds.
 #' @param num_trees_pred_cv Number of trees to use for prediction on the hold-out portion of each fold. Once variables have been selected using the training portion of each fold, a new model is built using only those variables with \code{num_trees_pred_cv} trees in the sum-of-trees model. Forecasts for the holdout sample are made using this model. A larger number of trees is recommended to exploit the full forecasting power of BART.
+#' @param verbose If TRUE, prints progress messages.
 #'
 #' @return
 #' Returns a list with the following components:
@@ -265,7 +329,18 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 #' print(var_sel_cv$best_method)
 #' print(var_sel_cv$important_vars_cv)
 #' }
-var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NULL, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
+#' @export
+var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NULL, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_number(k_folds, lower = 2) # Inf ok
+  assert_integerish(folds_vec, null.ok = TRUE)
+  assert_int(num_reps_for_avg, lower = 1)
+  assert_int(num_permute_samples, lower = 1)
+  assert_int(num_trees_for_permute, lower = 1)
+  assert_number(alpha, lower = 0, upper = 1)
+  assert_int(num_trees_pred_cv, lower = 1)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (k_folds <= 1 || k_folds > bart_machine$n){
@@ -302,7 +377,9 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NU
 	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global_se_names")
 	
 	for (k in 1 : k_folds){
-		cat("cv #", k, "\n", sep = "")
+		if (verbose){
+			cat("cv #", k, "\n", sep = "")
+		}
 		#find out the indices of the holdout sample
 		train_idx = which(folds_vec != k)
 		test_idx = setdiff(1 : n, train_idx)
@@ -320,15 +397,20 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NU
 				num_trees_for_permute = num_trees_for_permute,
         		num_reps_for_avg = num_reps_for_avg,                                                                          
 				alpha = alpha, 
-				plot = FALSE)
+				plot = FALSE,
+				verbose = verbose)
 		
 		#pull out test data
 		test_X_k = bart_machine$model_matrix_training_data[test_idx, -ncol(bart_machine$model_matrix_training_data)]
 		test_y_k = bart_machine$y[test_idx]
 		
-		cat("method")
+		if (verbose){
+			cat("method")
+		}
 		for (method in colnames(L2_err_mat)){
-			cat(".")
+			if (verbose){
+				cat(".")
+			}
 			#pull out the appropriate vars
 			vars_selected_by_method = bart_variables_select_obj_k[[method]]
   
@@ -353,12 +435,19 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NU
 				test_X_k_red_by_vars_picked_by_method = data.frame(test_X_k[, vars_selected_by_method])
         		colnames(test_X_k_red_by_vars_picked_by_method) = vars_selected_by_method #bug fix for single column
 
-        		predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
+        		predict_obj = bart_predict_for_test_data(
+					bart_machine_temp,
+					test_X_k_red_by_vars_picked_by_method,
+					test_y_k,
+					verbose = verbose
+				)
 				#now record it
 				L2_err_mat[k, method] = predict_obj$L2_err
 			}
 		}
-		cat("\n")
+		if (verbose){
+			cat("\n")
+		}
 	}
 	
 	#now extract the lowest oos-L2 to find the "best" method for variable selection
@@ -367,13 +456,16 @@ var_selection_by_permute_cv = function(bart_machine, k_folds = 5, folds_vec = NU
 	min_var_selection_method = min_var_selection_method[1]
 
 	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
-	cat("final", "\n")
+	if (verbose){
+		cat("final", "\n")
+	}
 	bart_variables_select_obj = var_selection_by_permute(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
 	    	num_reps_for_avg = num_reps_for_avg,                                                                        
 			alpha = alpha, 
-			plot = FALSE)
+			plot = FALSE,
+			verbose = verbose)
 	
     #return vars from best method and method name
 	list(best_method = min_var_selection_method, important_vars_cv = sort(bart_variables_select_obj[[min_var_selection_method]]))

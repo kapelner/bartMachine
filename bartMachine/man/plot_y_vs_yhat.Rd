@@ -10,7 +10,8 @@ plot_y_vs_yhat(
   ytest = NULL,
   credible_intervals = FALSE,
   prediction_intervals = FALSE,
-  interval_confidence_level = 0.95
+  interval_confidence_level = 0.95,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ plot_y_vs_yhat(
 \item{prediction_intervals}{If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \code{\link{calc_prediction_intervals}} for details.}
 
 \item{interval_confidence_level}{Desired level of confidence for credible or prediction intervals.}
+
+\item{verbose}{If TRUE, prints plots to the active device.}
 }
 \value{
 None.

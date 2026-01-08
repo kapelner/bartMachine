@@ -11,7 +11,8 @@ interaction_investigator(
   num_trees_bottleneck = 20,
   num_var_plot = 50,
   cut_bottom = NULL,
-  bottom_margin = 10
+  bottom_margin = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ y-axis as a percentage of that minimum.}
 
 \item{bottom_margin}{A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
 Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.}
+
+\item{verbose}{If TRUE, prints progress messages and plots to the active device.}
 }
 \value{
 \item{interaction_counts}{For each of the \eqn{p \times p}{p times p} interactions, what is the count across all \code{num_replicates_for_avg}

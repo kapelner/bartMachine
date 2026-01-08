@@ -11,7 +11,8 @@ investigate_var_importance(
   num_replicates_for_avg = 5,
   num_trees_bottleneck = 20,
   num_var_plot = Inf,
-  bottom_margin = 10
+  bottom_margin = 10,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ investigate_var_importance(
 
 \item{bottom_margin}{A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
 Higher values allow for more space if the covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.}
+
+\item{verbose}{If TRUE, prints progress messages and plots to the active device.}
 }
 \value{
 Invisibly, returns a list with the following components:

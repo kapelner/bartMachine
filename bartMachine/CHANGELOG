@@ -1,7 +1,10 @@
-v1.3.4.4
+v1.3.5
 * exported functions use ggplot2 for graphics instead of legacy base R graphics
-
-v1.3.4.3
+* arguments for all functions are now checked using checkmate
+* cleaned up verbosity when verbose = FALSE
+* cleaned out deprecated functions
+* test suite
+* benchmarks
 * roxygen documentation
 * examples in documentation
 * cleaned up the vignette compilation

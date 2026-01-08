@@ -11,6 +11,7 @@ rmse_by_num_trees(
   plot = TRUE,
   holdout_pctg = 0.3,
   num_replicates = 4,
+  verbose = TRUE,
   ...
 )
 }
@@ -26,6 +27,8 @@ rmse_by_num_trees(
 \item{holdout_pctg}{Percentage of the data to be treated as an out-of-sample holdout.}
 
 \item{num_replicates}{Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).}
+
+\item{verbose}{If TRUE, prints progress messages and plots to the active device.}
 
 \item{...}{Other arguments to be passed to the plot function.}
 }

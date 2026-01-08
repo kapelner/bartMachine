@@ -6,10 +6,11 @@
 \usage{
 get_sigsqs(
   bart_machine,
-  after_burn_in = T,
-  plot_hist = F,
+  after_burn_in = TRUE,
+  plot_hist = FALSE,
   plot_CI = 0.95,
-  plot_sigma = F
+  plot_sigma = F,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ get_sigsqs(
 \item{plot_CI}{Confidence level for credible interval on histogram.}
 
 \item{plot_sigma}{If TRUE, plots \eqn{\sigma} instead of \eqn{\sigma^2}.}
+
+\item{verbose}{If TRUE, prints plots to the active device.}
 }
 \value{
 Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).

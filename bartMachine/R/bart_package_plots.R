@@ -6,6 +6,7 @@
 #' Diagnostic tools to assess whether the errors of the BART model for regression are normally distributed and homoskedastic, as assumed by the model. This function generates a normal quantile plot of the residuals with a Shapiro-Wilks p-value as well as a residual plot.
 #' @param bart_machine An object of class ``bartMachine''.
 #' @param hetero_plot If ``yhats'', the residuals are plotted against the fitted values of the response. If ``ys'', the residuals are plotted against the actual values of the response.
+#' @param verbose If TRUE, prints plots to the active device.
 #'
 #' @return
 #' None.
@@ -31,7 +32,12 @@
 #' #check error diagnostics
 #' check_bart_error_assumptions(bart_machine)
 #' }
-check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
+#' @export
+check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats", verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_choice(hetero_plot, c("yhats", "ys"))
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (!(hetero_plot %in% c("ys", "yhats"))){
@@ -80,8 +86,10 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 			y = "Residuals"
 		)
 	
-	print(qq_plot)
-	print(hetero_plot_obj)
+	if (verbose){
+		print(qq_plot)
+		print(hetero_plot_obj)
+	}
 	invisible(list(qq_plot = qq_plot, hetero_plot = hetero_plot_obj))
 }
 
@@ -256,27 +264,22 @@ plot_mh_acceptance_reject = function(bart_machine){
 			ggplot2::aes(x = iter, y = acceptance),
 			color = "grey"
 		) +
-		ggplot2::geom_smooth(
+		ggplot2::geom_line(
 			data = burn_in_df,
 			ggplot2::aes(x = iter, y = acceptance),
-			method = "loess",
-			formula = y ~ x,
-			se = FALSE,
 			color = "black",
-			linewidth = 1
+			linewidth = 0.8
 		) +
 		ggplot2::geom_point(
 			data = after_df,
 			ggplot2::aes(x = iter, y = acceptance, color = core),
 			alpha = 0.7
 		) +
-		ggplot2::geom_smooth(
+		ggplot2::geom_line(
 			data = after_df,
 			ggplot2::aes(x = iter, y = acceptance, color = core),
-			method = "loess",
-			formula = y ~ x,
-			se = FALSE,
-			linewidth = 1
+			linewidth = 0.8,
+			alpha = 0.7
 		) +
 		ggplot2::geom_vline(xintercept = bart_machine$num_burn_in, color = "grey") +
 		ggplot2::scale_color_manual(values = COLORS[1 : bart_machine$num_cores]) +
@@ -287,8 +290,37 @@ plot_mh_acceptance_reject = function(bart_machine){
 			y = "% of Trees Accepting",
 			color = "Core"
 		)
-	
+
+	smooth_layer <- plot_mh_acceptance_smooth(after_df)
+	if (!is.null(smooth_layer)) {
+		p <- p + smooth_layer
+	}
+
 	p
+}
+
+## helper to only smooth cores with enough data
+plot_mh_acceptance_smooth <- function(after_df) {
+  counts <- table(after_df$core)
+  valid_cores <- names(counts[counts >= 4])
+  if (length(valid_cores) == 0) {
+    return(NULL)
+  }
+  smooth_df <- after_df[after_df$core %in% valid_cores, , drop = FALSE]
+  smooth_layer <- tryCatch(
+    suppressMessages(
+      ggplot2::geom_smooth(
+        data = smooth_df,
+        ggplot2::aes(x = iter, y = acceptance, color = core),
+        method = "loess",
+        formula = y ~ x,
+        se = FALSE,
+        linewidth = 1
+      )
+    ),
+    error = function(e) NULL
+  )
+  smooth_layer
 }
 
 ##private function for getting the MH acceptance proportions by core
@@ -319,6 +351,7 @@ get_mh_acceptance_reject = function(bart_machine){
 #' @param credible_intervals If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}. See \code{\link{calc_credible_intervals}} for details.
 #' @param prediction_intervals If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \code{\link{calc_prediction_intervals}} for details.
 #' @param interval_confidence_level Desired level of confidence for credible or prediction intervals.
+#' @param verbose If TRUE, prints plots to the active device.
 #'
 #' @return
 #' None.
@@ -350,7 +383,16 @@ get_mh_acceptance_reject = function(bart_machine){
 #' #generate plot with prediction bands
 #' plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
 #' }
-plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
+#' @export
+plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(Xtest, null.ok = TRUE)
+  if (!is.null(ytest)) assert_atomic_vector(ytest)
+  assert_flag(credible_intervals)
+  assert_flag(prediction_intervals)
+  assert_number(interval_confidence_level, lower = 0, upper = 1)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if( (!bart_machine$run_in_sample) & (is.null(Xtest) | is.null(ytest)) ){
@@ -373,7 +415,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		y_hat = bart_machine$y_hat_train
 		in_sample = TRUE
 	} else {
-		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest, verbose = verbose)
 		y_hat = predict_obj$y_hat
 		in_sample = FALSE
 	}
@@ -425,7 +467,9 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 				color = "In Interval",
 				shape = "In Interval"
 			)
-		print(p)
+		if (verbose){
+			print(p)
+		}
 		plot_obj = p
 	} else if (prediction_intervals){
 		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)$interval
@@ -473,7 +517,9 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 				color = "In Interval",
 				shape = "In Interval"
 			)
-		print(p)
+		if (verbose){
+			print(p)
+		}
 		plot_obj = p
 	} else {
 		min_val = min(min(ytest), min(y_hat))
@@ -488,7 +534,9 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 				x = "Actual Values",
 				y = "Fitted Values"
 			)
-		print(p)
+		if (verbose){
+			print(p)
+		}
 		plot_obj = p
 	}
 	invisible(plot_obj)
@@ -504,6 +552,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 #' @param plot_hist If TRUE, a histogram of the posterior \eqn{\sigma^2} draws is generated.
 #' @param plot_CI Confidence level for credible interval on histogram.
 #' @param plot_sigma If TRUE, plots \eqn{\sigma} instead of \eqn{\sigma^2}.
+#' @param verbose If TRUE, prints plots to the active device.
 #'
 #' @return
 #' Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).
@@ -529,7 +578,15 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 #' #get posterior sigma^2's after burn-in and plot
 #' sigsqs = get_sigsqs(bart_machine, plot_hist = TRUE)
 #' }
-get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
+#' @export
+get_sigsqs = function(bart_machine, after_burn_in = TRUE, plot_hist = FALSE, plot_CI = .95, plot_sigma = F, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_flag(after_burn_in)
+  assert_flag(plot_hist)
+  assert_number(plot_CI, lower = 0, upper = 1)
+  assert_flag(plot_sigma)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "classification"){
@@ -575,7 +632,9 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 	  	ggplot2::geom_vline(xintercept = mean(var_est_to_plot, na.rm = TRUE), color = "blue") +
 	  	ggplot2::geom_vline(xintercept = c(ppi_a, ppi_b), color = "red") +
 	  	ggplot2::labs(title = plot_title, x = plot_xlab, y = "Count")
-	  print(p)
+	  if (verbose){
+	  	print(p)
+	  }
 	}
   
 	if(after_burn_in == T){
@@ -651,6 +710,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 #' @param num_var_plot Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
 #' @param bottom_margin A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
 #'   Higher values allow for more space if the covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
+#' @param verbose If TRUE, prints progress messages and plots to the active device.
 #'
 #' @return
 #' Invisibly, returns a list with the following components:
@@ -692,7 +752,17 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 #' #investigate variable inclusion proportions
 #' investigate_var_importance(bart_machine)
 #' }
-investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
+#' @export
+investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_choice(type, c("splits", "trees"))
+  assert_flag(plot)
+  assert_int(num_replicates_for_avg, lower = 1)
+  assert_int(num_trees_bottleneck, lower = 1)
+  assert_number(num_var_plot, lower = 1) # Inf is allowed
+  assert_number(bottom_margin, lower = 0)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
@@ -703,9 +773,13 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck, run_in_sample = FALSE, verbose = FALSE)			
 			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)				
 		}
-		cat(".")
+		if (verbose){
+			cat(".")
+		}
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
 	
 	avg_var_props = colMeans(var_props)
 	names(avg_var_props) = bart_machine$training_data_features_with_missing_features
@@ -751,7 +825,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 				linewidth = 0.6
 			)
 		}
-		print(p)
+		if (verbose){
+			print(p)
+		}
 		plot_obj = p
 	}
 	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props, plot = plot_obj))	
@@ -772,6 +848,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 #' is the average number of nodes over all trees.
 #' @param bart_machine An object of class ``bartMachine''.
 #' @param plots The list of plots to be displayed. The four options are: "sigsqs", "mh_acceptance", "num_nodes", "tree_depths".
+#' @param verbose If TRUE, prints plots to the active device.
 #'
 #' @return
 #' None.
@@ -800,7 +877,12 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 #' #plot convergence diagnostics
 #' plot_convergence_diagnostics(bart_machine)
 #' }
-plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
+#' @export
+plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"), verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_subset(plots, c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"))
+  assert_flag(verbose)
+
   check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
   plot_list = list()
   if ("sigsqs" %in% plots){
@@ -822,7 +904,9 @@ plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_ac
 		return(invisible(list()))
 	}
 	if (num_plots == 1){
-		print(plot_list[[1]])
+		if (verbose){
+			print(plot_list[[1]])
+		}
 		return(invisible(plot_list))
 	}
 	if (num_plots <= 2){
@@ -832,17 +916,19 @@ plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_ac
 		num_cols = 2
 		num_rows = 2
 	}
-	grid::grid.newpage()
-	grid::pushViewport(grid::viewport(layout = grid::grid.layout(num_rows, num_cols)))
-	for (i in seq_len(num_plots)){
-		row_idx = ceiling(i / num_cols)
-		col_idx = i - (row_idx - 1) * num_cols
-		suppressMessages(print(
-			plot_list[[i]],
-			vp = grid::viewport(layout.pos.row = row_idx, layout.pos.col = col_idx)
-		))
+	if (verbose){
+		grid::grid.newpage()
+		grid::pushViewport(grid::viewport(layout = grid::grid.layout(num_rows, num_cols)))
+		for (i in seq_len(num_plots)){
+			row_idx = ceiling(i / num_cols)
+			col_idx = i - (row_idx - 1) * num_cols
+			suppressMessages(print(
+				plot_list[[i]],
+				vp = grid::viewport(layout.pos.row = row_idx, layout.pos.col = col_idx)
+			))
+		}
+		grid::popViewport()
 	}
-	grid::popViewport()
 	invisible(plot_list)
 }
 
@@ -873,6 +959,7 @@ shapiro_wilk_p_val = function(vec){
 #'   y-axis as a percentage of that minimum.
 #' @param bottom_margin A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
 #'   Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
+#' @param verbose If TRUE, prints progress messages and plots to the active device.
 #'
 #' @return
 #' \item{interaction_counts}{For each of the \eqn{p \times p}{p times p} interactions, what is the count across all \code{num_replicates_for_avg}
@@ -913,7 +1000,17 @@ shapiro_wilk_p_val = function(vec){
 #' #investigate interactions
 #' interaction_investigator(bart_machine)
 #' }
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
+#' @export
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_flag(plot)
+  assert_int(num_replicates_for_avg, lower = 1)
+  assert_int(num_trees_bottleneck, lower = 1)
+  assert_number(num_var_plot, lower = 1)
+  assert_number(cut_bottom, lower = 0, upper = 1, null.ok = TRUE)
+  assert_number(bottom_margin, lower = 0)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
@@ -924,13 +1021,17 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
 			interaction_counts[, , r] = .jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", simplify = TRUE)
-			cat(".")
-			if (r %% 40 == 0){
-				cat("\n")
+			if (verbose){
+				cat(".")
+				if (r %% 40 == 0){
+					cat("\n")
+				}
 			}
 		}
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
 	
 	interaction_counts_avg = matrix(NA, nrow = bart_machine$p, ncol = bart_machine$p)
 	interaction_counts_sd = matrix(NA, nrow = bart_machine$p, ncol = bart_machine$p)
@@ -1026,7 +1127,9 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 				linewidth = 0.6
 			)
 		}
-		print(p)
+		if (verbose){
+			print(p)
+		}
 		plot_obj = p
 	}
 		
@@ -1054,6 +1157,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 #' @param upper_ci Upper limit for credible interval
 #' @param prop_data The proportion of the training data to use. Default is 1. Use a lower proportion for speedier pd_plots. The closer to 1, the more resolution
 #'   the PD plot will have; the closer to 0, the lower but faster.
+#' @param verbose If TRUE, prints progress messages and plots to the active device.
 #'
 #' @return
 #' Invisibly, returns a list with the following components:
@@ -1111,7 +1215,16 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 #' #partial dependence plot
 #' pd_plot(bart_machine, "Petal.Width")
 #' }
-pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1){
+#' @export
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975, prop_data = 1, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  # j checked manually later because it can be numeric or character
+  assert_numeric(levs, lower = 0, upper = 1, min.len = 1)
+  assert_number(lower_ci, lower = 0, upper = 1)
+  assert_number(upper_ci, lower = 0, upper = 1)
+  assert_number(prop_data, lower = 0, upper = 1)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	if (inherits(j, "integer")){
 		j = as.numeric(j)
@@ -1149,10 +1262,14 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		test_data = bart_machine$X[indices, ]
 		test_data[, j] = rep(x_j_quants[q], n_pd_plot)
 		
-		bart_predictions_by_quantile[q, , ] = bart_machine_get_posterior(bart_machine, test_data)$y_hat_posterior_samples
-		cat(".")
+		bart_predictions_by_quantile[q, , ] = bart_machine_get_posterior(bart_machine, test_data, verbose = verbose)$y_hat_posterior_samples
+		if (verbose){
+			cat(".")
+		}
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
 	
   	if (bart_machine$pred_type == "classification"){ ##convert to probits
     	bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
@@ -1191,7 +1308,9 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 			y = ylab_name,
 			x = paste(var_name, "plotted at specified quantiles")
 		)
-	print(p)
+	if (verbose){
+		print(p)
+	}
 	
 	invisible(list(
 		x_j_quants = x_j_quants, 
@@ -1215,6 +1334,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 #' @param plot If TRUE, a plot of the RMSE by the number of trees in the ensemble is created.
 #' @param holdout_pctg Percentage of the data to be treated as an out-of-sample holdout.
 #' @param num_replicates Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).
+#' @param verbose If TRUE, prints progress messages and plots to the active device.
 #' @param ... Other arguments to be passed to the plot function.
 #'
 #' @return
@@ -1242,7 +1362,16 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 #' #explore RMSE by number of trees
 #' rmse_by_num_trees(bart_machine)
 #' }
-rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, ...){
+#' @export
+rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4, verbose = TRUE, ...){
+  assert_class(bart_machine, "bartMachine")
+  assert_integerish(tree_list, lower = 1, min.len = 1)
+  assert_flag(in_sample)
+  assert_flag(plot)
+  assert_number(holdout_pctg, lower = 0, upper = 1)
+  assert_int(num_replicates, lower = 1)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "classification"){
@@ -1253,7 +1382,9 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 	n = bart_machine$n
 	
 	rmses = array(NA, c(num_replicates, length(tree_list)))
-	cat("num_trees = ")
+	if (verbose){
+		cat("num_trees = ")
+	}
 	for (t in 1 : length(tree_list)){
 		for (r in 1 : num_replicates){
 			if (in_sample){
@@ -1267,14 +1398,23 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				ytest = y[holdout_indicies]
 				
 				bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
-				predict_obj = suppressWarnings(bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)) ##predict on holdout
+				predict_obj = suppressWarnings(bart_predict_for_test_data(
+					bart_machine_dup,
+					Xtest,
+					ytest,
+					verbose = verbose
+				)) ##predict on holdout
 				rmses[r, t] = predict_obj$rmse				
 			}
-			cat("..")
-			cat(tree_list[t])			
+			if (verbose){
+				cat("..")
+				cat(tree_list[t])
+			}			
 		}
 	}
-	cat("\n")
+	if (verbose){
+		cat("\n")
+	}
 	
 	rmse_means = colMeans(rmses, na.rm = TRUE)
 
@@ -1317,7 +1457,9 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				linewidth = 0.3
 			)
 		}
-		print(p)
+		if (verbose){
+			print(p)
+		}
 	}
 	if (plot){
 		attr(rmse_means, "plot") = p

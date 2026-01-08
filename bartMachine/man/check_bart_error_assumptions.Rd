@@ -4,12 +4,18 @@
 \alias{check_bart_error_assumptions}
 \title{Check BART Error Assumptions}
 \usage{
-check_bart_error_assumptions(bart_machine, hetero_plot = "yhats")
+check_bart_error_assumptions(
+  bart_machine,
+  hetero_plot = "yhats",
+  verbose = TRUE
+)
 }
 \arguments{
 \item{bart_machine}{An object of class ``bartMachine''.}
 
 \item{hetero_plot}{If ``yhats'', the residuals are plotted against the fitted values of the response. If ``ys'', the residuals are plotted against the actual values of the response.}
+
+\item{verbose}{If TRUE, prints plots to the active device.}
 }
 \value{
 None.

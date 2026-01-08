@@ -58,7 +58,15 @@
 #' ##make class predictions on test data conservatively for ''versicolor''
 #' y_hat_class_conservative = predict(bart_machine, X, type = "class", prob_rule_class = 0.9)
 #' }
+#' @export
 predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, verbose = TRUE, ...){
+  # Validate arguments
+  assert_class(object, "bartMachine")
+  assert_data_frame(new_data)
+  assert_choice(type, c("prob", "class"))
+  assert_number(prob_rule_class, lower = 0, upper = 1, null.ok = TRUE)
+  assert_flag(verbose)
+
 	check_serialization(object) #ensure the Java object exists and fire an error if not
 	
 	if(!(type %in% c("prob", "class"))){
@@ -66,15 +74,15 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 	}
   
 	if (object$pred_type == "regression"){	
-		bart_machine_get_posterior(object, new_data)$y_hat
+		bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat
 	} else { ##classification
 	    if (type == "prob"){
-			if (verbose == TRUE){
+			if (isTRUE(verbose)){
 				cat("predicting probabilities where \"", object$y_levels[1], "\" is considered the target level...\n", sep = "")
 			}			
-	    	bart_machine_get_posterior(object, new_data)$y_hat
+	    	bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat
 	    } else {
-	    	labels = bart_machine_get_posterior(object, new_data)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
+	    	labels = bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
 	      	#return whatever the raw y_levels were
 	      	labels_to_y_levels(object, labels)      
 	    }
@@ -95,6 +103,7 @@ labels_to_y_levels = function(bart_machine, labels){
 #' @param Xtest Data frame for test data containing rows at which predictions are to be made. Colnames should match that of the training data.
 #' @param ytest Actual outcomes for test data.
 #' @param prob_rule_class Threshold for classification.
+#' @param verbose If TRUE, prints prediction-related messages.
 #'
 #' @return
 #' For regression models, a list with the following components is returned:
@@ -140,11 +149,18 @@ labels_to_y_levels = function(bart_machine, labels){
 #' oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)
 #' print(oos_perf$rmse)
 #' }
-bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_class = NULL){
+#' @export
+bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_class = NULL, verbose = TRUE){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(Xtest)
+  assert_atomic_vector(ytest)
+  assert_number(prob_rule_class, lower = 0, upper = 1, null.ok = TRUE)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "regression"){ #regression list
-	  ytest_hat = predict(bart_machine, Xtest)
+	  ytest_hat = predict(bart_machine, Xtest, verbose = verbose)
 		n = nrow(Xtest)
 		L2_err = sum((ytest - ytest_hat)^2)
 		
@@ -163,7 +179,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_clas
 			stop("New factor level not seen in training introduced. Please remove.")
 		}
 		
-	    ptest_hat = predict(bart_machine, Xtest, type = "prob")
+	    ptest_hat = predict(bart_machine, Xtest, type = "prob", verbose = verbose)
 	    ytest_labels = ptest_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
 	    ytest_hat = labels_to_y_levels(bart_machine, ytest_labels)
     
@@ -188,6 +204,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_clas
 #' Generates draws from posterior distribution of \eqn{\hat{f}(x)} for a specified set of observations.
 #' @param bart_machine An object of class ``bartMachine''.
 #' @param new_data A data frame containing observations at which draws from posterior distribution of \eqn{\hat{f}(x)} are to be obtained.
+#' @param verbose If TRUE, prints preprocessing-related messages.
 #'
 #' @return
 #' Returns a list with the following components:
@@ -239,9 +256,14 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest, prob_rule_clas
 #' posterior = bart_machine_get_posterior(bart_machine, iris2[ ,1 : 4])
 #' print(posterior$y_hat)
 #' }
-bart_machine_get_posterior = function(bart_machine, new_data){	
+#' @export
+bart_machine_get_posterior = function(bart_machine, new_data, verbose = TRUE){
+  # Validate arguments
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data)
+  assert_flag(verbose)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	
 	if (!"data.frame"%in%class(new_data)){		
 		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
 	}
@@ -249,7 +271,9 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 		nrow_before = nrow(new_data)
 		new_data = na.omit(new_data)
 		if (nrow_before > nrow(new_data)){
-			cat(nrow_before - nrow(new_data), "rows omitted due to missing data. Try using the missing data feature in \"build_bart_machine\" to be able to predict on all observations.\n")
+			if (verbose){
+				cat(nrow_before - nrow(new_data), "rows omitted due to missing data. Try using the missing data feature in \"build_bart_machine\" to be able to predict on all observations.\n")
+			}
 		}
 	}
 	
@@ -331,7 +355,12 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 #' cred_int = calc_credible_intervals(bart_machine, X)
 #' print(head(cred_int))
 #' }
+#' @export
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data)
+  assert_number(ci_conf, lower = 0, upper = 1)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	#first convert the rows to the correct dummies etc
@@ -407,7 +436,13 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 #' pred_int = calc_prediction_intervals(bart_machine, X)
 #' print(head(pred_int))
 #' }
+#' @export
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num_samples_per_data_point = 1000){
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data)
+  assert_number(pi_conf, lower = 0, upper = 1)
+  assert_int(num_samples_per_data_point, lower = 1)
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (bart_machine$pred_type == "classification"){

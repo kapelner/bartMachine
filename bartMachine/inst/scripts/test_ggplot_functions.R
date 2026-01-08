@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-options(java.parameters = "-Xmx2g")
+options(java.parameters = "-Xmx10g")
 suppressPackageStartupMessages({
   library(bartMachine)
 })

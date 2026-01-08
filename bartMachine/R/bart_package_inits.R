@@ -11,6 +11,7 @@ for (i in 1 : 500){
 #' Sets the number of cores to be used for all parallelized BART functions.
 #' @param num_cores Number of cores to use. If the number of cores is more than 1, setting the seed during model construction
 #'   cannot be deterministic.
+#' @param verbose If TRUE, prints the updated core count.
 #'
 #' @return
 #' None.
@@ -26,9 +27,15 @@ for (i in 1 : 500){
 #' #set all parallelized functions to use 4 cores
 #' set_bart_machine_num_cores(4)
 #' }
-set_bart_machine_num_cores = function(num_cores){
+#' @export
+set_bart_machine_num_cores = function(num_cores, verbose = TRUE){
+  assert_int(num_cores, lower = 1)
+  assert_flag(verbose)
+
 	assign("BART_NUM_CORES", num_cores, bartMachine_globals)
-	cat("bartMachine now using", num_cores, "cores.\n")
+	if (verbose){
+		cat("bartMachine now using", num_cores, "cores.\n")
+	}
 }
 
 ##get number of cores in use
@@ -58,16 +65,13 @@ DEFAULT_BART_NUM_CORES = 1
 #' \dontrun{
 #' bart_machine_num_cores()
 #' }
+#' @export
 bart_machine_num_cores = function(){
 	if (exists("BART_NUM_CORES", envir = bartMachine_globals)){
 		get("BART_NUM_CORES", bartMachine_globals)
 	} else {
 		DEFAULT_BART_NUM_CORES
 	}
-}
-
-set_bart_machine_memory = function(bart_max_mem){
-	cat("This method has been deprecated. Please use 'options(java.parameters = \"-Xmx", bart_max_mem, "m\")' instead.\n", sep = "")
 }
 
 ##get variable counts
@@ -105,7 +109,11 @@ set_bart_machine_memory = function(bart_max_mem){
 #' var_counts = get_var_counts_over_chain(bart_machine)
 #' print(var_counts)
 #' }
+#' @export
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
+  assert_class(bart_machine, "bartMachine")
+  assert_choice(type, c("splits", "trees"))
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 
 	if (!(type %in% c("trees", "splits"))){
@@ -149,7 +157,11 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 #' var_props = get_var_props_over_chain(bart_machine)
 #' print(var_props)
 #' }
+#' @export
 get_var_props_over_chain = function(bart_machine, type = "splits"){
+  assert_class(bart_machine, "bartMachine")
+  assert_choice(type, c("splits", "trees"))
+
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
 	
 	if (!(type %in% c("trees", "splits"))){

@@ -10,7 +10,8 @@ pd_plot(
   levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.95),
   lower_ci = 0.025,
   upper_ci = 0.975,
-  prop_data = 1
+  prop_data = 1,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ pd_plot(
 
 \item{prop_data}{The proportion of the training data to use. Default is 1. Use a lower proportion for speedier pd_plots. The closer to 1, the more resolution
 the PD plot will have; the closer to 0, the lower but faster.}
+
+\item{verbose}{If TRUE, prints progress messages and plots to the active device.}
 }
 \value{
 Invisibly, returns a list with the following components:

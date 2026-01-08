@@ -4,12 +4,14 @@
 \alias{bart_machine_get_posterior}
 \title{Get Full Posterior Distribution}
 \usage{
-bart_machine_get_posterior(bart_machine, new_data)
+bart_machine_get_posterior(bart_machine, new_data, verbose = TRUE)
 }
 \arguments{
 \item{bart_machine}{An object of class ``bartMachine''.}
 
 \item{new_data}{A data frame containing observations at which draws from posterior distribution of \eqn{\hat{f}(x)} are to be obtained.}
+
+\item{verbose}{If TRUE, prints preprocessing-related messages.}
 }
 \value{
 Returns a list with the following components:

@@ -8,7 +8,8 @@ cov_importance_test(
   bart_machine,
   covariates = NULL,
   num_permutation_samples = 100,
-  plot = TRUE
+  plot = TRUE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ the entire factor will be permuted. We do not recommend entering the names of fa
 the \code{num_permutations} BART models created with the \code{covariates} permuted. The plot also illustrates
 the observed Pseudo-Rsq's / total misclassification error rate from the original training data and indicates
 the test's p-value.}
+
+\item{verbose}{If TRUE, prints progress and summary messages.}
 }
 \value{
 \item{permutation_samples_of_error}{A vector which records the error metric of the BART models with the covariates permuted (see details).}
