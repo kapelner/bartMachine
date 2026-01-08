@@ -326,41 +326,49 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 		
 		//split the data correctly
-		TIntArrayList left_indices = new TIntArrayList(n_eta);  ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
-		TIntArrayList right_indices = new TIntArrayList(n_eta); ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
-		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
-		TDoubleArrayList right_responses = new TDoubleArrayList(n_eta);
+		//Optimization: Use primitive arrays directly to avoid object allocation of TIntArrayList/TDoubleArrayList
+		int[] left_indices_ary = new int[n_eta];
+		int[] right_indices_ary = new int[n_eta];
+		double[] left_responses_ary = new double[n_eta];
+		double[] right_responses_ary = new double[n_eta];
+		
+		int left_count = 0;
+		int right_count = 0;
 		
 		for (int i = 0; i < n_eta; i++){
 			double[] datum = bart.X_y.get(indicies[i]);
 			//handle missing data first
 			if (Classifier.isMissing(datum[splitAttributeM])){
 				if (sendMissingDataRight){
-					right_indices.add(indicies[i]);
-					right_responses.add(responses[i]);
+					right_indices_ary[right_count] = indicies[i];
+					right_responses_ary[right_count] = responses[i];
+					right_count++;
 				} 
 				else {
-					left_indices.add(indicies[i]);
-					left_responses.add(responses[i]);					
+					left_indices_ary[left_count] = indicies[i];
+					left_responses_ary[left_count] = responses[i];
+					left_count++;
 				}
 			}
 			else if (datum[splitAttributeM] <= splitValue){
-				left_indices.add(indicies[i]);
-				left_responses.add(responses[i]);
+				left_indices_ary[left_count] = indicies[i];
+				left_responses_ary[left_count] = responses[i];
+				left_count++;
 			}
 			else {
-				right_indices.add(indicies[i]);
-				right_responses.add(responses[i]);
+				right_indices_ary[right_count] = indicies[i];
+				right_responses_ary[right_count] = responses[i];
+				right_count++;
 			}
 		}
 		//populate the left daughter
-		left.n_eta = left_responses.size();
-		left.responses = left_responses.toArray();
-		left.indicies = left_indices.toArray();
+		left.n_eta = left_count;
+		left.responses = Arrays.copyOf(left_responses_ary, left_count);
+		left.indicies = Arrays.copyOf(left_indices_ary, left_count);
 		//populate the right daughter
-		right.n_eta = right_responses.size();
-		right.responses = right_responses.toArray();
-		right.indicies = right_indices.toArray();
+		right.n_eta = right_count;
+		right.responses = Arrays.copyOf(right_responses_ary, right_count);
+		right.indicies = Arrays.copyOf(right_indices_ary, right_count);
 		//recursively propagate to children
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();

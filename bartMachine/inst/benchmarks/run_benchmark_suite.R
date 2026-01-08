@@ -1,5 +1,26 @@
 #!/usr/bin/env Rscript
 
+
+opts <- list(
+  output_dir = file.path("inst", "benchmarks", "results"),
+  folds = 5,
+  repeats = 1,
+  seed = 123,
+  cores = 4,
+  datasets = NULL,
+  packages = NULL,
+  max_datasets = Inf,
+  skip_tags = character(0),
+  list = FALSE,
+  dry_run = FALSE,
+  java_params = Sys.getenv("BART_JAVA_PARAMS", ""),
+  bart_num_trees = 200,
+  bart_burn_in = 800,
+  bart_iter = 500,
+  rf_ntree = 200,
+  rf_mtry = NA_real_
+)
+
 parse_args <- function(args) {
   opts <- list()
   for (arg in args) {
@@ -85,26 +106,6 @@ if (isTRUE(raw_opts$help)) {
   print_usage()
   quit(status = 0)
 }
-
-opts <- list(
-  output_dir = file.path("inst", "benchmarks", "results"),
-  folds = 5,
-  repeats = 1,
-  seed = 123,
-  cores = 1,
-  datasets = NULL,
-  packages = NULL,
-  max_datasets = Inf,
-  skip_tags = character(0),
-  list = FALSE,
-  dry_run = FALSE,
-  java_params = Sys.getenv("BART_JAVA_PARAMS", ""),
-  bart_num_trees = 50,
-  bart_burn_in = 200,
-  bart_iter = 200,
-  rf_ntree = 500,
-  rf_mtry = NA_real_
-)
 
 if (!is.null(raw_opts$output_dir)) {
   opts$output_dir <- raw_opts$output_dir

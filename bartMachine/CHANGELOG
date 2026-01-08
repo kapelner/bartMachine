@@ -1,3 +1,6 @@
+v1.3.6
+* major speedups due to the fastutil implementation (removed dependency on the legacy trove package)
+
 v1.3.5
 * exported functions use ggplot2 for graphics instead of legacy base R graphics
 * arguments for all functions are now checked using checkmate
