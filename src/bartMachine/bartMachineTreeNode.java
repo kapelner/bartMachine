@@ -8,9 +8,9 @@ import java.util.HashSet;
 
 import OpenSourceExtensions.TDoubleHashSetAndArray;
 import OpenSourceExtensions.UnorderedPair;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * The class that stores all the information in one node of the BART trees
@@ -69,7 +69,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** the sum of the responses, y */
 	private transient double sum_responses_qty;	
 	/** this caches the possible split variables populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient TIntArrayList possible_rule_variables;
+	private transient IntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable populated only if the <code>mem_cache_for_speed</code> feature is set to on */
 	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this number of possible split variables at this node */
@@ -326,10 +326,10 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 		
 		//split the data correctly
-		TIntArrayList left_indices = new TIntArrayList(n_eta);  ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
-		TIntArrayList right_indices = new TIntArrayList(n_eta); ///////////////THIS MUST BE A TIntArrayList, the fastutil IntArrayList doesn't work here!!!
-		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
-		TDoubleArrayList right_responses = new TDoubleArrayList(n_eta);
+		IntArrayList left_indices = new IntArrayList(n_eta);
+		IntArrayList right_indices = new IntArrayList(n_eta);
+		DoubleArrayList left_responses = new DoubleArrayList(n_eta);
+		DoubleArrayList right_responses = new DoubleArrayList(n_eta);
 		
 		for (int i = 0; i < n_eta; i++){
 			double[] datum = bart.X_y.get(indicies[i]);
@@ -355,12 +355,12 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 		//populate the left daughter
 		left.n_eta = left_responses.size();
-		left.responses = left_responses.toArray();
-		left.indicies = left_indices.toArray();
+		left.responses = left_responses.toDoubleArray();
+		left.indicies = left_indices.toIntArray();
 		//populate the right daughter
 		right.n_eta = right_responses.size();
-		right.responses = right_responses.toArray();
-		right.indicies = right_indices.toArray();
+		right.responses = right_responses.toDoubleArray();
+		right.indicies = right_indices.toIntArray();
 		//recursively propagate to children
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
@@ -489,7 +489,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of predictors indexed by the columns in the design matrix
 	 */
-	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
+	protected IntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (bart.mem_cache_for_speed){
 			if (possible_rule_variables == null){
 				possible_rule_variables = tabulatePredictorsThatCouldBeUsedToSplitAtNode();
@@ -506,10 +506,10 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of predictors indexed by the columns in the design matrix
 	 */
-	private TIntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
-		TIntHashSet possible_rule_variables_contenders = null;
+	private IntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
+		IntOpenHashSet possible_rule_variables_contenders = null;
 		if (bart.mem_cache_for_speed && parent != null){
-			possible_rule_variables_contenders = new TIntHashSet();
+			possible_rule_variables_contenders = new IntOpenHashSet();
 			//check interaction constraints first
 			int m = parent.splitAttributeM;
 			if (bart.interaction_constraints != null && bart.interaction_constraints.containsKey(m)) {
@@ -521,7 +521,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 					
 		}
 
-		TIntArrayList possible_rule_variables = new TIntArrayList();
+		IntArrayList possible_rule_variables = new IntArrayList();
 		for (int j = 0; j < bart.p; j++){
 			if (possible_rule_variables_contenders != null && !possible_rule_variables_contenders.contains(j)) {
 				continue;
@@ -822,7 +822,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			System.out.println("possible_split_vals_by_attr: {");
 			if (possible_split_vals_by_attr != null){
 				for (int key : possible_split_vals_by_attr.keySet()){
-					double[] array = possible_split_vals_by_attr.get(key).toArray();
+					double[] array = possible_split_vals_by_attr.get(key).toDoubleArray();
 					Arrays.sort(array);
 					System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
 				}

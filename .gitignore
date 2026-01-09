@@ -95,3 +95,14 @@ bartMachine/inst/scripts/bartmachine_ggplot_tests.pdf
 bartMachine/tests/testthat/Rplots.pdf
 inst/benchmarks/results/*
 bartMachine/tests/testthat/*.png
+TestSetBehavior.java
+bartMachine_old/
+benchmark_fastutil.R
+benchmark_results_current.csv
+benchmark_worker.R
+compare_results.R
+lib_new/
+lib_old/
+results_new.rds
+results_old.rds
+run_comparison.sh

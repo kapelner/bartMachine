@@ -21,8 +21,13 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 [BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics. 
 2010 4(1): 266-298](http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdfview_1&handle=euclid.aoas/1273584455 "PDF download of the BART paper") as well as many other features.
 
-News from the Past Year
+Recent News
 ---------
+
+1/8/26
+
+v1.3.6 released - switched from legacy trove package to modern (and maintained) fastutil, possible speedups on some datasets
+
 1/7/26
 
 v1.3.5 released - verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, benchmarks
@@ -49,7 +54,7 @@ can install the package from CRAN or compile from source.
 
 ### Install Java JDK (not the JRE)
 
-Download the latest [Java JDK](https://jdk.java.net/) and install it properly. (Java 7 or above is required for v1.2.x and Java 8 or above is required for v1.3 and above). bartMachine requires rJava which requires the JDK; you cannot just have a JRE!
+Download the latest [Java JDK](https://jdk.java.net/) and install it properly. (Java 8 or above is required for version >=1.3). bartMachine requires rJava which requires the JDK; you cannot just have a JRE!
 
 ### Install rJava
 

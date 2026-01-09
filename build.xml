@@ -7,6 +7,7 @@
 	  <fileset dir=".">
 	    <include name="*.jar" />
 	  	<exclude name="bart_java.jar" />
+	  	<exclude name="trove-3.0.3.jar" />
 	  </fileset>
 	</path>	
 	

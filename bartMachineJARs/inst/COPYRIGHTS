@@ -4,12 +4,8 @@ The following open source Java libraries are included in this package:
   Version 2.1, March 2010,
   http://commons.apache.org/proper/commons-math/
 
-- Trove under Lesser GNU Public License (LGPL) 2.1,
-  Version 3.0.3, February 2012, 
-  http://trove.starlight-systems.com/
-  
 - Fastutil under Apache-2.0 license,
-  Version 8.5.8, February 2022, 
+  Version 8.5.18, 
   https://fastutil.di.unimi.it/
 
 License
@@ -17,6 +13,3 @@ License
 
 You may obtain a copy of the Apache License, Version 2.0 at
 http://www.apache.org/licenses/LICENSE-2.0
-
-You may obtain a copy of the Lesser GNU Public License (LGPL) 2.1 at
-http://www.gnu.org/licenses/lgpl-2.1.html
