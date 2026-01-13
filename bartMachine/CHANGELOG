@@ -1,3 +1,10 @@
+v1.4
+* major speedups throughout Java code using new features in JDK 21 (the java version now required)
+* major speedups throughout R code by moving heavy lifting to Java or otherwise using smarter vector operations
+* Xoshiro256++ random number generation support in Java (for even greater speed and robust randomness)
+* Seed-setting for multiple cores now produces deterministic output
+* Speed and accuracy benchmarks against packages BART and dbarts (stochtree is a different architecture which does not explore the full posterior so it is not included)
+
 v1.3.6
 * major speedups due to the fastutil implementation (removed dependency on the legacy trove package)
 
@@ -150,3 +157,4 @@ v1.0.1
 
 v1.0
 * Initial Release
+

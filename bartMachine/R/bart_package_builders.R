@@ -33,6 +33,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		flush_indices_to_save_RAM = TRUE,
 		serialize = FALSE,
 		seed = NULL,
+		use_xoshiro = FALSE,
 		verbose = TRUE){
 
   # Validate arguments
@@ -66,6 +67,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
   assert_flag(flush_indices_to_save_RAM)
   assert_flag(serialize)
   assert_int(seed, null.ok = TRUE)
+  assert_flag(use_xoshiro)
   assert_flag(verbose)
 
 	if (verbose){
@@ -239,30 +241,34 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			stop("specified parameter \"interaction_constraints\" must be a list")
 		} else if (length(interaction_constraints) == 0){
 			stop("interaction_constraints list cannot be empty")
-		}		
+		}
 		
+		col_names = colnames(X)
 		for (a in 1 : length(interaction_constraints)){
 			vars_a = interaction_constraints[[a]]
+			vars_a_converted = integer(length(vars_a))
 			#check if the constraint components are valid features
 			for (b in 1 : length(vars_a)){
-				var = vars_a[b]
-				if ((inherits(var, "numeric") | inherits(var, "integer")) & !(var %in% (1 : p))){
-					stop(paste("Element", var, "in interaction_constraints vector number", a, "is numeric but not one of 1, ...,", p, "where", p, "is the number of columns in X."))
-				}
+				var = vars_a[[b]]
 				if (inherits(var, "factor")){
 					var = as.character(var)
 				}
-				if (inherits(var, "character")  & !(var %in% colnames(X))){
-					stop(paste("Element", var, "in interaction_constraints vector number", a, "is a string but not one of the column names of X."))
-				}
-				#force all it be integers and begin index at zero
-				if (inherits(var, "integer") | inherits(var, "numeric")){
-					vars_a[b] = var - 1
-				} else if (inherits(var, "character")){
-					vars_a[b] = which(colnames(X) == var) - 1
+				if (inherits(var, "character")){
+					idx = match(var, col_names)
+					if (is.na(idx)){
+						stop(paste("Element", var, "in interaction_constraints vector number", a, "is a string but not one of the column names of X."))
+					}
+					vars_a_converted[b] = idx - 1
+				} else if (inherits(var, "numeric") || inherits(var, "integer")){
+					if (var %% 1 != 0 || var < 1 || var > p){
+						stop(paste("Element", var, "in interaction_constraints vector number", a, "is numeric but not one of 1, ...,", p, "where", p, "is the number of columns in X."))
+					}
+					vars_a_converted[b] = as.integer(var) - 1
+				} else {
+					stop(paste("Element", var, "in interaction_constraints vector number", a, "has unsupported type."))
 				}
 			}
-			interaction_constraints[[a]] = as.integer(vars_a)
+			interaction_constraints[[a]] = vars_a_converted
 		}
 	}
 	#print("interaction_constraints:"); print(interaction_constraints)
@@ -360,14 +366,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	.jcall(java_bart_machine, "V", "setFlushIndicesToSaveRAM", flush_indices_to_save_RAM)
+	.jcall(java_bart_machine, "V", "setUseXoshiro", use_xoshiro)
 	
 #	cat("seed", seed, "\n")
 	if (!is.null(seed)){
 		#set the seed in Java
 		.jcall(java_bart_machine, "V", "setSeed", as.integer(seed))
-		if (num_cores > 1){
-			warning("Setting the seed when using parallelization does not result in deterministic output.\nIf you need deterministic output, you must run \"set_bart_machine_num_cores(1)\" and then build the BART model with the set seed.")
-		}
 	}
 	
 	#now we need to set random samples
@@ -479,6 +483,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			flush_indices_to_save_RAM = flush_indices_to_save_RAM,
 			debug_log = debug_log,
 			seed = seed,
+			use_xoshiro = use_xoshiro,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
 	#if the user used a cov prior vec, pass it back
@@ -599,6 +604,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
 		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
 		serialize = FALSE, #we do not want to waste CPU time here since these are created internally by us
+		use_xoshiro = bart_machine$use_xoshiro,
 		verbose = verbose)
 }
 
@@ -611,6 +617,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		nu_q_cvs = NULL,
 		k_folds = 5, 
 		folds_vec = NULL, 
+		use_xoshiro = FALSE,
 		verbose = TRUE,
 		...){
 	
@@ -623,6 +630,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
   assert_list(nu_q_cvs, null.ok = TRUE)
   assert_count(k_folds, positive = TRUE)
   assert_integerish(folds_vec, null.ok = TRUE)
+  assert_flag(use_xoshiro)
   assert_flag(verbose)
 
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
@@ -745,6 +753,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 			nu = min_rmse_nu_q[1],
 			q = min_rmse_nu_q[2], 
 			verbose = verbose,
+			use_xoshiro = use_xoshiro,
 			...)
 	
 	#give the user some cv_stats ordered by the best (ie lowest) oosrmse
@@ -757,27 +766,30 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 
 ##private function for filling in missing data with averages for cont. vars and modes for cat. vars
 imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_calculating_avgs){
-	for (i in 1 : nrow(X_with_missing)){
-		for (j in 1 : ncol(X_with_missing)){
-			if (is.na(X_with_missing[i, j])){
-				#mode for factors, otherwise average
-				if (inherits(X_with_missing[, j], "factor")){
-					X_with_missing[i, j] = names(which.max(table(X_for_calculating_avgs[, j])))
-				} else {
-					X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
-				}
-			}
+	replacements = vector("list", ncol(X_with_missing))
+	for (j in seq_len(ncol(X_with_missing))){
+		#mode for factors, otherwise average
+		if (inherits(X_with_missing[, j], "factor")){
+			replacements[[j]] = names(which.max(table(X_for_calculating_avgs[, j])))
+		} else {
+			replacements[[j]] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
+		}
+	}
+	for (j in seq_len(ncol(X_with_missing))){
+		missing_idx = is.na(X_with_missing[, j])
+		if (any(missing_idx)){
+			X_with_missing[missing_idx, j] = replacements[[j]]
 		}
 	}
 	#now we have to go through and drop columns that are all NaN's if need be
-	bad_cols = c()
-	for (j in colnames(X_with_missing)){
-		if (sum(is.nan(X_with_missing[, j])) == nrow(X_with_missing)){
-			bad_cols = c(bad_cols, j)
+	bad_cols = vapply(X_with_missing, function(col){
+		if (!is.numeric(col)){
+			return(FALSE)
 		}
-	}
-	for (j in bad_cols){
-		X_with_missing[, j] = NULL
+		sum(is.nan(col)) == nrow(X_with_missing)
+	}, logical(1))
+	if (any(bad_cols)){
+		X_with_missing = X_with_missing[, !bad_cols, drop = FALSE]
 	}
 	X_with_missing
 }

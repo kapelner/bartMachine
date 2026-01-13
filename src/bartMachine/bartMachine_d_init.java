@@ -67,6 +67,7 @@ public abstract class bartMachine_d_init extends bartMachine_c_debug implements 
 	/** Initializes the first variance value by drawing from the prior */
 	protected void InitizializeSigsq() {
 		gibbs_samples_of_sigsq[0] = StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda));
+		updateLogSigsqTable(gibbs_samples_of_sigsq[0]);
 	}	
 	
 	/** this is the number of posterior Gibbs samples afte burn-in (thinning was never implemented) */

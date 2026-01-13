@@ -20,7 +20,7 @@ in the list structure recursively.
 }
 \examples{
 \dontrun{
-options(java.parameters = "-Xmx10g")
+options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 pacman::p_load(bartMachine)
 
 seed = 1984

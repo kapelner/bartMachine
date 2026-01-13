@@ -74,12 +74,12 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		if (y_i == 1){ 
 			double p_i = StatUtil.normal_cdf(-g_x_i);
 //			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
-			return g_x_i + StatUtil.getInvCDF((1 - u) * p_i + u, false);
+			return g_x_i + StatUtil.getInvCDF((1 - u) * p_i + u);
 		} 
 		else if (y_i == 0){
 			double p_i = StatUtil.normal_cdf(g_x_i);
 //			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
-			return g_x_i - StatUtil.getInvCDF((1 - u) * p_i + u, false);
+			return g_x_i - StatUtil.getInvCDF((1 - u) * p_i + u);
 		}
 		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
 		System.exit(0);

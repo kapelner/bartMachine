@@ -124,10 +124,9 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 			cat(".")
 		}
 		
-	    train_idx = which(folds_vec != k)
-	    test_idx = setdiff(1 : n, train_idx)
+	    test_idx = which(folds_vec == k)
 		test_data_k = Xy[test_idx, ]
-		training_data_k = Xy[train_idx, ]
+		training_data_k = Xy[-test_idx, ]
 
 
 		

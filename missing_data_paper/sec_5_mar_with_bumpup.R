@@ -1,4 +1,4 @@
-options(java.parameters = "-Xmx5000m")
+options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 library(bartMachine)
 library(MASS)
 

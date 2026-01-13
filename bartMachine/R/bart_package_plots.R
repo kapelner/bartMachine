@@ -106,11 +106,13 @@ plot_tree_depths = function(bart_machine){
 		tree = factor(rep(seq_len(num_trees), each = num_after_burn_in)),
 		depth = as.vector(tree_depths_after_burn_in)
 	)
+	row_mins = matrixStats::rowMins(tree_depths_after_burn_in)
+	row_maxs = matrixStats::rowMaxs(tree_depths_after_burn_in)
 	summary_df = data.frame(
 		iter = iter,
-		mean = apply(tree_depths_after_burn_in, 1, mean),
-		min = apply(tree_depths_after_burn_in, 1, min),
-		max = apply(tree_depths_after_burn_in, 1, max)
+		mean = rowMeans(tree_depths_after_burn_in),
+		min = row_mins,
+		max = row_maxs
 	)
 	
 	p = ggplot2::ggplot(tree_df, ggplot2::aes(x = iter, y = depth, group = tree)) +
@@ -151,13 +153,12 @@ plot_tree_depths = function(bart_machine){
 
 #private function for getting tree depths to plot
 get_tree_depths = function(bart_machine){
-	tree_depths_after_burn_in = NULL
+	tree_depths_list = vector("list", bart_machine$num_cores)
 	for (c in 1 : bart_machine$num_cores){
-		tree_depths_after_burn_in_core = 
+		tree_depths_list[[c]] = 
 			.jcall(bart_machine$java_bart_machine, "[[I", "getDepthsForTreesInGibbsSampAfterBurnIn", as.integer(c), simplify = TRUE)
-		tree_depths_after_burn_in = rbind(tree_depths_after_burn_in, tree_depths_after_burn_in_core)
 	}
-	tree_depths_after_burn_in
+	do.call(rbind, tree_depths_list)
 }
 
 #private function for plotting number of nodes in the trees
@@ -173,11 +174,13 @@ plot_tree_num_nodes = function(bart_machine){
 		tree = factor(rep(seq_len(num_trees), each = num_after_burn_in)),
 		num_nodes = as.vector(tree_num_nodes_and_leaves_after_burn_in)
 	)
+	row_mins = matrixStats::rowMins(tree_num_nodes_and_leaves_after_burn_in)
+	row_maxs = matrixStats::rowMaxs(tree_num_nodes_and_leaves_after_burn_in)
 	summary_df = data.frame(
 		iter = iter,
-		mean = apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean),
-		min = apply(tree_num_nodes_and_leaves_after_burn_in, 1, min),
-		max = apply(tree_num_nodes_and_leaves_after_burn_in, 1, max)
+		mean = rowMeans(tree_num_nodes_and_leaves_after_burn_in),
+		min = row_mins,
+		max = row_maxs
 	)
 	
 	p = ggplot2::ggplot(tree_df, ggplot2::aes(x = iter, y = num_nodes, group = tree)) +
@@ -217,13 +220,12 @@ plot_tree_num_nodes = function(bart_machine){
 }
 ##private function for getting the number of nodes in the trees
 get_tree_num_nodes_and_leaves = function(bart_machine){
-	tree_num_nodes_and_leaves_after_burn_in = NULL
+	tree_num_nodes_and_leaves_list = vector("list", bart_machine$num_cores)
 	for (c in 1 : bart_machine$num_cores){
-		tree_num_nodes_and_leaves_after_burn_in_core = 
+		tree_num_nodes_and_leaves_list[[c]] = 
 			.jcall(bart_machine$java_bart_machine, "[[I", "getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn", as.integer(c), simplify = TRUE)
-		tree_num_nodes_and_leaves_after_burn_in = rbind(tree_num_nodes_and_leaves_after_burn_in, tree_num_nodes_and_leaves_after_burn_in_core)
 	}
-	tree_num_nodes_and_leaves_after_burn_in
+	do.call(rbind, tree_num_nodes_and_leaves_list)
 }
 
 #private function for plotting the MH acceptance proportions by core
@@ -472,7 +474,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 		}
 		plot_obj = p
 	} else if (prediction_intervals){
-		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)$interval
+		prediction_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
 		ci_a = prediction_intervals[, 1]
 		ci_b = prediction_intervals[, 2]
 		y_in_ppi = ytest >= ci_a & ytest <= ci_b
@@ -783,7 +785,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	
 	avg_var_props = colMeans(var_props)
 	names(avg_var_props) = bart_machine$training_data_features_with_missing_features
-	sd_var_props = apply(var_props, 2, sd)
+	sd_var_props = matrixStats::colSds(var_props)
 	names(sd_var_props) = bart_machine$training_data_features_with_missing_features
 	
 	if (num_var_plot == Inf){
@@ -1275,16 +1277,17 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
     	bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
   	}
   
-	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(x_j_quants), bart_machine$num_iterations_after_burn_in))
-	for (q in 1 : length(x_j_quants)){
-		for (g in 1 : bart_machine$num_iterations_after_burn_in){
-			bart_avg_predictions_by_quantile_by_gibbs[q, g] = mean(bart_predictions_by_quantile[q, , g])
-		}		
-	}
+	bart_avg_predictions_by_quantile_by_gibbs = apply(bart_predictions_by_quantile, c(1, 3), mean)
 	
-	bart_avg_predictions_by_quantile = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, mean)
-	bart_avg_predictions_lower = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = lower_ci)
-	bart_avg_predictions_upper = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = upper_ci)
+	bart_avg_predictions_by_quantile = rowMeans(bart_avg_predictions_by_quantile_by_gibbs)
+	bart_avg_predictions_lower = as.numeric(matrixStats::rowQuantiles(
+		bart_avg_predictions_by_quantile_by_gibbs,
+		probs = lower_ci
+	))
+	bart_avg_predictions_upper = as.numeric(matrixStats::rowQuantiles(
+		bart_avg_predictions_by_quantile_by_gibbs,
+		probs = upper_ci
+	))
 	
 	var_name = ifelse(class(j) == "character", j, bart_machine$training_data_features[j])
     ylab_name = ifelse(bart_machine$pred_type == "classification", "Partial Effect (Probits)", "Partial Effect")
@@ -1420,7 +1423,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 
 	if (plot){ ##plotting
 		if (num_replicates > 1){
-			rmse_sds = apply(rmses, 2, sd)
+			rmse_sds = matrixStats::colSds(rmses)
 		} else {
 			rmse_sds = rep(0, length(tree_list))
 		}

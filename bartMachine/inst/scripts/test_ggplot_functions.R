@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-options(java.parameters = "-Xmx10g")
+options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 suppressPackageStartupMessages({
   library(bartMachine)
 })

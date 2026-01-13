@@ -3,8 +3,16 @@ Version: 1.2.2
 Title: bartMachine JARs
 Type: Package
 Date: 2026-01-08
-Author: Adam Kapelner and Justin Bleich (R package), see COPYRIGHTS file for the authors of the java libraries
+Author: Adam Kapelner [aut, cre] (ORCID: 0000-0001-5985-6792), Justin Bleich [aut]
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
+Authors@R: c(person(given = "Adam",
+                  family = "Kapelner",
+                  role = c("aut", "cre"),
+                  email = "kapelner@qc.cuny.edu",
+                  comment = "ORCID: 0000-0001-5985-6792"),
+             person(given = "Justin",
+	              family = "Bleich",
+	              role = "aut"))
 Description: These are bartMachine's Java dependency libraries. Note: this package has no functionality of its own and should not be installed as a standalone package without bartMachine.
 License: GPL-3
 Depends: R (>= 2.14.0), rJava (>= 0.9-8)

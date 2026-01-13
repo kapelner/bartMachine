@@ -12,6 +12,8 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.StreamHandler;
 
+import jdk.incubator.vector.DoubleVector;
+
 import CustomLogging.*;
 
 /**
@@ -125,13 +127,15 @@ public abstract class Classifier implements Serializable{
 	 * @return		The training data set indexed by column
 	 */
 	private ArrayList<double[]> getDataMatrixByCol(ArrayList<double[]> X_y) {
-		 ArrayList<double[]> X_y_by_col = new ArrayList<double[]>(n);
-		 for (int j = 0; j < p; j++){
-			 double[] x_dot_j = new double[n];
+		 double[][] colMatrix = new double[p][n];
+		 java.util.stream.IntStream.range(0, p).parallel().forEach(j -> {
 			 for (int i = 0; i < n; i++){
-				 x_dot_j[i] = X_y.get(i)[j];
+				 colMatrix[j][i] = X_y.get(i)[j];
 			 }
-			 X_y_by_col.add(x_dot_j);
+		 });
+		 ArrayList<double[]> X_y_by_col = new ArrayList<double[]>(p);
+		 for (int j = 0; j < p; j++){
+			 X_y_by_col.add(colMatrix[j]);
 		 }
 		 return X_y_by_col;
 	 }
@@ -178,7 +182,7 @@ public abstract class Classifier implements Serializable{
 	/**
 	 * Useful for debugging only. Undocumented.
 	 * 
-	 * @see {@link https://blogs.oracle.com/nickstephen/entry/java_redirecting_system_out_and
+	 * For details see <a href="https://blogs.oracle.com/nickstephen/entry/java_redirecting_system_out_and_err">Redirecting System.out and System.err</a>.
 	 */
 	public void suppressOrWriteToDebugLog(){
 		//also handle the logging
@@ -219,6 +223,21 @@ public abstract class Classifier implements Serializable{
 	 * @return				The prediction
 	 */
 	public abstract double Evaluate(double[] record, int num_cores);
+
+	/**
+	 * Evaluate multiple records at once. Subclasses should override this for performance.
+	 * 
+	 * @param records 		The observations to be evaluated
+	 * @param num_cores 	The number of processor cores to use
+	 * @return 				The predictions
+	 */
+	public double[] Evaluate(double[][] records, int num_cores) {
+		double[] results = new double[records.length];
+		for (int i = 0; i < records.length; i++) {
+			results[i] = Evaluate(records[i], num_cores);
+		}
+		return results;
+	}
 	
 	/**
 	 * A wrapper for {@link #Evaluate(double[], int)} where one processor core is used

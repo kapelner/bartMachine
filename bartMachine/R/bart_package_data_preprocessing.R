@@ -45,20 +45,27 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 		data[, character_var] = as.factor(data[, character_var])
 	}
 	
-	factors = names(which(sapply(data, class) == "factor"))
+	factors = names(which(sapply(data, is.factor)))
 	
 	factor_lengths = c()
-	for (fac in factors){
-		#first create the dummies to be appended for this factor
-		dummied = do.call(cbind, lapply(levels(data[, fac]), function(lev){as.numeric(data[, fac] == lev)}))
-		#ensure they're named appropriately
-		colnames(dummied) = paste(fac, levels(data[, fac]), sep = "_")
-		#append them to the data
-		data = cbind(data, dummied)
-		#delete the factor covariate from the design matrix
-		data[, fac] = NULL
-		#record the length of this factor
-		factor_lengths = c(factor_lengths, ncol(dummied))
+	if (length(factors) > 0) {
+		# Pre-allocate a list for dummified matrices to avoid repeated cbind
+		dummied_list = lapply(factors, function(fac) {
+			levs = levels(data[, fac])
+			dummied = matrix(0, nrow = nrow(data), ncol = length(levs))
+			for (i in seq_along(levs)) {
+				dummied[, i] = as.numeric(data[, fac] == levs[i])
+			}
+			colnames(dummied) = paste(fac, levs, sep = "_")
+			dummied
+		})
+		
+		# Record lengths
+		factor_lengths = vapply(dummied_list, ncol, integer(1))
+		
+		# Combine all dummied matrices and non-factor columns
+		non_factors = setdiff(names(data), factors)
+		data = do.call(cbind, c(list(data[, non_factors, drop = FALSE]), dummied_list))
 	}
 
 	if (use_missing_data_dummies_as_covars){		
@@ -67,14 +74,7 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 		
 		#only do something if there are predictors with missingness
 		if (length(predictor_columns_with_missingness) > 0){
-			M = matrix(0, nrow = nrow(data), ncol = length(predictor_columns_with_missingness))
-			for (i in 1 : nrow(data)){
-				for (j in 1 : length(predictor_columns_with_missingness)){
-					if (is.missing(data[i, predictor_columns_with_missingness[j]])){
-						M[i, j] = 1
-					}
-				}
-			}
+			M = is.na(data[, predictor_columns_with_missingness, drop = FALSE]) + 0
 			colnames(M) = paste("M_", colnames(data)[predictor_columns_with_missingness], sep = "")
 			
 			#now we may want to add imputations before the missingness dummies
@@ -97,6 +97,9 @@ is.missing = function(x){
 
 pre_process_new_data = function(new_data, bart_machine){
 	new_data = as.data.frame(new_data)
+	if (bart_machine$replace_missing_data_with_x_j_bar){
+		new_data = imputeMatrixByXbarjContinuousOrModalForBinary(new_data, bart_machine$X)
+	}
 	n = nrow(new_data)
 	
 	imputations = NULL #global namespace?
@@ -107,15 +110,21 @@ pre_process_new_data = function(new_data, bart_machine){
 		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
 	}
 	
-	#preprocess the new data with the training data to ensure proper dummies
-	new_data_and_training_data = rbind(new_data, bart_machine$X)
-	#kill all factors again
-	predictors_which_are_factors = names(which(sapply(new_data_and_training_data, is.factor)))
-	for (predictor in predictors_which_are_factors){
-		new_data_and_training_data[, predictor] = factor(new_data_and_training_data[, predictor])
+	#ensure factor levels include training levels to match dummies without binding all rows
+	training_factors = names(which(sapply(bart_machine$X, is.factor)))
+	if (length(training_factors) > 0){
+		for (predictor in training_factors){
+			if (!predictor %in% names(new_data)){
+				next
+			}
+			training_levels = levels(bart_machine$X[, predictor])
+			new_levels = levels(factor(new_data[, predictor]))
+			combined_levels = union(training_levels, new_levels)
+			new_data[, predictor] = factor(new_data[, predictor], levels = combined_levels)
+		}
 	}
 	
-	new_data = pre_process_training_data(new_data_and_training_data, bart_machine$use_missing_data_dummies_as_covars, imputations)$data
+	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data_dummies_as_covars, imputations)$data
 		
 	if (bart_machine$use_missing_data){
 		training_data_features = bart_machine$training_data_features_with_missing_features
@@ -143,34 +152,13 @@ pre_process_new_data = function(new_data, bart_machine){
 	new_data_features = colnames(new_data)
 	
 	if (!all(new_data_features == training_data_features)){
-		warning("Are you sure you have the same feature names in the new record(s) as the training data?", call. = FALSE)
-	}
-	
-	#iterate through and see
-	for (j in 1 : length(training_data_features)){
-		training_data_feature = training_data_features[j]
-		new_data_feature = new_data_features[j]
-		if (training_data_feature != new_data_feature){
-			#create a new col of zeroes
-			new_col = rep(0, n)
-			#wedge it into the data set
-			temp_new_data = cbind(new_data[, 1 : (j - 1)], new_col)
-			#give it the same name as in the training set
-			colnames(temp_new_data)[j] = training_data_feature
-			#tack on the rest of the stuff
-			if (ncol(new_data) >= j){
-				rhs = new_data[, j : ncol(new_data)]
-				if (inherits(rhs, "numeric")){
-					rhs = as.matrix(rhs)
-					colnames(rhs)[1] = new_data_feature
-				}
-				temp_new_data = cbind(temp_new_data, rhs)
-			} 
-			new_data = temp_new_data
-			
-			#update list
-			new_data_features = colnames(new_data)
-		}
+		# Re-order and fill missing columns in one go
+		final_new_data = matrix(0, nrow = n, ncol = length(training_data_features))
+		colnames(final_new_data) = training_data_features
+		
+		common_features = intersect(training_data_features, new_data_features)
+		final_new_data[, common_features] = new_data[, common_features]
+		new_data = final_new_data
 	}
 	#coerce to a numeric matrix
 	new_data = data.matrix(new_data)

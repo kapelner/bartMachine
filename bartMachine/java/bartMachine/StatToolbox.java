@@ -25,6 +25,7 @@
 package bartMachine;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 
 import OpenSourceExtensions.MersenneTwisterFast;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -36,8 +37,17 @@ import gnu.trove.list.array.TIntArrayList;
  */
 public class StatToolbox {
 	
+	private static final AtomicLong SEED_UNIQUIFIER = new AtomicLong(System.nanoTime());
+	
+	private static long nextSeed() {
+		long seed = SEED_UNIQUIFIER.getAndAdd(0x9E3779B97F4A7C15L);
+		seed ^= System.nanoTime();
+		seed ^= Thread.currentThread().threadId();
+		return seed;
+	}
+	
 	/** A convenience for a Random object */
-	private static final MersenneTwisterFast R = new MersenneTwisterFast();
+	private static final MersenneTwisterFast R = new MersenneTwisterFast(nextSeed());
 	/** A flag that indicates an illegal value or failed operation */
 	public static final double ILLEGAL_FLAG = -999999999;	
 

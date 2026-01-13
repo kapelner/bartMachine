@@ -106,3 +106,7 @@ lib_old/
 results_new.rds
 results_old.rds
 run_comparison.sh
+multi_core_prediction_comparison.pdf
+multi_core_classification_comparison.pdf
+results_*_*core.rds
+bartMachine/inst/benchmarks/bart_packages_comparisons_results/*

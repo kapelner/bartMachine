@@ -118,7 +118,7 @@
 
 \section{Introduction}
 
-Ensemble-of-trees methods have become popular choices for forecasting in both regression and classification problems. Algorithms such as random forests \citep{Breiman2001} and stochastic gradient boosting \citep{Friedman2002} are two well-established and widely employed procedures. Recent advances in ensemble methods include dynamic trees \citep{Taddy2011} and Bayesian additive regression trees \citep[BART;][]{Chipman2010}, which depart from predecessors in that they rely on an underlying Bayesian probability model rather than a pure algorithm. BART has demonstrated substantial promise in a wide variety of simulations and real world applications such as predicting avalanches on mountain roads \citep{Blattenberger2014}, predicting how transcription factors interact with DNA \citep{Zhou2008} and predicting movie box office revenues \citep{Eliashberg2010}. This paper introduces \pkg{bartMachine} \citep{bartMachine}, a new \proglang{R} \citep{Rlang} package available from the Comprehensive \proglang{R} Archive Network (CRAN) at \url{http://CRAN.R-project.org/package=bartMachine} that significantly expands the capabilities of using BART for data analysis. 
+Ensemble-of-trees methods have become popular choices for forecasting in both regression and classification problems. Algorithms such as random forests \citep{Breiman2001} and stochastic gradient boosting \citep{Friedman2002} are two well-established and widely employed procedures. Recent advances in ensemble methods include dynamic trees \citep{Taddy2011} and Bayesian additive regression trees \citep[BART;][]{Chipman2010}, which depart from predecessors in that they rely on an underlying Bayesian probability model rather than a pure algorithm. BART has demonstrated substantial promise in a wide variety of simulations and real world applications such as predicting avalanches on mountain roads \citep{Blattenberger2014}, predicting how transcription factors interact with DNA \citep{Zhou2008} and predicting movie box office revenues \citep{Eliashberg2010}. This paper introduces \pkg{bartMachine} \citep{bartMachine}, a new \proglang{R} \citep{Rlang} package available from the Comprehensive \proglang{R} Archive Network (CRAN) at \url{https://CRAN.R-project.org/package=bartMachine} that significantly expands the capabilities of using BART for data analysis. 
 
 Currently, there exists one other implementation of BART on CRAN: \pkg{BayesTree} \citep{BayesTree}, the package developed by the algorithm's original authors. One of the major drawbacks of this implementation is its lack of a \code{predict} function. Test data must be provided as an argument during the training phase of the model. Hence it is impossible to generate forecasts on future data without re-fitting the entire model. Since the run time is not trivial, forecasting becomes an arduous exercise. A significantly faster implementation of BART that contains master-slave parallelization was introduced in \citet{Pratola2013}, but this is only available as standalone \proglang{C++} source code and not integrated with \proglang{R}. Additionally, a recent package \pkg{dbarts} \citep{dbarts} allows updating of BART with new predictors and response values to incorporate BART into a larger Bayesian model. \pkg{dbarts} relies on \pkg{BayesTree} as its BART engine.
 
@@ -399,7 +399,7 @@ number of computing cores available for use to 4.
 %
 \begin{CodeChunk}
 \begin{CodeInput}
-R> options(java.parameters = "-Xmx5000m")
+R> options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 R> library("bartMachine")
 R> set_bart_machine_num_cores(4)
 \end{CodeInput}
@@ -1560,7 +1560,7 @@ we encourage the community to make innovations on this package.
 
 The stable version of \pkg{bartMachine} is on CRAN and the development
 version is located at
-\url{http://github.com/kapelner/bartMachine}. The package code is
+\url{https://github.com/kapelner/bartMachine}. The package code is
 under the General Public License, version 3 (GPL-3). Results, tables, and figures found in this
 paper can be replicated via the scripts located in the
 \texttt{bart\_package\_paper} folder within the \texttt{git}
@@ -1730,7 +1730,7 @@ Kindo B, Wang H, Pe E (2013).
 \newblock \enquote{{MBACT -- Multiclass Bayesian Additive Classification
   Trees}.}
 \newblock {arXiv}:1309.7821 [stat.ML],
-  \urlprefix\url{http://arxiv.org/abs/1309.7821v1}.
+  \urlprefix\url{https://arxiv.org/abs/1309.7821v1}.
 
 \bibitem[{Liaw and Wiener(2002)}]{Liaw2002}
 Liaw A, Wiener M (2002).

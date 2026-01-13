@@ -44,7 +44,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 	
 	/** We sample the latent variables, Z, for each of the n observations
 	 * 
-	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	private boolean SampleZs() {
 		for (int i = 0; i < n; i++){
@@ -66,7 +66,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 
 	/** We sample one latent variable, Z_i
 	 * 
-	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	private double SampleZi(double g_x_i, double y_i) {
 		double u = StatToolbox.rand();
@@ -74,12 +74,12 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		if (y_i == 1){ 
 			double p_i = StatUtil.normal_cdf(-g_x_i);
 //			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
-			return g_x_i + StatUtil.getInvCDF((1 - u) * p_i + u, false);
+			return g_x_i + StatUtil.getInvCDF((1 - u) * p_i + u);
 		} 
 		else if (y_i == 0){
 			double p_i = StatUtil.normal_cdf(g_x_i);
 //			System.out.println("       u = " + u + ", g_x_i = " + g_x_i + ", p_i = " + p_i + ", (1 - u) * p_i = " + ((1 - u) * p_i) + ", (1 - u) * p_i + u = " + ((1 - u) * p_i + u));
-			return g_x_i - StatUtil.getInvCDF((1 - u) * p_i + u, false);
+			return g_x_i - StatUtil.getInvCDF((1 - u) * p_i + u);
 		}
 		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
 		System.exit(0);

@@ -28,9 +28,8 @@ Rscript inst/benchmarks/run_benchmark_suite.R --folds=5 --repeats=3
 
 ## Notes
 
-- Set Java memory *before* loading `bartMachine`. You can do this via:
-  - `--java-params=-Xmx5g` (command line), or
-  - `BART_JAVA_PARAMS="-Xmx5g"` (environment variable).
+- Set Java memory and other parameters *before* loading `bartMachine`. You can do this via:
+  - `options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))`
 - Use `--list` to view all dataset definitions and `--dry-run` to list the
   filtered selection without running.
 - Large or slow datasets can be skipped with `--skip-tags=large`.

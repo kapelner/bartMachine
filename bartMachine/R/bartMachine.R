@@ -43,6 +43,8 @@
 #' @param seed Optional: sets the seed in both R and Java. Default is \code{NULL} which does not set the seed in R nor Java.
 #'   Setting the seed enforces deterministic behavior only in the case when one core is used (the default before
 #'   \code{set_bart_machine_num_cores() was invoked}.
+#' @param use_xoshiro if TRUE, use the Xoshiro256PlusPlus random number generator; if FALSE, use the legacy MersenneTwister
+#'   random number generator (default is FALSE)
 #' @param verbose Prints information about progress of the algorithm to the screen.
 #'
 #' @return
@@ -161,6 +163,7 @@ bartMachine = function(
 	flush_indices_to_save_RAM = TRUE,
 	serialize = FALSE,
 	seed = NULL,
+	use_xoshiro = FALSE,
     verbose = TRUE
     	){
   # Validate arguments
@@ -194,6 +197,7 @@ bartMachine = function(
   assert_flag(flush_indices_to_save_RAM)
   assert_flag(serialize)
   assert_int(seed, null.ok = TRUE)
+  assert_flag(use_xoshiro)
   assert_flag(verbose)
 
     	build_bart_machine(    
@@ -228,6 +232,7 @@ bartMachine = function(
 			flush_indices_to_save_RAM = flush_indices_to_save_RAM,
 			serialize = serialize,
 			seed = seed,
+			use_xoshiro = use_xoshiro,
 			verbose = verbose			
 	   )
 }
@@ -245,6 +250,8 @@ bartMachine = function(
 #' @param nu_q_cvs Only for regression. List of vectors containing (\code{nu}, \code{q}) ordered pair choices to cross-validate over. If \code{NULL}, then it defaults to the three values \code{list(c(3, 0.9), c(3, 0.99), c(10, 0.75))}.
 #' @param k_folds Number of folds for cross-validation
 #' @param folds_vec An integer vector of indices specifying which fold each observation belongs to.
+#' @param use_xoshiro if TRUE, use the Xoshiro256PlusPlus random number generator; if FALSE, use the legacy MersenneTwister
+#'   random number generator (default is FALSE)
 #' @param verbose Prints information about progress of the algorithm to the screen.
 #' @param \dots Additional arguments to be passed to \code{bartMachine}.
 #'
@@ -290,8 +297,10 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
    k_cvs = c(2, 3, 5),
    nu_q_cvs = NULL,
    k_folds = 5, 
-   folds_vec = NULL,    
-   verbose = FALSE, ...){
+   folds_vec = NULL,  
+   use_xoshiro = FALSE,   
+   verbose = FALSE, 
+   ...){
   # Validate arguments
   assert_data_frame(X, null.ok = TRUE)
   if (!is.null(y)) assert_atomic_vector(y)
@@ -301,6 +310,7 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
   assert_list(nu_q_cvs, null.ok = TRUE)
   assert_count(k_folds, positive = TRUE)
   assert_integerish(folds_vec, null.ok = TRUE)
+  assert_flag(use_xoshiro)
   assert_flag(verbose)
 
   	build_bart_machine_cv(X, y, Xy, 
@@ -309,6 +319,7 @@ bartMachineCV = function(X = NULL, y = NULL, Xy = NULL,
 	   nu_q_cvs,
 	   k_folds, 
 	   folds_vec, 
+       use_xoshiro = use_xoshiro,
 	   verbose = verbose,
 	   ...)
 }

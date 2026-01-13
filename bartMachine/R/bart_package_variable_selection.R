@@ -103,21 +103,22 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
     ##use local cutoff
-	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
+	pointwise_cutoffs = as.numeric(matrixStats::colQuantiles(permute_mat, probs = 1 - alpha))
 	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
-	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features_with_missing_features)})
+	important_vars_pointwise_col_nums = match(important_vars_pointwise_names, bart_machine$training_data_features_with_missing_features)
 	
     ##use global max cutoff
-	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
+	row_maxes = matrixStats::rowMaxs(permute_mat)
+	max_cut = quantile(row_maxes, 1 - alpha)
 	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
-	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features_with_missing_features)})
+	important_vars_simul_max_col_nums = match(important_vars_simul_max_names, bart_machine$training_data_features_with_missing_features)
 	
     #use global se cutoff
-	perm_se = apply(permute_mat, 2, sd)
-	perm_mean = apply(permute_mat, 2, mean)
+	perm_mean = colMeans(permute_mat)
+	perm_se = matrixStats::colSds(permute_mat)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
 	important_vars_simul_se_names = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se & var_true_props_avg > 0)])	
-	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features_with_missing_features)})
+	important_vars_simul_se_col_nums = match(important_vars_simul_se_names, bart_machine$training_data_features_with_missing_features)
 	
 	if (plot){
 		if (is.infinite(num_var_plot) || num_var_plot > bart_machine$p){
@@ -254,17 +255,25 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute,
 ##private - used to compute constant for global se method. simple bisection algo.
 bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm_mean, perm_se){
 	count = 0
-	guess = mean(c(x_left, x_right))
+	guess = (x_left + x_right) / 2
+	# Pre-center and scale the permutation matrix to speed up the loop
+	# We want to check if all(permute_mat[s,] - perm_mean <= guess * perm_se)
+	# which is equivalent to all((permute_mat[s,] - perm_mean) / perm_se <= guess)
+	# which is equivalent to max((permute_mat[s,] - perm_mean) / perm_se) <= guess
+	
+	# Precompute row-wise maximums of the standardized differences
+	row_max_std_diffs = apply(sweep(sweep(permute_mat, 2, perm_mean, "-"), 2, perm_se, "/"), 1, max)
+	
 	while ((x_right - x_left) / 2 >= tol & count < countLimit){
-		empirical_coverage = mean(sapply(1 : nrow(permute_mat), function(s){all(permute_mat[s,] - perm_mean <= guess * perm_se)}))
-		if (empirical_coverage - coverage == 0){
+		empirical_coverage = mean(row_max_std_diffs <= guess)
+		if (empirical_coverage == coverage){
 			break
-		} else if (empirical_coverage - coverage < 0){
+		} else if (empirical_coverage < coverage){
 			x_left = guess
 		} else {
 			x_right = guess
 		}
-		guess = mean(c(x_left, x_right))
+		guess = (x_left + x_right) / 2
 		count = count + 1
 	}
 	guess

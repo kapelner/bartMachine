@@ -38,7 +38,7 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	/** 
 	 * whether or not we use the memory cache feature
 	 * 
-	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed;	
 	/** saves indices in nodes (useful for computing weights) */
@@ -46,6 +46,11 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 	/** should we print stuff out to screen? */
 	protected boolean verbose = true;
 	
+	/** the seed for the random number generator */
+	protected Long seed;
+
+	/** whether or not to use the Xoshiro256PlusPlus random number generator */
+	protected boolean use_xoshiro;
 
 
 	/** Remove unnecessary data from the Gibbs chain to conserve RAM */
@@ -87,5 +92,13 @@ public abstract class bartMachine_a_base extends Classifier implements Serializa
 
 	public void setNumTrees(int m){
 		this.num_trees = m;
+	}
+
+	public void setSeed(int seed){
+		this.seed = (long)seed;
+	}
+
+	public void setUseXoshiro(boolean use_xoshiro){
+		this.use_xoshiro = use_xoshiro;
 	}
 }

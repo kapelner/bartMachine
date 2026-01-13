@@ -37,6 +37,7 @@ bartMachine(
   flush_indices_to_save_RAM = TRUE,
   serialize = FALSE,
   seed = NULL,
+  use_xoshiro = FALSE,
   verbose = TRUE
 )
 
@@ -72,6 +73,7 @@ build_bart_machine(
   flush_indices_to_save_RAM = TRUE,
   serialize = FALSE,
   seed = NULL,
+  use_xoshiro = FALSE,
   verbose = TRUE
 )
 }
@@ -147,6 +149,9 @@ Thus, the default is \code{FALSE}.}
 \item{seed}{Optional: sets the seed in both R and Java. Default is \code{NULL} which does not set the seed in R nor Java.
 Setting the seed enforces deterministic behavior only in the case when one core is used (the default before
 \code{set_bart_machine_num_cores() was invoked}.}
+
+\item{use_xoshiro}{if TRUE, use the Xoshiro256PlusPlus random number generator; if FALSE, use the legacy MersenneTwister
+random number generator (default is FALSE)}
 
 \item{verbose}{Prints information about progress of the algorithm to the screen.}
 }

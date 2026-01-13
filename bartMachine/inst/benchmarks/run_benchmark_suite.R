@@ -1,12 +1,14 @@
 #!/usr/bin/env Rscript
 
+#Rscript bartMachine/inst/benchmarks/run_benchmark_suite.R  --java-params="-Xmx10g"  --cores=4  --folds=5  --repeats=3
+
 
 opts <- list(
   output_dir = file.path("inst", "benchmarks", "results"),
   folds = 5,
   repeats = 1,
   seed = 123,
-  cores = 4,
+  cores = 1,
   datasets = NULL,
   packages = NULL,
   max_datasets = Inf,
@@ -14,6 +16,7 @@ opts <- list(
   list = FALSE,
   dry_run = FALSE,
   java_params = Sys.getenv("BART_JAVA_PARAMS", ""),
+  use_xoshiro = FALSE,
   bart_num_trees = 200,
   bart_burn_in = 800,
   bart_iter = 500,
@@ -34,6 +37,10 @@ parse_args <- function(args) {
     }
     if (arg == "--help") {
       opts$help <- TRUE
+      next
+    }
+    if (arg == "--use-xoshiro") {
+      opts$use_xoshiro <- TRUE
       next
     }
     if (grepl("^--", arg)) {
@@ -73,6 +80,7 @@ print_usage <- function() {
   cat("  --skip-tags=A,B           Skip datasets with these tags\n")
   cat("  --cores=N                 bartMachine cores (default: 1)\n")
   cat("  --java-params=STRING      Set options(java.parameters)\n")
+  cat("  --use-xoshiro             Use Xoshiro256PlusPlus RNG (JDK 17+)\n")
   cat("  --bart-num-trees=N        bartMachine num_trees\n")
   cat("  --bart-burn-in=N          bartMachine num_burn_in\n")
   cat("  --bart-iter=N             bartMachine num_iterations_after_burn_in\n")
@@ -126,6 +134,9 @@ opts$rf_ntree <- as_int(raw_opts$`rf-ntree`, opts$rf_ntree)
 if (!is.null(raw_opts$`rf-mtry`) && nzchar(raw_opts$`rf-mtry`)) {
   opts$rf_mtry <- as.numeric(raw_opts$`rf-mtry`)
 }
+if (!is.null(raw_opts$use_xoshiro)) {
+  opts$use_xoshiro <- isTRUE(raw_opts$use_xoshiro)
+}
 opts$list <- isTRUE(raw_opts$list)
 opts$dry_run <- isTRUE(raw_opts$dry_run)
 
@@ -170,8 +181,10 @@ if (opts$dry_run) {
   quit(status = 0)
 }
 
+
+
 if (nzchar(opts$java_params)) {
-  options(java.parameters = opts$java_params)
+  options(java.parameters = c(opts$java_params, "--add-modules=jdk.incubator.vector"))
 }
 
 suppressPackageStartupMessages({
@@ -524,6 +537,7 @@ for (dataset_index in seq_along(registry)) {
         num_trees = opts$bart_num_trees,
         num_burn_in = opts$bart_burn_in,
         num_iterations_after_burn_in = opts$bart_iter,
+        use_xoshiro = opts$use_xoshiro,
         verbose = FALSE
       )
       rf_params <- list(
@@ -726,6 +740,17 @@ if (nrow(fold_results) > 0 && "bartMachine" %in% fold_results$model && "randomFo
   
   if (length(comp_rows) > 0) {
     comparison_results <- do.call(rbind, comp_rows)
+    # Add winner and order results
+    comparison_results$winner <- ifelse(
+      comparison_results$metric %in% c("rmse", "mae", "misclass"),
+      ifelse(comparison_results$bart_mean <= comparison_results$rf_mean, "BART", "RF"),
+      ifelse(comparison_results$bart_mean >= comparison_results$rf_mean, "BART", "RF")
+    )
+    comparison_results <- comparison_results[order(
+      comparison_results$metric,
+      comparison_results$dataset,
+      comparison_results$p_value
+    ), ]
   }
 }
 

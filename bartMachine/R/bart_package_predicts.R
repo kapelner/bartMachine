@@ -74,15 +74,15 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 	}
   
 	if (object$pred_type == "regression"){	
-		bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat
+		bart_machine_get_posterior_mean(object, new_data, verbose = verbose)$y_hat
 	} else { ##classification
 	    if (type == "prob"){
 			if (isTRUE(verbose)){
 				cat("predicting probabilities where \"", object$y_levels[1], "\" is considered the target level...\n", sep = "")
 			}			
-	    	bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat
+	    	bart_machine_get_posterior_mean(object, new_data, verbose = verbose)$y_hat
 	    } else {
-	    	labels = bart_machine_get_posterior(object, new_data, verbose = verbose)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
+	    	labels = bart_machine_get_posterior_mean(object, new_data, verbose = verbose)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
 	      	#return whatever the raw y_levels were
 	      	labels_to_y_levels(object, labels)      
 	    }
@@ -92,6 +92,71 @@ predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class 
 ##private function
 labels_to_y_levels = function(bart_machine, labels){
 	factor(ifelse(labels == TRUE, bart_machine$y_levels[1], bart_machine$y_levels[2]), levels = bart_machine$y_levels)
+}
+
+.bartMachine_pred_cache <- new.env(parent = emptyenv())
+.bartMachine_pred_cache$processed_data_array <- NULL
+
+prepare_prediction_data = function(bart_machine, new_data){
+	if (!"data.frame"%in%class(new_data)){		
+		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
+	}
+	clean_data = new_data
+	if (!bart_machine$use_missing_data && !bart_machine$replace_missing_data_with_x_j_bar){
+		if (anyNA(clean_data)){
+			nrow_before = nrow(clean_data)
+			clean_data = na.omit(clean_data)
+			if (nrow_before > nrow(clean_data)){
+				warning(nrow_before - nrow(clean_data), " rows omitted due to missing data. Try using the missing data feature in \"build_bart_machine\" to be able to predict on all observations.", call. = FALSE)
+			}
+		}
+	}
+	
+	if (nrow(clean_data) == 0){
+		stop("No rows to predict.\n")
+	}
+	
+	cache = .bartMachine_pred_cache
+	if (!is.null(cache$java_bart_machine) &&
+		identical(cache$java_bart_machine, bart_machine$java_bart_machine) &&
+		!is.null(cache$raw_data) &&
+		identical(cache$raw_data, clean_data)) {
+		return(list(data = cache$processed_data, array = cache$processed_data_array))
+	}
+	
+	if (identical(clean_data, bart_machine$X) &&
+		(bart_machine$use_missing_data || bart_machine$replace_missing_data_with_x_j_bar || !anyNA(clean_data))) {
+		processed_data = bart_machine$model_matrix_training_data[, 1 : bart_machine$p, drop = FALSE]
+	} else {
+		processed_data = pre_process_new_data(clean_data, bart_machine)
+	}
+	
+	cache$java_bart_machine = bart_machine$java_bart_machine
+	cache$raw_data = clean_data
+	cache$processed_data = processed_data
+	cache$processed_data_array = .jarray(processed_data, dispatch = TRUE)
+	list(data = processed_data, array = cache$processed_data_array)
+}
+
+bart_machine_get_posterior_mean = function(bart_machine, new_data, verbose = TRUE){
+  # Validate arguments
+  assert_class(bart_machine, "bartMachine")
+  assert_data_frame(new_data)
+  assert_flag(verbose)
+
+	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
+	prepared_data = prepare_prediction_data(bart_machine, new_data)
+	new_data = prepared_data$data
+		
+	y_hat = .jcall(
+		bart_machine$java_bart_machine,
+		"[D",
+		"getPosteriorMeanForPrediction",
+		prepared_data$array,
+		as.integer(bart_machine_num_cores()),
+		simplify = TRUE
+	)
+	list(y_hat = y_hat, X = new_data)
 }
 
 ##utility function for predicting when test outcomes are known
@@ -264,49 +329,18 @@ bart_machine_get_posterior = function(bart_machine, new_data, verbose = TRUE){
   assert_flag(verbose)
 
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	if (!"data.frame"%in%class(new_data)){		
-		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
-	}
-	if (!bart_machine$use_missing_data){
-		nrow_before = nrow(new_data)
-		new_data = na.omit(new_data)
-		if (nrow_before > nrow(new_data)){
-			if (verbose){
-				cat(nrow_before - nrow(new_data), "rows omitted due to missing data. Try using the missing data feature in \"build_bart_machine\" to be able to predict on all observations.\n")
-			}
-		}
-	}
-	
-	if (nrow(new_data) == 0){
-		stop("No rows to predict.\n")
-	}
-	#pull out data objects for convenience
-	java_bart_machine = bart_machine$java_bart_machine
-	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-	n = nrow(new_data)
-	
-	#check for errors in data
-	#
-	#now process and make dummies if necessary
-	new_data = pre_process_new_data(new_data, bart_machine)
-	
-	#check for missing data if this feature was not turned on
-	if (!bart_machine$use_missing_data){
-		M = matrix(0, nrow = nrow(new_data), ncol = ncol(new_data))
-		for (i in 1 : nrow(new_data)){
-			for (j in 1 : ncol(new_data)){
-				if (is.missing(new_data[i, j])){
-					M[i, j] = 1
-				}
-			}
-		}
-		if (sum(M) > 0){
-			warning("missing data found in test data and bartMachine was not built with missing data feature!\n")
-		}		
-	}
+	prepared_data = prepare_prediction_data(bart_machine, new_data)
+	new_data = prepared_data$data
 	
 	y_hat_posterior_samples = 
-		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
+		.jcall(
+			bart_machine$java_bart_machine,
+			"[[D",
+			"getGibbsSamplesForPrediction",
+			prepared_data$array,
+			as.integer(bart_machine_num_cores()),
+			simplify = TRUE
+		)
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)
@@ -362,26 +396,17 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
   assert_number(ci_conf, lower = 0, upper = 1)
 
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	
-	#first convert the rows to the correct dummies etc
-	new_data = pre_process_new_data(new_data, bart_machine)
-	n_test = nrow(new_data)
-	
-	ci_lower_bd = array(NA, n_test)
-	ci_upper_bd = array(NA, n_test)	
-	
-	y_hat_posterior_samples = ##get samples
-		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
-	
-	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
-	y_hat = rowMeans(y_hat_posterior_samples)
-	
-	for (i in 1 : n_test){		
-		ci_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ci_conf) / 2)
-		ci_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ci_conf) / 2)
-	}
-	#put them together and return
-	cbind(ci_lower_bd, ci_upper_bd)
+	prepared_data = prepare_prediction_data(bart_machine, new_data)
+
+	.jcall(
+		bart_machine$java_bart_machine,
+		"[[D",
+		"getCredibleIntervalsForPrediction",
+		prepared_data$array,
+		as.double(ci_conf),
+		as.integer(bart_machine_num_cores()),
+		simplify = TRUE
+	)
 }
 
 ##compute prediction intervals
@@ -449,38 +474,15 @@ calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, num
 		stop("Prediction intervals are not possible for classification.")
 	}
   
-	#first convert the rows to the correct dummies etc
-	new_data = pre_process_new_data(new_data, bart_machine)
-	n_test = nrow(new_data)
-	
-	pi_lower_bd = array(NA, n_test)
-	pi_upper_bd = array(NA, n_test)	
-	
-	y_hat_posterior_samples = 
-		.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores()), simplify = TRUE)
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-	
-	
-	#for each row in new_data we have to get a B x n_G matrix of draws from the normal
-	
-	all_prediction_samples = matrix(NA, nrow = n_test, ncol = num_samples_per_data_point)
-	for (i in 1 : n_test){		
-		#get all the y_hats in the posterior for this datapoint
-		y_hats = y_hat_posterior_samples[i, ]
-		#make a sample of gibbs samples to pull from
-		n_gs = sample(1 : bart_machine$num_iterations_after_burn_in, num_samples_per_data_point, replace = TRUE)
-		#now make num_samples_per_data_point draws from y_hat
-		for (k in 1 : num_samples_per_data_point){
-			y_hat_draw = y_hats[n_gs[k]]
-			sigsq_draw = sigsqs[n_gs[k]]
-			all_prediction_samples[i, k] = rnorm(1, mean = y_hat_draw, sd = sqrt(sigsq_draw))	
-		}
-	}
-	
-	for (i in 1 : n_test){		
-		pi_lower_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
-		pi_upper_bd[i] = quantile(c(all_prediction_samples[i, ]), (1 + pi_conf) / 2)
-	}
-	#put them together and return
-	list(interval = cbind(pi_lower_bd, pi_upper_bd), all_prediction_samples = all_prediction_samples)
+	prepared_data = prepare_prediction_data(bart_machine, new_data)
+	.jcall(
+		bart_machine$java_bart_machine,
+		"[[D",
+		"getPredictionIntervalsForPrediction",
+		prepared_data$array,
+		as.double(pi_conf),
+		as.integer(num_samples_per_data_point),
+		as.integer(bart_machine_num_cores()),
+		simplify = TRUE
+	)
 }

@@ -73,7 +73,7 @@ node_prediction_training_data_indices = function(bart_machine, new_data = NULL){
 #'
 #' @examples
 #' \dontrun{
-#' options(java.parameters = "-Xmx10g")
+#' options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 #' pacman::p_load(bartMachine, tidyverse)
 #' 
 #' seed = 1984
@@ -164,7 +164,7 @@ BAD_FLAG_DOUBLE = -1.7976931348623157e+308
 #'
 #' @examples
 #' \dontrun{
-#' options(java.parameters = "-Xmx10g")
+#' options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 #' pacman::p_load(bartMachine)
 #' 
 #' seed = 1984

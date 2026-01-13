@@ -59,11 +59,52 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	protected Double sample_var_y;
 	/** if a covariate is a key here, the value defines interaction between the variables that are legal */
 	protected HashMap<Integer, IntOpenHashSet> interaction_constraints;
-		
+	
+	/** A cached table of log(sigsq + n * hyper_sigsq_mu) for n = 0 to N */
+	protected transient double[] log_sigsq_plus_n_sigsq_mu_table;
+	/** Cached log(sigsq) */
+	protected transient double log_sigsq;
+	
+	/** A cached table of log(i) for i = 0 to max(N, P) */
+	protected transient double[] log_table;
+	/** A cached table of the depth-dependent part of the tree prior log-ratio */
+	protected transient double[] depth_prior_log_ratio_table;
+
 	/** A wrapper to set data which also calculates hyperparameters and statistics about the repsonse variable */
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		calculateHyperparameters();	
+		calculateHyperparameters();
+		initializeGlobalLogTables();
+	}
+	
+	/** Initializes the global log tables */
+	private void initializeGlobalLogTables() {
+		int max_val = Math.max(n, Math.max(p, num_trees));
+		log_table = new double[max_val + 1];
+		log_table[0] = Double.NEGATIVE_INFINITY;
+		for (int i = 1; i <= max_val; i++) {
+			log_table[i] = Math.log(i);
+		}
+		
+		// Precompute depth prior table for depths 0 to 100
+		depth_prior_log_ratio_table = new double[101];
+		double log_alpha = Math.log(alpha);
+		for (int d = 0; d <= 100; d++) {
+			double term1 = 1 - alpha / Math.pow(2 + d, beta);
+			double term2 = Math.pow(1 + d, beta) - alpha;
+			depth_prior_log_ratio_table[d] = log_alpha + 2 * Math.log(term1) - Math.log(term2);
+		}
+	}
+	
+	/** Updates the log table after a new sigsq is sampled */
+	protected void updateLogSigsqTable(double sigsq) {
+		if (log_sigsq_plus_n_sigsq_mu_table == null || log_sigsq_plus_n_sigsq_mu_table.length != n + 1) {
+			log_sigsq_plus_n_sigsq_mu_table = new double[n + 1];
+		}
+		log_sigsq = Math.log(sigsq);
+		for (int i = 0; i <= n; i++) {
+			log_sigsq_plus_n_sigsq_mu_table[i] = Math.log(sigsq + i * hyper_sigsq_mu);
+		}
 	}
 	
 	/** Computes <code>hyper_sigsq_mu</code> and <code>hyper_lambda</code>. */
@@ -90,7 +131,7 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	
 	/** Computes the transformed y variable using the procedure outlined in the following paper:
 	 *  
-	 *  @see HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics, 4(1): 266-298, 2010.
+	 *  See HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees. The Annals of Applied Statistics, 4(1): 266-298, 2010.
 	 */
 	protected void transformResponseVariable() {
 		super.transformResponseVariable();
@@ -135,6 +176,28 @@ public abstract class bartMachine_b_hyperparams extends bartMachine_a_base imple
 	 */
 	public double un_transform_y(double yt_i){
 		return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
+	}
+
+	/**
+	 * Vectorized version of un_transform_y for batch processing.
+	 */
+	public void un_transform_y_batch(double[] yt, double[] y_out) {
+		int n = yt.length;
+		var species = jdk.incubator.vector.DoubleVector.SPECIES_PREFERRED;
+		var v_YminAndYmaxHalfDiff = jdk.incubator.vector.DoubleVector.broadcast(species, YminAndYmaxHalfDiff);
+		var v_range = jdk.incubator.vector.DoubleVector.broadcast(species, y_max - y_min);
+		var v_y_min = jdk.incubator.vector.DoubleVector.broadcast(species, y_min);
+		
+		int i = 0;
+		int loopBound = species.loopBound(n);
+		for (; i < loopBound; i += species.length()) {
+			var v = jdk.incubator.vector.DoubleVector.fromArray(species, yt, i);
+			// (v + diff) * range + min
+			v.add(v_YminAndYmaxHalfDiff).mul(v_range).add(v_y_min).intoArray(y_out, i);
+		}
+		for (; i < n; i++) {
+			y_out[i] = un_transform_y(yt[i]);
+		}
 	}
 	
 	/**

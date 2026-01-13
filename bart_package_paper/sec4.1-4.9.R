@@ -1,7 +1,7 @@
 
 
 ###### section 4.1
-options(java.parameters = "-Xmx5000m")
+options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 library(bartMachine)
 set_bart_machine_num_cores(4)
 

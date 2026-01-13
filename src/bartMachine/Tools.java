@@ -3,6 +3,10 @@ package bartMachine;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import jdk.incubator.vector.DoubleVector;
+import jdk.incubator.vector.IntVector;
+import jdk.incubator.vector.VectorOperators;
+
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -53,13 +57,13 @@ public class Tools {
 		if (all == null){
 			return " NULL ARRAY ";
 		}		
-		String joined = "";
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < all.length; i++){
-			joined += all[i];
+			sb.append(all[i]);
 			if (i < all.length - 1)
-				joined += joinby;
+				sb.append(joinby);
 		}
-		return joined;
+		return sb.toString();
 	}
 	
 	/**
@@ -73,13 +77,13 @@ public class Tools {
 		if (all == null){
 			return " NULL ARRAY ";
 		}		
-		String joined = "";
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < all.length; i++){
-			joined += all[i];
+			sb.append(all[i]);
 			if (i < all.length - 1)
-				joined += joinby;
+				sb.append(joinby);
 		}
-		return joined;
+		return sb.toString();
 	}
 	
 	/**
@@ -154,13 +158,16 @@ public class Tools {
 	 * @return			the final product: str1 + joinby + str2 + . . . + strN
 	 */	
 	public static String StringJoin(Object[] all, String joinby){
-		String joined = "";
-		for (int i = 0; i < all.length; i++){
-			joined += all[i];
-			if (i < all.length - 1)
-				joined += joinby;
+		if (all == null){
+			return " NULL ARRAY ";
 		}
-		return joined;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < all.length; i++){
+			sb.append(all[i]);
+			if (i < all.length - 1)
+				sb.append(joinby);
+		}
+		return sb.toString();
 	}	
 	
 	/**
@@ -208,11 +215,26 @@ public class Tools {
 	 * @return			The maximum of those values
 	 */
     public static double max(double[] values) {
-    	double max = Double.NEGATIVE_INFINITY;
-        for (double value : values) {
-        	if (value > max){
-        		max = value;
-        	}
+        if (values == null || values.length == 0) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        
+        var species = DoubleVector.SPECIES_PREFERRED;
+        var maxVec = DoubleVector.broadcast(species, Double.NEGATIVE_INFINITY);
+        int i = 0;
+        int upperBound = species.loopBound(values.length);
+        
+        for (; i < upperBound; i += species.length()) {
+            var v = DoubleVector.fromArray(species, values, i);
+            maxVec = maxVec.max(v);
+        }
+        
+        double max = maxVec.reduceLanes(VectorOperators.MAX);
+        
+        for (; i < values.length; i++) {
+            if (values[i] > max) {
+                max = values[i];
+            }
         }
         return max;
     }
@@ -224,8 +246,16 @@ public class Tools {
      * @return		The sum of those values
      */
     public static double sum_array(double[] arr){
-    	double sum = 0;
-    	for (int i = 0; i < arr.length; i++){
+    	var species = DoubleVector.SPECIES_PREFERRED;
+    	var sumVec = DoubleVector.zero(species);
+    	int i = 0;
+    	int upperBound = species.loopBound(arr.length);
+    	for (; i < upperBound; i += species.length()) {
+    		var v = DoubleVector.fromArray(species, arr, i);
+    		sumVec = sumVec.add(v);
+    	}
+    	double sum = sumVec.reduceLanes(VectorOperators.ADD);
+    	for (; i < arr.length; i++){
     		sum += arr[i];
     	}
     	return sum;
@@ -255,8 +285,17 @@ public class Tools {
      * @return		The sum of the inverses of those values
      */
 	public static double sum_inv_array(double[] arr) {
-    	double sum = 0;
-    	for (int i = 0; i < arr.length; i++){
+		var species = DoubleVector.SPECIES_PREFERRED;
+		var sumVec = DoubleVector.zero(species);
+		var oneVec = DoubleVector.broadcast(species, 1.0);
+		int i = 0;
+		int upperBound = species.loopBound(arr.length);
+		for (; i < upperBound; i += species.length()) {
+			var v = DoubleVector.fromArray(species, arr, i);
+			sumVec = sumVec.add(oneVec.div(v));
+		}
+		double sum = sumVec.reduceLanes(VectorOperators.ADD);
+    	for (; i < arr.length; i++){
     		sum += 1 / arr[i];
     	}
     	return sum;
@@ -269,7 +308,14 @@ public class Tools {
 	 */
     public static void normalize_array(double[] arr){
     	double weight = sum_array(arr);
-    	for (int i = 0; i < arr.length; i++){
+		var species = DoubleVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(arr.length);
+		for (; i < upperBound; i += species.length()) {
+			var v = DoubleVector.fromArray(species, arr, i);
+			v.div(weight).intoArray(arr, i);
+		}
+    	for (; i < arr.length; i++){
     		arr[i] = arr[i] / weight;
     	}
     }
@@ -281,7 +327,14 @@ public class Tools {
 	 * @param arr		The values of interest
 	 */
     public static void weight_arr(double[] arr, double weight){
-    	for (int i = 0; i < arr.length; i++){
+		var species = DoubleVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(arr.length);
+		for (; i < upperBound; i += species.length()) {
+			var v = DoubleVector.fromArray(species, arr, i);
+			v.div(weight).intoArray(arr, i);
+		}
+    	for (; i < arr.length; i++){
     		arr[i] = arr[i] / weight;
     	}
     }    
@@ -296,7 +349,15 @@ public class Tools {
 	public static double[] subtract_arrays(double[] arr1, double[] arr2) {
 		int n = arr1.length;
 		double[] diff = new double[n];
-		for (int i = 0; i < n; i++){
+		var species = DoubleVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(n);
+		for (; i < upperBound; i += species.length()) {
+			var v1 = DoubleVector.fromArray(species, arr1, i);
+			var v2 = DoubleVector.fromArray(species, arr2, i);
+			v1.sub(v2).intoArray(diff, i);
+		}
+		for (; i < n; i++){
 			diff[i] = arr1[i] - arr2[i];
 		}
 		return diff;
@@ -312,7 +373,15 @@ public class Tools {
 	public static double[] add_arrays(double[] arr1, double[] arr2) {
 		int n = arr1.length;
 		double[] sum = new double[n];
-		for (int i = 0; i < n; i++){
+		var species = DoubleVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(n);
+		for (; i < upperBound; i += species.length()) {
+			var v1 = DoubleVector.fromArray(species, arr1, i);
+			var v2 = DoubleVector.fromArray(species, arr2, i);
+			v1.add(v2).intoArray(sum, i);
+		}
+		for (; i < n; i++){
 			sum[i] = arr1[i] + arr2[i];
 		}
 		return sum;
@@ -344,7 +413,15 @@ public class Tools {
 	public static int[] add_arrays(int[] arr1, int[] arr2) {
 		int n = arr1.length;
 		int[] sum = new int[n];
-		for (int i = 0; i < n; i++){
+		var species = IntVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(n);
+		for (; i < upperBound; i += species.length()) {
+			var v1 = IntVector.fromArray(species, arr1, i);
+			var v2 = IntVector.fromArray(species, arr2, i);
+			v1.add(v2).intoArray(sum, i);
+		}
+		for (; i < n; i++){
 			sum[i] = arr1[i] + arr2[i];
 		}
 		return sum;
@@ -361,7 +438,20 @@ public class Tools {
 	public static int[] binary_add_arrays(int[] arr1, int[] arr2) {
 		int n = arr1.length;
 		int[] sum = new int[n];
-		for (int i = 0; i < n; i++){
+		var species = jdk.incubator.vector.IntVector.SPECIES_PREFERRED;
+		var v_zero = jdk.incubator.vector.IntVector.zero(species);
+		int i = 0;
+		int loopBound = species.loopBound(n);
+		for (; i < loopBound; i += species.length()) {
+			var v1 = jdk.incubator.vector.IntVector.fromArray(species, arr1, i);
+			var v2 = jdk.incubator.vector.IntVector.fromArray(species, arr2, i);
+			
+			var b1 = v_zero.add(1, v1.compare(jdk.incubator.vector.VectorOperators.GE, 1));
+			var b2 = v_zero.add(1, v2.compare(jdk.incubator.vector.VectorOperators.GE, 1));
+			
+			b1.add(b2).intoArray(sum, i);
+		}
+		for (; i < n; i++){
 			sum[i] = (arr1[i] >= 1 ? 1 : 0) + (arr2[i] >= 1 ? 1 : 0);
 		}
 		return sum;

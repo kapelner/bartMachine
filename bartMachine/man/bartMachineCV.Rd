@@ -14,6 +14,7 @@ bartMachineCV(
   nu_q_cvs = NULL,
   k_folds = 5,
   folds_vec = NULL,
+  use_xoshiro = FALSE,
   verbose = FALSE,
   ...
 )
@@ -27,6 +28,7 @@ build_bart_machine_cv(
   nu_q_cvs = NULL,
   k_folds = 5,
   folds_vec = NULL,
+  use_xoshiro = FALSE,
   verbose = TRUE,
   ...
 )
@@ -47,6 +49,9 @@ build_bart_machine_cv(
 \item{k_folds}{Number of folds for cross-validation}
 
 \item{folds_vec}{An integer vector of indices specifying which fold each observation belongs to.}
+
+\item{use_xoshiro}{if TRUE, use the Xoshiro256PlusPlus random number generator; if FALSE, use the legacy MersenneTwister
+random number generator (default is FALSE)}
 
 \item{verbose}{Prints information about progress of the algorithm to the screen.}
 

@@ -31,7 +31,7 @@ The intuition is because due to the backfitting there is multiple counting. But 
 }
 \examples{
 \dontrun{
-options(java.parameters = "-Xmx10g")
+options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))
 pacman::p_load(bartMachine, tidyverse)
 
 seed = 1984

@@ -2,6 +2,9 @@ package bartMachine;
 
 import java.io.Serializable;
 
+import jdk.incubator.vector.DoubleVector;
+import jdk.incubator.vector.VectorOperators;
+
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
@@ -74,9 +77,17 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 */
 	protected double drawSigsqFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
-		double sse = 0;
-		for (double e : es){
-			sse += e * e; 
+		var species = DoubleVector.SPECIES_PREFERRED;
+		var sseVec = DoubleVector.zero(species);
+		int i = 0;
+		int upperBound = species.loopBound(es.length);
+		for (; i < upperBound; i += species.length()) {
+			var v = DoubleVector.fromArray(species, es, i);
+			sseVec = v.fma(v, sseVec);
+		}
+		double sse = sseVec.reduceLanes(VectorOperators.ADD);
+		for (; i < es.length; i++){
+			sse = Math.fma(es[i], es[i], sse); 
 		}
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
@@ -101,7 +112,7 @@ public abstract class bartMachine_f_gibbs_internal extends bartMachine_e_gibbs_b
 	 * @return		The number of valid predictors
 	 */
 	public double pAdj(bartMachineTreeNode node){
-		if (node.padj == null){
+		if (node.padj == -1){
 			node.padj = node.predictorsThatCouldBeUsedToSplitAtNode().size();
 		}
 		return node.padj;

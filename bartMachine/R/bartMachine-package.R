@@ -4,10 +4,9 @@
 #' @import bartMachineJARs
 #' @import randomForest
 #' @import missForest
-#' @import graphics
-#' @import grDevices
 #' @import stats
 #' @importFrom utils packageVersion tail
+#' @importFrom grDevices rgb
 #' @import grid
 #' @import checkmate
 #' @keywords internal

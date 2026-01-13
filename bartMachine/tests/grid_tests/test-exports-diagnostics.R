@@ -31,8 +31,16 @@ test_that("posterior and interval helpers return expected structures", {
     reg_model$X[idx, , drop = FALSE],
     num_samples_per_data_point = BART_TESTS$prediction_samples_per_point
   )
-  expect_true(is.list(pred))
-  expect_equal(nrow(pred$interval), BART_TESTS$posterior_subset_n)
+  expect_true(is.matrix(pred))
+  expect_equal(nrow(pred), BART_TESTS$posterior_subset_n)
+
+  tol <- 1e-8
+  expect_true(all(cred[, 1] >= pred[, 1] - tol))
+  expect_true(all(cred[, 2] <= pred[, 2] + tol))
+  expect_true(all(posterior$y_hat >= cred[, 1] - tol))
+  expect_true(all(posterior$y_hat <= cred[, 2] + tol))
+  expect_true(all(posterior$y_hat >= pred[, 1] - tol))
+  expect_true(all(posterior$y_hat <= pred[, 2] + tol))
 })
 
 test_that("covariate tests and linearity test return p-values", {
