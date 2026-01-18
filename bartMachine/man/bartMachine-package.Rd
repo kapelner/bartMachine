@@ -15,7 +15,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Adam Kapelner \email{kapelner@qc.cuny.edu} (ORCID: 0000-0001-5985-6792)
+\strong{Maintainer}: Adam Kapelner \email{kapelner@qc.cuny.edu} (\href{https://orcid.org/0000-0001-5985-6792}{ORCID})
 
 Authors:
 \itemize{

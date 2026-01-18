@@ -1,18 +1,17 @@
 Package: bartMachine
 Type: Package
 Title: Bayesian Additive Regression Trees
-Version: 1.4
+Version: 1.4.1
 Date: 2026-01-12
-Author: Adam Kapelner [aut, cre] (ORCID: 0000-0001-5985-6792), Justin Bleich [aut]
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Authors@R: c(person(given = "Adam",
                   family = "Kapelner",
                   role = c("aut", "cre"),
                   email = "kapelner@qc.cuny.edu",
-                  comment = "ORCID: 0000-0001-5985-6792"),
+                  comment = c(ORCID = "0000-0001-5985-6792")),
              person(given = "Justin",
-	              family = "Bleich",
-	              role = "aut"))
+                      family = "Bleich",
+                      role = "aut"))
 Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
 License: GPL-3
 Encoding: UTF-8

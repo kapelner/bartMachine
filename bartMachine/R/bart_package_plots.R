@@ -722,7 +722,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 #' @references
 #' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
 #' with Bayesian Additive Regression Trees. Journal of Statistical
-#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#' Software, 70(4), 1-40. \doi{10.18637/jss.v070.i04}
 #' 
 #' J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
 #' Additive Regression Trees. ArXiv e-prints, 2013.
@@ -976,7 +976,7 @@ shapiro_wilk_p_val = function(vec){
 #' @references
 #' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
 #' with Bayesian Additive Regression Trees. Journal of Statistical
-#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#' Software, 70(4), 1-40. \doi{10.18637/jss.v070.i04}
 #'
 #' @seealso
 #' \code{\link{investigate_var_importance}}
@@ -1175,7 +1175,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 #' @references
 #' Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
 #' with Bayesian Additive Regression Trees. Journal of Statistical
-#' Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+#' Software, 70(4), 1-40. \doi{10.18637/jss.v070.i04}
 #' 
 #' HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
 #' The Annals of Applied Statistics, 4(1): 266--298, 2010.

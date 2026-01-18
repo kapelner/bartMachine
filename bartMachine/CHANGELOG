@@ -1,3 +1,6 @@
+v1.4.1
+* fix onAttach to pass CRAN checks
+
 v1.4
 * major speedups throughout Java code using new features in JDK 21 (the java version now required)
 * major speedups throughout R code by moving heavy lifting to Java or otherwise using smarter vector operations

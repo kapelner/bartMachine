@@ -88,7 +88,7 @@ summary(bart_machine_cv)
 \references{
 Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning
 with Bayesian Additive Regression Trees. Journal of Statistical
-Software, 70(4), 1-40. doi:10.18637/jss.v070.i04
+Software, 70(4), 1-40. \doi{10.18637/jss.v070.i04}
 }
 \seealso{
 \code{\link{bartMachine}}
