@@ -28,7 +28,7 @@ Recent News
 
 January, 2026
 
-v1.3.5-1.4 released - major speedups using Java 21+ advancements and "Vector API code", switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction.
+v1.3.5-1.4.1 released - major speedups using Java 21+ advancements and "Vector API code", switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction.
 
 
 The Paper
