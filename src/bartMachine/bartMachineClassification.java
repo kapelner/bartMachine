@@ -97,6 +97,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
 			gibbs_samples_of_sigsq[g] = SIGSQ_FOR_PROBIT;
 		}
+		updateLogSigsqTable(SIGSQ_FOR_PROBIT);
 	}
 
 	/**
@@ -115,4 +116,12 @@ public class bartMachineClassification extends bartMachineRegression implements 
 	public double un_transform_y(double yt_i){
 		return yt_i; //do nothing
 	}	
+
+	@Override
+	public void un_transform_y_batch(double[] yt, double[] y_out) {
+		if (yt == y_out) {
+			return;
+		}
+		System.arraycopy(yt, 0, y_out, 0, yt.length);
+	}
 }
