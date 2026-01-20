@@ -28,7 +28,7 @@ Recent News
 
 January, 2026
 
-v1.3.5-1.4.1.1 released - major speedups using Java 21+ advancements and "Vector API code", switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction. Note: v1.4.1 has a bug where classification doesn't work. Please upgrade to v1.4.1.1.
+v1.3.5-1.4.1.1 released - major speedups using Java 21+ advancements and "Vector API code" (see benchmark section below), switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction. Note: v1.4.1 has a bug where classification doesn't work. Please upgrade to v1.4.1.1.
 
 
 The Paper
@@ -83,6 +83,64 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 
 (At least under GNU/Linux) even if you set `set_bart_machine_num_cores(1)`, CPU usage per process can be much larger than 100% (reaching at times 200% or 300%). This can lead to CPU overloading, especially if you run multiple bartMachines in parallel (for example, if you use the [SuperLearner](https://cran.r-project.org/web/packages/SuperLearner/) package and use parallelization). This seems to be a consequence of the garbage collector. One way to avoid this problem is to issue `Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")` *before* invoking `library(bartMachine)`. (If you use a cluster, for example a SNOW cluster, you will want to do this in the slaves too, for example `clusterEvalQ(the_name_of_your_cluster, {Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")})`).
 
+Benchmarks v1.4.1.1 to v1.3.5
+------------------
+
+You can see how we did these benchmarks in `run_comparisons.sh`. We compared regression and classification for 1 core and 12 cores for (a) predictions (to ensure they are roughly the same to the previous version) and (b) speed. Here are the results.
+
+```
+--- Single-Core Regression ---
+Maximum Absolute Difference in Predictions (Last Iter): 3.10832
+Average MSE (Old): 2.0015080457
+Average MSE (New): 2.0337961078
+MSE Difference Mean: 3.2288e-02 (p-val: 4.4706e-01)
+Winner (MSE): No Significant Difference
+Average Train Time (Old): 8.057 s, (New): 4.369 s
+Average Predict Time (Old): 14.013 s, (New): 2.558 s
+Training Speedup: 45.77%
+Predict Speedup: 81.74%
+Training Time p-value:   3.6343e-08
+Prediction Time p-value: 1.2483e-10
+
+--- Multi-Core Regression (12 Cores) ---
+Maximum Absolute Difference in Predictions (Last Iter): 1.24406
+Average MSE (Old): 1.7044720879
+Average MSE (New): 1.6851107882
+MSE Difference Mean: -1.9361e-02 (p-val: 7.0423e-02)
+Winner (MSE): No Significant Difference
+Average Train Time (Old): 8.864 s, (New): 2.605 s
+Average Predict Time (Old): 1.644 s, (New): 0.307 s
+Training Speedup: 70.61%
+Predict Speedup: 81.32%
+Training Time p-value:   3.5447e-24
+Prediction Time p-value: 1.7334e-12
+
+--- Single-Core Classification ---
+Maximum Absolute Difference in Predictions (Last Iter): 0.0561842
+Average Misclassification Error (Old): 0.1693235294
+Average Misclassification Error (New): 0.1694411765
+Misclassification Error Difference Mean: 1.1765e-04 (p-val: 8.5238e-01)
+Winner (Misclassification Error): No Significant Difference
+Average Train Time (Old): 10.508 s, (New): 5.903 s
+Average Predict Time (Old): 13.741 s, (New): 2.703 s
+Training Speedup: 43.82%
+Predict Speedup: 80.33%
+Training Time p-value:   1.0643e-10
+Prediction Time p-value: 3.8494e-09
+
+--- Multi-Core Classification (12 Cores) ---
+Maximum Absolute Difference in Predictions (Last Iter): 0.0584479
+Average Misclassification Error (Old): 0.1687058824
+Average Misclassification Error (New): 0.1687941176
+Misclassification Error Difference Mean: 8.8235e-05 (p-val: 7.6356e-01)
+Winner (Misclassification Error): No Significant Difference
+Average Train Time (Old): 11.213 s, (New): 4.098 s
+Average Predict Time (Old): 1.941 s, (New): 0.318 s
+Training Speedup: 63.45%
+Predict Speedup: 83.63%
+Training Time p-value:   4.0458e-23
+Prediction Time p-value: 4.4088e-15
+```
 
 Acknowledgements
 ------------------
