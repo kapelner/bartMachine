@@ -2,13 +2,15 @@ package bartMachine;
 
 import java.io.Serializable;
 
-import gnu.trove.list.array.TIntArrayList;
+import jdk.incubator.vector.DoubleVector;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
  * This portion of the code implements the informed prior information on covariates feature.
  * 
  * @author 	Adam Kapelner and Justin Bleich
- * @see 	Section 4.10 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+ * See Section 4.10 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
  */
 @SuppressWarnings("serial")
 public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements Serializable{
@@ -27,7 +29,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	 * @return		The index of the column to split on
 	 */
 	private int pickRandomPredictorThatCanBeAssignedF1(bartMachineTreeNode node){
-		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+		IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);
 		//choose predictor based on random prior value	
@@ -41,7 +43,7 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	 * @return			The prior-adjusted number of covariates that can be split
 	 */
 	private double pAdjF1(bartMachineTreeNode node) {
-		if (node.padj == null){
+		if (node.padj == -1){
 			node.padj = node.predictorsThatCouldBeUsedToSplitAtNode().size();
 		}
 		if (node.padj == 0){
@@ -51,14 +53,14 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 			return node.padj;
 		}			
 		//pull out weighted cov split prior subset vector
-		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+		IntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);	
 		
 		//find index inside predictor vector
 		int index = bartMachineTreeNode.BAD_FLAG_int;
 		for (int i = 0; i < predictors.size(); i++){
-			if (predictors.get(i) == node.splitAttributeM){
+			if (predictors.getInt(i) == node.splitAttributeM){
 				index = i;
 				break;
 			}
@@ -75,10 +77,18 @@ public class bartMachine_i_prior_cov_spec extends bartMachine_h_eval implements 
 	 * @param predictors	The indices of the valid covariates
 	 * @return				The updated and renormalized prior probability vector on the covariates to split
 	 */
-	private double[] getWeightedCovSplitPriorSubset(TIntArrayList predictors) {
+	private double[] getWeightedCovSplitPriorSubset(IntArrayList predictors) {
 		double[] weighted_cov_split_prior_subset = new double[predictors.size()];
-		for (int i = 0; i < predictors.size(); i++){
-			weighted_cov_split_prior_subset[i] = cov_split_prior[predictors.get(i)];
+		var species = DoubleVector.SPECIES_PREFERRED;
+		int[] predIndices = predictors.elements();
+		int i = 0;
+		int loopBound = species.loopBound(predictors.size());
+		for (; i < loopBound; i += species.length()) {
+			DoubleVector.fromArray(species, cov_split_prior, 0, predIndices, i)
+					.intoArray(weighted_cov_split_prior_subset, i);
+		}
+		for (; i < predictors.size(); i++){
+			weighted_cov_split_prior_subset[i] = cov_split_prior[predIndices[i]];
 		}
 		Tools.normalize_array(weighted_cov_split_prior_subset);
 		return weighted_cov_split_prior_subset;

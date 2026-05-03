@@ -28,7 +28,7 @@ Recent News
 
 May, 2026
 
-v1.4.2 released - major speedups using GPU via TornadoVM (see relevant section below). Additional speedups from multiple R-> Java migrations.
+v1.4.2 released - major speedups using GPU via TornadoVM (see relevant sections below). Additional speedups from multiple R-> Java migrations.
 v1.3.5-1.4.1.1 released - major speedups using Java 21+ advancements and "Vector API code" (see benchmark section below), switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction. Note: v1.4.1 has a bug where classification doesn't work. Please upgrade to v1.4.1.1.
 
 
@@ -63,7 +63,9 @@ Use `install.packages("rJava")` within R. If you experience errors, make sure yo
 
 Use `install.packages("bartMachine")` within R.
 
-### Install bartMachine via compilation from source
+### Install bartMachine via compilation from source (CPU only)
+
+For compiling with GPU optimizations, see next section.
 
 1. Make sure you have [git](http://git-scm.com/downloads "Download git for all operating systems") 
 properly installed.
@@ -80,9 +82,101 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can be corrected by running `R CMD INSTALL --no-multiarch bartMachine` (I haven't seen this issue in years though). This may also fail if you don't have the required packages installed (run `install.packages("bartMachineJARs")` and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. In R, you can now run `library(bartMachine)` and start using the package normally.
 
 
-#### Limiting CPU usage
+### Install bartMachine via compilation from source (GPU + CPU)
+
+GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/), which dispatches prediction kernels to CUDA/OpenCL devices. The build auto-detects TornadoVM — no special flags are needed when TornadoVM is properly installed. 
+
+1. Follow steps 1–3 of the CPU-only instructions above (git clone, Java JDK, Apache Ant). At the time of this writing, TornadoVM only works with Java JDK version 21, so you sohuld download that version.
+
+2. Install [TornadoVM](https://tornadovm.readthedocs.io/en/latest/installation.html). The TornadoVM installer sets the `TORNADO_SDK` environment variable; make sure it is set in the shell where you will run `ant`.
+
+3. Compile with `ant clean`. The build will automatically find `$TORNADO_SDK/share/java/tornado/tornado-api*.jar` and compile `GpuForestPredictor.java` in a second pass. You will see a line like `TornadoVM detected at: ...` in the build output. For non-standard installs where `TORNADO_SDK` is not set, you can override manually: `ant -Dtornadovm.jar=/path/to/tornado-api.jar clean`.
+
+4. Install into R using `R CMD INSTALL bartMachine` (same as the CPU-only step 5 above).
+
+5. Before loading the package in R, set the JVM flags for your GPU hardware. The first three flags (`-Xmx20g`, `--add-modules=jdk.incubator.vector`, `-XX:+UseZGC`) are always required; the rest are TornadoVM backend flags.
+
+   **NVIDIA GPU (CUDA/PTX backend):**
+   ```r
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "-Dtornado.backends=ptx-backend",
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+   ```
+
+   **Intel GPU (Level Zero / SPIR-V backend):**
+   ```r
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "-Dtornado.backends=spirv-backend",
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+   ```
+
+   **AMD GPU or Intel GPU (OpenCL backend):**
+   ```r
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "-Dtornado.backends=opencl-backend",
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+   ```
+
+   **Mac — Apple Silicon or Intel Mac (OpenCL backend, supported):**
+   ```r
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "-Dtornado.backends=opencl-backend",
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+   ```
+   Note: macOS ships with OpenCL (deprecated but functional) and is the recommended path. TornadoVM's Metal backend is still experimental but can be tried on Apple Silicon:
+
+   **Mac — Apple Silicon (Metal backend, experimental):**
+   ```r
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "-Dtornado.backends=metal-backend",
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+   ```
+
+   For the authoritative, version-specific list of all required flags for your TornadoVM build, run `$TORNADO_SDK/bin/tornado --printJVMFlags` and append any additional flags it emits to the `java.parameters` vector above.
+
+6. GPU acceleration is enabled by default. You can toggle it per-session:
+   ```r
+   options(bartMachine.use_gpu = TRUE)   # default — use GPU when available
+   options(bartMachine.use_gpu = FALSE)  # force CPU path
+   ```
+   At runtime the GPU path activates only when a real CUDA/OpenCL device is found; it falls back to CPU transparently if no GPU is available or if `GpuForestPredictor` cannot be loaded.
+
+The following regression operations dispatch directly to the GPU when the number of test records is ≥ 1,000:
+
+- **Posterior mean prediction** (`predict`)
+- **Posterior samples** (`bart_machine_get_posterior`)
+- **Credible intervals** (`calc_credible_intervals`)
+
+The following regression operations are Java-parallelized (CPU thread pool) and additionally use the GPU for their internal prediction calls when the dataset is large enough:
+
+- **Variable importance permutations** (`var_selection_by_permute`)
+- **Covariate importance tests** (`cov_importance_test`)
+- **k-fold cross-validation** (`k_fold_cv`)
+
+Classification and prediction batches with fewer than 1,000 records always use the CPU path.
+
+
+#### Limiting CPU core usage
 
 (At least under GNU/Linux) even if you set `set_bart_machine_num_cores(1)`, CPU usage per process can be much larger than 100% (reaching at times 200% or 300%). This can lead to CPU overloading, especially if you run multiple bartMachines in parallel (for example, if you use the [SuperLearner](https://cran.r-project.org/web/packages/SuperLearner/) package and use parallelization). This seems to be a consequence of the garbage collector. One way to avoid this problem is to issue `Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")` *before* invoking `library(bartMachine)`. (If you use a cluster, for example a SNOW cluster, you will want to do this in the slaves too, for example `clusterEvalQ(the_name_of_your_cluster, {Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")})`).
+
+Benchmarks v1.4.2 to v1.4.1.1
+------------------
+
+In v1.4.2, we migrated several computationally intensive tasks from R loops to a high-performance Java backend using virtual threads. The following table summarizes the speedups achieved on a 4-core system:
+
+| Operation | Baseline (R) | Current (Java) | **Speedup** | Correctness |
+| :--- | :--- | :--- | :--- | :--- |
+| **Variable Selection** | 6.568s | 0.701s | **9.37x** | Match: TRUE |
+| **Covariate Importance** | 4.364s | 0.662s | **6.59x** | Match: TRUE |
+| **K-Fold CV (RMSE)** | 1.802s | 1.439s | **1.25x** | Diff: 0.14 |
+
+Note: Numerical differences in CV results are expected due to initialization variances in the independent multi-threaded BART builds now handled by the JVM.*
 
 Benchmarks v1.4.1.1 to v1.3.5
 ------------------

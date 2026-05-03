@@ -44,7 +44,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 	
 	/** We sample the latent variables, Z, for each of the n observations
 	 * 
-	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	private boolean SampleZs() {
 		for (int i = 0; i < n; i++){
@@ -66,7 +66,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 
 	/** We sample one latent variable, Z_i
 	 * 
-	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	private double SampleZi(double g_x_i, double y_i) {
 		double u = StatToolbox.rand();
@@ -97,6 +97,7 @@ public class bartMachineClassification extends bartMachineRegression implements 
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
 			gibbs_samples_of_sigsq[g] = SIGSQ_FOR_PROBIT;
 		}
+		updateLogSigsqTable(SIGSQ_FOR_PROBIT);
 	}
 
 	/**
@@ -115,4 +116,12 @@ public class bartMachineClassification extends bartMachineRegression implements 
 	public double un_transform_y(double yt_i){
 		return yt_i; //do nothing
 	}	
+
+	@Override
+	public void un_transform_y_batch(double[] yt, double[] y_out) {
+		if (yt == y_out) {
+			return;
+		}
+		System.arraycopy(yt, 0, y_out, 0, yt.length);
+	}
 }

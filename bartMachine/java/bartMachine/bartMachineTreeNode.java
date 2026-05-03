@@ -8,9 +8,10 @@ import java.util.HashSet;
 
 import OpenSourceExtensions.TDoubleHashSetAndArray;
 import OpenSourceExtensions.UnorderedPair;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 /**
  * The class that stores all the information in one node of the BART trees
@@ -65,15 +66,15 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	/** the y's in this node */
 	protected transient double[] responses;
 	/** the square of the sum of the responses, y */
-	private transient double sum_responses_qty_sqd;
+	private transient double sum_responses_qty_sqd = Double.NaN;
 	/** the sum of the responses, y */
-	private transient double sum_responses_qty;	
+	private transient double sum_responses_qty = Double.NaN;	
 	/** this caches the possible split variables populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient TIntArrayList possible_rule_variables;
+	private transient IntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable populated only if the <code>mem_cache_for_speed</code> feature is set to on */
-	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
+	private transient Int2ObjectOpenHashMap<TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this number of possible split variables at this node */
-	protected transient Integer padj;
+	protected transient int padj = -1;
 	/** a tabulation of the counts of attributes being used in split points in this tree */
 	private int[] attribute_split_counts;
 
@@ -300,6 +301,63 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 	}
 
+	/**
+	 * Evaluate a batch of records and add their predictions to the results array.
+	 * This version uses in-place partitioning to avoid object allocations.
+	 * 
+	 * @param records 	the training/test data
+	 * @param rowIndices 	the array of row indices (will be partitioned in-place)
+	 * @param start 	start index in rowIndices
+	 * @param end 		end index in rowIndices (exclusive)
+	 * @param results 	the array to accumulate predictions
+	 */
+	public void evaluateBatch(double[][] records, int[] rowIndices, int start, int end, double[] results) {
+		if (start >= end) return;
+		
+		if (isLeaf) {
+			for (int i = start; i < end; i++) {
+				results[rowIndices[i]] += y_pred;
+			}
+			return;
+		}
+		
+		// In-place partition: move all indices that go left to the beginning
+		int leftPtr = start;
+		int rightPtr = end - 1;
+		
+		while (leftPtr <= rightPtr) {
+			int idx = rowIndices[leftPtr];
+			double val = records[idx][splitAttributeM];
+			
+			boolean goLeft;
+			if (Classifier.isMissing(val)) {
+				goLeft = !sendMissingDataRight;
+			} else {
+				goLeft = val <= splitValue;
+			}
+			
+			if (goLeft) {
+				leftPtr++;
+			} else {
+				// Swap with rightPtr
+				rowIndices[leftPtr] = rowIndices[rightPtr];
+				rowIndices[rightPtr] = idx;
+				rightPtr--;
+			}
+		}
+		
+		// leftPtr is now the boundary: [start, leftPtr) go left, [leftPtr, end) go right
+		left.evaluateBatch(records, rowIndices, start, leftPtr, results);
+		right.evaluateBatch(records, rowIndices, leftPtr, end, results);
+	}
+
+	/**
+	 * Legacy support or convenient entry point for evaluateBatch.
+	 */
+	public void evaluateBatch(double[][] records, int[] rowIndices, double[] results) {
+		evaluateBatch(records, rowIndices, 0, rowIndices.length, results);
+	}
+
 	/** Remove all the data in this node and its children recursively to save memory */
 	public void flushNodeData() {
 		yhats = null;
@@ -326,49 +384,47 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}
 		
 		//split the data correctly
-		//Optimization: Use primitive arrays directly to avoid object allocation of TIntArrayList/TDoubleArrayList
-		int[] left_indices_ary = new int[n_eta];
-		int[] right_indices_ary = new int[n_eta];
-		double[] left_responses_ary = new double[n_eta];
-		double[] right_responses_ary = new double[n_eta];
+		IntArrayList left_indices = new IntArrayList(n_eta);
+		IntArrayList right_indices = new IntArrayList(n_eta);
+		DoubleArrayList left_responses = new DoubleArrayList(n_eta);
+		DoubleArrayList right_responses = new DoubleArrayList(n_eta);
 		
-		int left_count = 0;
-		int right_count = 0;
+		// Optimization: Use column-major access for the split attribute
+		double[] splitAttributeCol = bart.X_y_by_col.get(splitAttributeM);
 		
 		for (int i = 0; i < n_eta; i++){
-			double[] datum = bart.X_y.get(indicies[i]);
+			int index = indicies[i];
+			double val = splitAttributeCol[index];
+			double resp = responses[i];
+			
 			//handle missing data first
-			if (Classifier.isMissing(datum[splitAttributeM])){
+			if (Classifier.isMissing(val)){
 				if (sendMissingDataRight){
-					right_indices_ary[right_count] = indicies[i];
-					right_responses_ary[right_count] = responses[i];
-					right_count++;
+					right_indices.add(index);
+					right_responses.add(resp);
 				} 
 				else {
-					left_indices_ary[left_count] = indicies[i];
-					left_responses_ary[left_count] = responses[i];
-					left_count++;
+					left_indices.add(index);
+					left_responses.add(resp);					
 				}
 			}
-			else if (datum[splitAttributeM] <= splitValue){
-				left_indices_ary[left_count] = indicies[i];
-				left_responses_ary[left_count] = responses[i];
-				left_count++;
+			else if (val <= splitValue){
+				left_indices.add(index);
+				left_responses.add(resp);
 			}
 			else {
-				right_indices_ary[right_count] = indicies[i];
-				right_responses_ary[right_count] = responses[i];
-				right_count++;
+				right_indices.add(index);
+				right_responses.add(resp);
 			}
 		}
 		//populate the left daughter
-		left.n_eta = left_count;
-		left.responses = Arrays.copyOf(left_responses_ary, left_count);
-		left.indicies = Arrays.copyOf(left_indices_ary, left_count);
+		left.n_eta = left_responses.size();
+		left.responses = left_responses.toDoubleArray();
+		left.indicies = left_indices.toIntArray();
 		//populate the right daughter
-		right.n_eta = right_count;
-		right.responses = Arrays.copyOf(right_responses_ary, right_count);
-		right.indicies = Arrays.copyOf(right_indices_ary, right_count);
+		right.n_eta = right_responses.size();
+		right.responses = right_responses.toDoubleArray();
+		right.indicies = right_indices.toIntArray();
 		//recursively propagate to children
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
@@ -382,8 +438,8 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	public void updateWithNewResponsesRecursively(double[] new_responses) {
 		//nuke previous responses and sums
 		responses = new double[n_eta]; //ensure correct dimension
-		sum_responses_qty_sqd = 0; //need to be primitives
-		sum_responses_qty = 0; //need to be primitives
+		sum_responses_qty_sqd = Double.NaN;
+		sum_responses_qty = Double.NaN;
 		//copy all the new data in appropriately
 		for (int i = 0; i < n_eta; i++){
 			double y_new = new_responses[indicies[i]];
@@ -469,8 +525,9 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * @return	The squared quantity of the sum of responses
 	 */
 	public double sumResponsesQuantitySqd() {
-		if (sum_responses_qty_sqd == 0){
-			sum_responses_qty_sqd = Math.pow(sumResponses(), 2);
+		if (Double.isNaN(sum_responses_qty_sqd)){
+			double sum = sumResponses();
+			sum_responses_qty_sqd = sum * sum;
 		}
 		return sum_responses_qty_sqd;
 	}
@@ -481,11 +538,8 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * @return	The sum
 	 */
 	public double sumResponses() {
-		if (sum_responses_qty == 0){
-			sum_responses_qty = 0.0;
-			for (int i = 0; i < n_eta; i++){
-				sum_responses_qty += responses[i];
-			}
+		if (Double.isNaN(sum_responses_qty)){
+			sum_responses_qty = Tools.sum_array(responses);
 		}
 		return sum_responses_qty;
 	}	
@@ -497,7 +551,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of predictors indexed by the columns in the design matrix
 	 */
-	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
+	protected IntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (bart.mem_cache_for_speed){
 			if (possible_rule_variables == null){
 				possible_rule_variables = tabulatePredictorsThatCouldBeUsedToSplitAtNode();
@@ -514,10 +568,10 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	 * 
 	 * @return		The list of predictors indexed by the columns in the design matrix
 	 */
-	private TIntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
-		TIntHashSet possible_rule_variables_contenders = null;
+	private IntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
+		IntOpenHashSet possible_rule_variables_contenders = null;
 		if (bart.mem_cache_for_speed && parent != null){
-			possible_rule_variables_contenders = new TIntHashSet();
+			possible_rule_variables_contenders = new IntOpenHashSet();
 			//check interaction constraints first
 			int m = parent.splitAttributeM;
 			if (bart.interaction_constraints != null && bart.interaction_constraints.containsKey(m)) {
@@ -529,7 +583,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 					
 		}
 
-		TIntArrayList possible_rule_variables = new TIntArrayList();
+		IntArrayList possible_rule_variables = new IntArrayList();
 		for (int j = 0; j < bart.p; j++){
 			if (possible_rule_variables_contenders != null && !possible_rule_variables_contenders.contains(j)) {
 				continue;
@@ -568,7 +622,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
 		if (bart.mem_cache_for_speed){
 			if (possible_split_vals_by_attr == null){
-				possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
+				possible_split_vals_by_attr = new Int2ObjectOpenHashMap<TDoubleHashSetAndArray>();
 			}
 			if (possible_split_vals_by_attr.get(splitAttributeM) == null){
 				possible_split_vals_by_attr.put(splitAttributeM, tabulatePossibleSplitValuesGivenAttribute());
@@ -588,6 +642,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 	private TDoubleHashSetAndArray tabulatePossibleSplitValuesGivenAttribute() {
 		double[] x_dot_j = bart.X_y_by_col.get(splitAttributeM);
 		double[] x_dot_j_node = new double[n_eta];
+		double max = BAD_FLAG_double;
 		for (int i = 0; i < n_eta; i++){
 			double val = x_dot_j[indicies[i]];
 			if (Classifier.isMissing(val)){
@@ -595,12 +650,14 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			}
 			else {
 				x_dot_j_node[i] = val;
+				if (val > max) {
+					max = val;
+				}
 			}
 		}		
 		
 		TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
 		unique_x_dot_j_node.remove(BAD_FLAG_double); //kill all missings immediately
-		double max = Tools.max(x_dot_j_node);
 		unique_x_dot_j_node.remove(max); //kill the max
 		return unique_x_dot_j_node;
 	}
@@ -657,11 +714,7 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 			indicies[i] = i;
 		}
 		for (int i = 0; i < n_eta; i++){
-			for (int j = 0; j < p + 2; j++){
-				if (j == p){
-					responses[i] = y_trans[i];
-				}
-			}
+			responses[i] = y_trans[i];
 		}	
 
 		//initialize the yhats
@@ -676,7 +729,14 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 
 	/** Given new yhat predictions, update them for this node */
 	public void updateYHatsWithPrediction() {		
-		for (int i = 0; i < indicies.length; i++){
+		var species = jdk.incubator.vector.DoubleVector.SPECIES_PREFERRED;
+		var v_y_pred = jdk.incubator.vector.DoubleVector.broadcast(species, y_pred);
+		int i = 0;
+		int loopBound = species.loopBound(indicies.length);
+		for (; i < loopBound; i += species.length()) {
+			v_y_pred.intoArray(yhats, 0, indicies, i);
+		}
+		for (; i < indicies.length; i++){
 			yhats[indicies[i]] = y_pred;
 		}
 		if (DEBUG_NODES){
@@ -823,14 +883,14 @@ public class bartMachineTreeNode implements Cloneable, Serializable {
 		}	
 
 		
-		System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
+		System.out.println("sum_responses_qty = " + sumResponses() + " sum_responses_qty_sqd = " + sumResponsesQuantitySqd());
 		
 		if (bart.mem_cache_for_speed){
 			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
 			System.out.println("possible_split_vals_by_attr: {");
 			if (possible_split_vals_by_attr != null){
 				for (int key : possible_split_vals_by_attr.keySet()){
-					double[] array = possible_split_vals_by_attr.get(key).toArray();
+					double[] array = possible_split_vals_by_attr.get(key).toDoubleArray();
 					Arrays.sort(array);
 					System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
 				}
