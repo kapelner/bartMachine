@@ -367,6 +367,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	.jcall(java_bart_machine, "V", "setFlushIndicesToSaveRAM", flush_indices_to_save_RAM)
 	.jcall(java_bart_machine, "V", "setUseXoshiro", use_xoshiro)
+	.jcall(java_bart_machine, "V", "setUseGpu", isTRUE(getOption("bartMachine.use_gpu", TRUE)))
 	
 #	cat("seed", seed, "\n")
 	if (!is.null(seed)){

@@ -77,28 +77,33 @@ var_selection_by_permute = function(bart_machine, num_reps_for_avg = 10, num_per
   assert_flag(verbose)
 
 	check_serialization(bart_machine) #ensure the Java object exists and fire an error if not
-	
+
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
-	
-	if (verbose){
-		cat("avg")
+
+	if (bart_machine$pred_type == "regression") {
+		# Java path: builds all numRepsForAvg + numPermuteSamples models in parallel
+		raw_mat = .jcall(bart_machine$java_bart_machine, "[[D", "runVarImportancePermutations",
+				as.integer(num_reps_for_avg), as.integer(num_permute_samples),
+				as.integer(num_trees_for_permute), "splits", simplify = TRUE)
+		# raw_mat is (num_permute_samples+1) x p; row 1 = avg props, rows 2..end = permutations
+		var_true_props_avg = raw_mat[1, ]
+		names(var_true_props_avg) = bart_machine$training_data_features_with_missing_features
+		permute_mat = raw_mat[2:(num_permute_samples + 1), , drop = FALSE]
+		colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
+	} else {
+		if (verbose){ cat("avg") }
+		var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute, verbose = verbose) ##get props from actual data
+		if (verbose){ cat("null") }
+		for (b in 1 : num_permute_samples){
+			permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute, verbose = verbose) ##build null permutation distribution
+		}
+		if (verbose){ cat("\n") }
 	}
-	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute, verbose = verbose) ##get props from actual data
-	
+
 	#now sort from high to low
 	var_true_props_avg = sort(var_true_props_avg, decreasing = TRUE) ##sort props
-	
-	if (verbose){
-		cat("null")
-	}
-	for (b in 1 : num_permute_samples){
-		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute, verbose = verbose) ##build null permutation distribution
-	}
-	if (verbose){
-		cat("\n")
-	}
-	
+
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	

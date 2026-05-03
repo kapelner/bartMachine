@@ -98,22 +98,51 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 		cat(title)
 	}
 	observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)
-		
+
 	permutation_samples_of_error = array(NA, num_permutation_samples)
+
+	if (bart_machine$pred_type == "regression") {
+		# Resolve covariates to 0-based column indices in the processed feature matrix
+		all_feats = bart_machine$training_data_features_with_missing_features
+		if (is.null(covariates)) {
+			java_cols = integer(0)  # empty = permute y (omnibus test)
+			use_java = TRUE
+		} else if (is.numeric(covariates)) {
+			java_cols = as.integer(covariates) - 1L
+			use_java = TRUE
+		} else {
+			idxs = match(covariates, all_feats)
+			if (any(is.na(idxs))) {
+				use_java = FALSE  # factor expansion or unknown names — fall back to R
+			} else {
+				java_cols = as.integer(idxs) - 1L
+				use_java = TRUE
+			}
+		}
+		if (use_java) {
+			permutation_samples_of_error = .jcall(bart_machine$java_bart_machine, "[D",
+					"runCovariateImportancePermutations",
+					.jarray(java_cols), as.integer(num_permutation_samples))
+		}
+	} else {
+		use_java = FALSE
+	}
+
+	if (!use_java) {
 	for (nsim in 1 : num_permutation_samples){
 		if (verbose){
 			cat(".")
 			if (nsim %% 50 == 0){
 				cat("\n")
 			}
-		}	
+		}
 		#omnibus F-like test - just permute y (same as permuting ALL the columns of X and it's faster)
 		if (is.null(covariates)){
 			bart_machine_samp = bart_machine_duplicate(bart_machine, y = sample(bart_machine$y), run_in_sample = TRUE, verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		#partial F-like test - permute the columns that we're interested in seeing if they matter
 		} else {
 			X_samp = bart_machine$X #copy original design matrix
-			
+
 			covariates_left_to_permute = c()
 			for (cov in covariates){
 				if (cov %in% colnames(X_samp)){
@@ -126,10 +155,11 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutation_
 			bart_machine_samp = bart_machine_duplicate(bart_machine, X = X_samp, covariates_to_permute = covariates_left_to_permute, run_in_sample = TRUE, verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		}
 		#record permutation result
-		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)	
+		permutation_samples_of_error[nsim] = ifelse(bart_machine$pred_type == "regression", bart_machine_samp$PseudoRsq, bart_machine_samp$misclassification_error)
 	}
 	if (verbose){
 		cat("\n")
+	}
 	}
   
 	##compute p-value

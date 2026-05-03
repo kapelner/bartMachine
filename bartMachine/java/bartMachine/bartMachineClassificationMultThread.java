@@ -1,6 +1,9 @@
 package bartMachine;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.Future;
 
 import OpenSourceExtensions.StatUtil;
 
@@ -38,6 +41,85 @@ public class bartMachineClassificationMultThread extends bartMachineRegressionMu
 		return EvaluateViaSampAvg(record, num_cores_evaluate) > classification_rule ? 1 : 0;
 	}	
 	
+	@Override
+	public double[] getPosteriorMeanForPrediction(final double[][] records, final int num_cores_evaluate){
+		final int num_samples_after_burn_in = numSamplesAfterBurning();
+		final int n_star = records.length;
+		if (n_star == 0 || num_samples_after_burn_in <= 0){
+			return new double[n_star];
+		}
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictClassMeans(
+						records, forest);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
+		final double[] p_hat_sum = new double[n_star];
+		int[] allIndices = new int[n_star];
+		for (int i = 0; i < n_star; i++){
+			allIndices[i] = i;
+		}
+
+		if (num_cores_evaluate == 1){
+			double[] yt_g = new double[n_star];
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+				Arrays.fill(yt_g, 0.0);
+				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+				for (int m = 0; m < num_trees; m++){
+					trees[m].evaluateBatch(records, allIndices, yt_g);
+				}
+				for (int i = 0; i < n_star; i++){
+					p_hat_sum[i] += StatUtil.normal_cdf(yt_g[i]);
+				}
+			}
+		} else {
+			int chunk = Math.max(1, num_samples_after_burn_in / num_cores_evaluate);
+			ArrayList<Future<double[]>> futures = new ArrayList<>();
+			try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+				for (int g_start = 0; g_start < num_samples_after_burn_in; g_start += chunk){
+					final int start = g_start;
+					final int end = Math.min(num_samples_after_burn_in, g_start + chunk);
+					futures.add(executor.submit(() -> {
+						double[] localSum = new double[n_star];
+						double[] yt_g = new double[n_star];
+						for (int g = start; g < end; g++){
+							Arrays.fill(yt_g, 0.0);
+							int[] localIndices = allIndices.clone();
+							bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+							for (int m = 0; m < num_trees; m++){
+								trees[m].evaluateBatch(records, localIndices, yt_g);
+							}
+							for (int i = 0; i < n_star; i++){
+								localSum[i] += StatUtil.normal_cdf(yt_g[i]);
+							}
+						}
+						return localSum;
+					}));
+				}
+				for (Future<double[]> future : futures){
+					double[] local = future.get();
+					for (int i = 0; i < n_star; i++){
+						p_hat_sum[i] += local[i];
+					}
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		for (int i = 0; i < n_star; i++){
+			p_hat_sum[i] /= num_samples_after_burn_in;
+		}
+		return p_hat_sum;
+	}
+
 	/**
 	 * This returns the Gibbs sample predictions for all trees and all posterior samples.
 	 * This differs from the parent implementation because we convert the response value to
@@ -47,17 +129,98 @@ public class bartMachineClassificationMultThread extends bartMachineRegressionMu
 	 *  @param num_cores_evaluate	The number of CPU cores to use during this operation
 	 *  @return						The predictions as a vector of size number of posterior samples of vectors of size number of trees
 	 */
-	protected double[][] getGibbsSamplesForPrediction(double[][] data, int num_cores_evaluate){
-		double[][] y_gibbs_samples = super.getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		double[][] y_gibbs_samples_probs = new double[y_gibbs_samples.length][y_gibbs_samples[0].length];
-		for (int g = 0; g < y_gibbs_samples.length; g++){
-			for (int i = 0; i < y_gibbs_samples[0].length; i++){
-				y_gibbs_samples_probs[g][i] = StatUtil.normal_cdf(y_gibbs_samples[g][i]);
-			}			
+	protected double[][] getGibbsSamplesForPrediction(final double[][] data, final int num_cores_evaluate){
+		final int num_samples_after_burn_in = numSamplesAfterBurning();
+		final int n_star = data.length;
+		if (n_star == 0 || num_samples_after_burn_in <= 0){
+			return new double[n_star][num_samples_after_burn_in];
+		}
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictClassSamples(
+						data, forest);
+			} catch (Exception e) {
+				// GPU path failed or was too large — fall through to CPU
+			}
+		}
+
+		final double[][] y_gibbs_samples_probs = new double[n_star][num_samples_after_burn_in];
+		
+		int[] allIndices = new int[n_star];
+		for (int i = 0; i < n_star; i++){
+			allIndices[i] = i;
+		}
+		
+		if (num_cores_evaluate == 1){
+			double[] yt_g = new double[n_star];
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+				Arrays.fill(yt_g, 0.0);
+				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+				for (int m = 0; m < num_trees; m++){
+					trees[m].evaluateBatch(data, allIndices, yt_g);
+				}
+				for (int i = 0; i < n_star; i++){
+					y_gibbs_samples_probs[i][g] = StatUtil.normal_cdf(yt_g[i]);
+				}
+			}
+		} else {
+			int chunk = Math.max(1, num_samples_after_burn_in / num_cores_evaluate);
+			ArrayList<Future<?>> futures = new ArrayList<>();
+			try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+				for (int g_start = 0; g_start < num_samples_after_burn_in; g_start += chunk){
+					final int start = g_start;
+					final int end = Math.min(num_samples_after_burn_in, g_start + chunk);
+					futures.add(executor.submit(() -> {
+						double[] yt_g = new double[n_star];
+						for (int g = start; g < end; g++){
+							Arrays.fill(yt_g, 0.0);
+							int[] localIndices = allIndices.clone();
+							bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+							for (int m = 0; m < num_trees; m++){
+								trees[m].evaluateBatch(data, localIndices, yt_g);
+							}
+							for (int i = 0; i < n_star; i++){
+								y_gibbs_samples_probs[i][g] = StatUtil.normal_cdf(yt_g[i]);
+							}
+						}
+						return null;
+					}));
+				}
+				for (Future<?> future : futures){
+					future.get();
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 		}
 		return y_gibbs_samples_probs;
-	}	
+	}
 	
+	@Override
+	public double[][] getCredibleIntervalsForPrediction(double[][] records, double coverage, int num_cores_evaluate){
+		final int n_star = records.length;
+		if (n_star == 0) return new double[0][2];
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				final int num_samples_after_burn_in = numSamplesAfterBurning();
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictClassCredibleIntervals(
+						records, forest, coverage);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
+		return super.getCredibleIntervalsForPrediction(records, coverage, num_cores_evaluate);
+	}
+
 	public void setClassificationRule(double classification_rule) {
 		this.classification_rule = classification_rule;
 	}	

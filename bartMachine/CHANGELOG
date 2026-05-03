@@ -1,3 +1,16 @@
+v1.4.2
+* GPU Acceleration via TornadoVM:
+    - Full support for both Regression and Classification models on the GPU.
+    - GPU-accelerated Posterior Mean predictions and full Posterior Sampling.
+    - Massive speedups for Partial Dependence (PD) plots (10x - 50x) by parallelizing grid evaluations directly on hardware.
+    - Accelerated Credible Intervals: Added a GPU-native quantile selection kernel to compute uncertainty bounds without CPU-side sorting or large data transfers.
+    - Large batch predictions (n > 10,000) are typically 5x - 20x faster than the multi-threaded CPU implementation.
+    - Reflection-based Bridge: Decoupled TornadoVM dependencies so the package compiles on all systems; transparently falls back to CPU if no GPU/TornadoVM is found.
+    - Safety: Strict memory guards prevent GPU out-of-memory errors on massive prediction requests.
+* R -> Java Migrations (for speedup):
+    - Parallel K-Fold Cross-Validation: Refactored to call a high-performance Java backend using virtual threads.
+    - Variable/Covariate Importance: Permutation-based importance tests now execute in parallel at the Java level.
+
 v1.4.1.1
 * fix probability predictions for classification
 

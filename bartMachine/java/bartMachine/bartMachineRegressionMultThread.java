@@ -7,11 +7,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import OpenSourceExtensions.UnorderedPair;
-import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * This class handles the parallelization of many Gibbs chains over many CPU cores
@@ -21,6 +22,8 @@ import gnu.trove.set.hash.TIntHashSet;
  */
 @SuppressWarnings("serial")
 public class bartMachineRegressionMultThread extends Classifier implements Serializable {
+	private static final int PARALLEL_SORT_THRESHOLD = 1 << 14;
+	private static final ThreadLocal<double[]> EVAL_BUFFER = ThreadLocal.withInitial(() -> new double[0]);
 	
 	/** the number of CPU cores to build many different Gibbs chain within a BART model */
 	protected int num_cores = 1; //default
@@ -63,13 +66,19 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	/** 
 	 * whether or not we use the memory cache feature
 	 * 
-	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 * See Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
 	 */
 	protected boolean mem_cache_for_speed = true;
 	/** saves indices in nodes (useful for computing weights) */
 	protected boolean flush_indices_to_save_ram = true;
 	private boolean tree_illust;
-	private HashMap<Integer, TIntHashSet> interaction_constraints;
+	private HashMap<Integer, IntOpenHashSet> interaction_constraints;
+	/** the seed for the random number generator */
+	protected Integer seed;
+	/** whether or not to use the Xoshiro256PlusPlus random number generator */
+	protected boolean use_xoshiro;
+	/** whether to attempt GPU-accelerated prediction (requires GpuForestPredictor.GPU_AVAILABLE) */
+	protected boolean use_gpu = true;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -125,9 +134,13 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		bart.setProbPrune(prob_prune);
 		//set thread num and data
 		bart.setThreadNum(t);
+		if (seed != null) {
+			bart.setSeed((int)(seed + t));
+		}
 		bart.setTotalNumThreads(num_cores);
 		bart.setMemCacheForSpeed(mem_cache_for_speed);
 		bart.setFlushIndicesToSaveRAM(flush_indices_to_save_ram);
+		bart.setUseXoshiro(use_xoshiro);
 		
 		//set features
 		if (cov_split_prior != null){
@@ -211,19 +224,16 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 
 	/** This is the core of BART's parallelization for model creation: build one BART model on each CPU core in parallel */
 	private void BuildOnAllThreads(){
-		ExecutorService bart_gibbs_chain_pool = Executors.newFixedThreadPool(num_cores);
-		for (int t = 0; t < num_cores; t++){
-			final int tf = t;
-	    	bart_gibbs_chain_pool.execute(new Runnable(){
-				public void run() {
+		try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+			for (int t = 0; t < num_cores; t++){
+				final int tf = t;
+		    	executor.execute(() -> {
 					bart_gibbs_chain_threads[tf].Build();
-				}
-			});
-		}
-		bart_gibbs_chain_pool.shutdown();
-		try {	         
-	         bart_gibbs_chain_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
-	    } catch (InterruptedException ignored){}		
+				});
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}		
 	}
 
 	protected boolean[][][][] getNodePredictionTrainingIndicies(double[][] records){
@@ -303,59 +313,161 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected double[][] getGibbsSamplesForPrediction(final double[][] records, final int num_cores_evaluate){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
 		final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
-		
-		final int n = records.length;
-		final double[][] y_hats = new double[n][records[0].length];
-		
-		//this is really ugly, but it's faster (we've checked in a Profiler)
-		if (num_cores_evaluate == 1){
-			for (int i = 0; i < n; i++){
-				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
-				for (int g = 0; g < num_samples_after_burn_in; g++){
-					bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
-					double yt_i = 0;
-					for (int m = 0; m < num_trees; m++){ 
-						yt_i += trees[m].Evaluate(records[i]); //sum of trees, right?
-					}
-					//just make sure we switch it back to really what y is for the user
-					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
-				}
-				y_hats[i] = y_gibbs_samples;
-			}			
+
+		final int n_star = records.length;
+		if (n_star == 0 || num_samples_after_burn_in <= 0){
+			return new double[n_star][num_samples_after_burn_in];
 		}
-		else {
-			Thread[] fixed_thread_pool = new Thread[num_cores_evaluate];
-			for (int t = 0; t < num_cores_evaluate; t++){
-				final int final_t = t;
-				Thread thread = new Thread(){
-					public void run(){
-						for (int i = 0; i < n; i++){
-							if (i % num_cores_evaluate == final_t){
-								double[] y_gibbs_samples = new double[num_samples_after_burn_in];
-								for (int g = 0; g < num_samples_after_burn_in; g++){									
-									bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
-									double yt_i = 0;
-									for (int m = 0; m < num_trees; m++){ //sum of trees right?
-										yt_i += trees[m].Evaluate(records[i]);
-									}
-									//just make sure we switch it back to really what y is for the user
-									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
-								}
-								y_hats[i] = y_gibbs_samples;
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictSamples(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min);
+			} catch (Exception e) {
+				// GPU path failed or was too large — fall through to CPU
+			}
+		}
+
+		final double[][] y_hats = new double[n_star][num_samples_after_burn_in];
+
+		int[] allIndices = new int[n_star];
+		for (int i = 0; i < n_star; i++) allIndices[i] = i;
+
+		if (num_cores_evaluate == 1){
+			double[] yt_g = getThreadLocalBuffer(n_star);
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+				Arrays.fill(yt_g, 0.0);
+				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+				for (int m = 0; m < num_trees; m++){ 
+					trees[m].evaluateBatch(records, allIndices, yt_g);
+				}
+				first_bart.un_transform_y_batch(yt_g, yt_g);
+				for (int i = 0; i < n_star; i++) {
+					y_hats[i][g] = yt_g[i];
+				}
+			}
+		} else {
+			int chunk = Math.max(1, num_samples_after_burn_in / num_cores_evaluate);
+			ArrayList<Future<?>> futures = new ArrayList<>();
+			try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+				for (int g_start = 0; g_start < num_samples_after_burn_in; g_start += chunk){
+					final int start = g_start;
+					final int end = Math.min(num_samples_after_burn_in, g_start + chunk);
+					futures.add(executor.submit(() -> {
+						double[] yt_g = new double[n_star];
+						for (int g = start; g < end; g++) {
+							Arrays.fill(yt_g, 0.0);
+							int[] localIndices = allIndices.clone();
+							bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+							for (int m = 0; m < num_trees; m++){ 
+								trees[m].evaluateBatch(records, localIndices, yt_g);
+							}
+							first_bart.un_transform_y_batch(yt_g, yt_g);
+							for (int i = 0; i < n_star; i++) {
+								y_hats[i][g] = yt_g[i];
 							}
 						}
-					}
-				};
-				thread.start();
-				fixed_thread_pool[t] = thread;
-			}
-			for (int t = 0; t < num_cores_evaluate; t++){
-				try {
-					fixed_thread_pool[t].join();
-				} catch (InterruptedException e) {}
+						return null;
+					}));
+				}
+				for (Future<?> future : futures){
+					future.get();
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
 		}
 		return y_hats;
+	}
+
+	/**
+	 * Return posterior mean predictions for each record without storing all Gibbs samples.
+	 *
+	 * @param records				the observations / records for which to return predictions
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						Posterior mean predictions
+	 */
+	public double[] getPosteriorMeanForPrediction(final double[][] records, final int num_cores_evaluate){
+		final int num_samples_after_burn_in = numSamplesAfterBurning();
+		final int n_star = records.length;
+		final double[] y_hat_sum = new double[n_star];
+		if (n_star == 0 || num_samples_after_burn_in <= 0){
+			return y_hat_sum;
+		}
+		final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictMeans(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
+		int[] allIndices = new int[n_star];
+		for (int i = 0; i < n_star; i++) allIndices[i] = i;
+		
+		if (num_cores_evaluate == 1){
+			double[] yt_g = getThreadLocalBuffer(n_star);
+			for (int g = 0; g < num_samples_after_burn_in; g++){
+				Arrays.fill(yt_g, 0.0);
+				bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+				for (int m = 0; m < num_trees; m++){
+					trees[m].evaluateBatch(records, allIndices, yt_g);
+				}
+				first_bart.un_transform_y_batch(yt_g, yt_g);
+				addInPlace(y_hat_sum, yt_g);
+			}
+		}
+		else {
+			int chunk = Math.max(1, num_samples_after_burn_in / num_cores_evaluate);
+			ArrayList<Future<double[]>> futures = new ArrayList<>();
+			try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+				for (int g_start = 0; g_start < num_samples_after_burn_in; g_start += chunk){
+					final int start = g_start;
+					final int end = Math.min(num_samples_after_burn_in, g_start + chunk);
+					futures.add(executor.submit(() -> {
+						double[] localSum = new double[n_star];
+						double[] yt_g = new double[n_star];
+						for (int g = start; g < end; g++){
+							Arrays.fill(yt_g, 0.0);
+							int[] localIndices = allIndices.clone();
+							bartMachineTreeNode[] trees = gibbs_samples_of_bart_trees_after_burn_in[g];
+							for (int m = 0; m < num_trees; m++){
+								trees[m].evaluateBatch(records, localIndices, yt_g);
+							}
+							first_bart.un_transform_y_batch(yt_g, yt_g);
+							addInPlace(localSum, yt_g);
+						}
+						return localSum;
+					}));
+				}
+				for (Future<double[]> future : futures){
+					double[] local = future.get();
+					addInPlace(y_hat_sum, local);
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		for (int i = 0; i < n_star; i++){
+			y_hat_sum[i] /= num_samples_after_burn_in;
+		}
+		return y_hat_sum;
 	}
 
 	/**
@@ -370,15 +482,15 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
 		double[][] data = new double[1][record.length];
 		data[0] = record;		
-		//get all gibbs samples sorted
 		double[][] y_gibbs_samples_sorted_matrix = getGibbsSamplesForPrediction(data, num_cores_evaluate);
 		double[] y_gibbs_samples_sorted = y_gibbs_samples_sorted_matrix[0];
-		Arrays.sort(y_gibbs_samples_sorted);
-		
-		//calculate index of the CI_a and CI_b
-		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-		double[] conf_interval = {y_gibbs_samples_sorted[n_bottom], y_gibbs_samples_sorted[n_top]};
+		sortInPlace(y_gibbs_samples_sorted);
+		double lowerProb = (1 - coverage) / 2;
+		double upperProb = 1 - lowerProb;
+		double[] conf_interval = {
+			quantileType7Sorted(y_gibbs_samples_sorted, lowerProb),
+			quantileType7Sorted(y_gibbs_samples_sorted, upperProb)
+		};
 		return conf_interval;
 	}
 	
@@ -392,11 +504,235 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record, int num_cores_evaluate){
 		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
 	}	
+
+	/**
+	 * Return credible interval bounds for each record.
+	 *
+	 * @param records				The records for which to obtain intervals
+	 * @param coverage				The desired coverage
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						A matrix of lower/upper bounds for each record
+	 */
+	public double[][] getCredibleIntervalsForPrediction(double[][] records, double coverage, int num_cores_evaluate){
+		final int n_star = records.length;
+		if (n_star == 0) return new double[0][2];
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				final int num_samples_after_burn_in = numSamplesAfterBurning();
+				final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictCredibleIntervals(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min,
+						coverage);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
+		double[][] y_gibbs_samples = getGibbsSamplesForPrediction(records, num_cores_evaluate);
+		double[][] intervals = new double[y_gibbs_samples.length][2];
+		double lowerProb = (1 - coverage) / 2;
+		double upperProb = 1 - lowerProb;
+		for (int i = 0; i < y_gibbs_samples.length; i++){
+			intervals[i][0] = quantileType7(y_gibbs_samples[i], lowerProb);
+			intervals[i][1] = quantileType7(y_gibbs_samples[i], upperProb);
+		}
+		return intervals;
+	}
+	
+	/**
+	 * Return prediction interval bounds for each record.
+	 *
+	 * @param records					The records for which to obtain intervals
+	 * @param coverage					The desired coverage
+	 * @param num_samples_per_data_point	The number of normal draws per record
+	 * @param num_cores_evaluate		The number of CPU cores to use during evaluation
+	 * @return							A matrix of lower/upper bounds for each record
+	 */
+	public double[][] getPredictionIntervalsForPrediction(double[][] records, double coverage, int num_samples_per_data_point, int num_cores_evaluate){
+		double[][] y_gibbs_samples = getGibbsSamplesForPrediction(records, num_cores_evaluate);
+		double[] sigsqs = getGibbsSamplesSigsqs();
+		double[][] intervals = new double[y_gibbs_samples.length][2];
+		double lowerProb = (1 - coverage) / 2;
+		double upperProb = 1 - lowerProb;
+		
+		if (y_gibbs_samples.length == 0){
+			return intervals;
+		}
+		
+		int num_gibbs_samples = y_gibbs_samples[0].length;
+		int sigsqs_len = Math.min(num_gibbs_samples, sigsqs.length);
+		if (sigsqs_len == 0 || num_samples_per_data_point <= 0){
+			for (int i = 0; i < intervals.length; i++){
+				intervals[i][0] = Double.NaN;
+				intervals[i][1] = Double.NaN;
+			}
+			return intervals;
+		}
+		
+		double[] samples = new double[num_samples_per_data_point];
+		for (int i = 0; i < y_gibbs_samples.length; i++){
+			for (int s = 0; s < num_samples_per_data_point; s++){
+				int g = (int)Math.floor(StatToolbox.rand() * sigsqs_len);
+				double mu = y_gibbs_samples[i][g];
+				double sigsq = sigsqs[g];
+				samples[s] = StatToolbox.sample_from_norm_dist(mu, sigsq);
+			}
+			intervals[i][0] = quantileType7(samples, lowerProb);
+			intervals[i][1] = quantileType7(samples, upperProb);
+		}
+		return intervals;
+	}
+	
+	private static double quantileType7Sorted(double[] sorted, double p) {
+		int n = sorted.length;
+		if (n == 0){
+			return Double.NaN;
+		}
+		if (n == 1){
+			return sorted[0];
+		}
+		if (p <= 0){
+			return sorted[0];
+		}
+		if (p >= 1){
+			return sorted[n - 1];
+		}
+		double h = (n - 1) * p + 1;
+		int hf = (int)Math.floor(h);
+		double x0 = sorted[hf - 1];
+		if (h == hf){
+			return x0;
+		}
+		double x1 = sorted[hf];
+		return x0 + (h - hf) * (x1 - x0);
+	}
+	
+	private static double quantileType7(double[] values, double p) {
+		int n = values.length;
+		if (n == 0){
+			return Double.NaN;
+		}
+		if (n == 1){
+			return values[0];
+		}
+		if (p <= 0){
+			return min(values);
+		}
+		if (p >= 1){
+			return max(values);
+		}
+		double h = (n - 1) * p + 1;
+		int hf = (int)Math.floor(h);
+		double x0 = select(values, hf - 1);
+		if (h == hf){
+			return x0;
+		}
+		double x1 = select(values, hf);
+		return x0 + (h - hf) * (x1 - x0);
+	}
+	
+	private static double select(double[] values, int k) {
+		int left = 0;
+		int right = values.length - 1;
+		while (true){
+			if (left == right){
+				return values[left];
+			}
+			int pivotIndex = left + ((right - left) >>> 1);
+			pivotIndex = partition(values, left, right, pivotIndex);
+			if (k == pivotIndex){
+				return values[k];
+			}
+			if (k < pivotIndex){
+				right = pivotIndex - 1;
+			} else {
+				left = pivotIndex + 1;
+			}
+		}
+	}
+	
+	private static int partition(double[] values, int left, int right, int pivotIndex) {
+		double pivotValue = values[pivotIndex];
+		swap(values, pivotIndex, right);
+		int storeIndex = left;
+		for (int i = left; i < right; i++){
+			if (values[i] < pivotValue){
+				swap(values, storeIndex, i);
+				storeIndex++;
+			}
+		}
+		swap(values, right, storeIndex);
+		return storeIndex;
+	}
+	
+	private static void swap(double[] values, int i, int j) {
+		double tmp = values[i];
+		values[i] = values[j];
+		values[j] = tmp;
+	}
+	
+	private static double min(double[] values) {
+		double min = Double.POSITIVE_INFINITY;
+		for (double v : values){
+			if (v < min){
+				min = v;
+			}
+		}
+		return min;
+	}
+	
+	private static double max(double[] values) {
+		double max = Double.NEGATIVE_INFINITY;
+		for (double v : values){
+			if (v > max){
+				max = v;
+			}
+		}
+		return max;
+	}
+	
+	private static void sortInPlace(double[] values) {
+		if (values.length >= PARALLEL_SORT_THRESHOLD) {
+			Arrays.parallelSort(values);
+		} else {
+			Arrays.sort(values);
+		}
+	}
+	
+	private static double[] getThreadLocalBuffer(int size) {
+		double[] buf = EVAL_BUFFER.get();
+		if (buf.length < size) {
+			buf = new double[size];
+			EVAL_BUFFER.set(buf);
+		}
+		return buf;
+	}
+	
+	private static void addInPlace(double[] target, double[] addend) {
+		var species = jdk.incubator.vector.DoubleVector.SPECIES_PREFERRED;
+		int i = 0;
+		int upperBound = species.loopBound(target.length);
+		for (; i < upperBound; i += species.length()) {
+			var v_target = jdk.incubator.vector.DoubleVector.fromArray(species, target, i);
+			var v_addend = jdk.incubator.vector.DoubleVector.fromArray(species, addend, i);
+			v_target.add(v_addend).intoArray(target, i);
+		}
+		for (; i < target.length; i++){
+			target[i] += addend[i];
+		}
+	}
 	
 	public double[] getGibbsSamplesSigsqs(){
-		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
+		DoubleArrayList sigsqs_to_export = new DoubleArrayList(num_gibbs_total_iterations);
 		for (int t = 0; t < num_cores; t++){
-			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
+			DoubleArrayList sigsqs_to_export_by_thread = new DoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
 			if (t == 0){
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
 			}
@@ -404,7 +740,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
 			}
 		}
-		return sigsqs_to_export.toArray();
+		return sigsqs_to_export.toDoubleArray();
 	}
 	
 	/**
@@ -559,8 +895,18 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		double[][] data = new double[1][record.length];
 		data[0] = record;
 		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		return StatToolbox.sample_median(gibbs_samples[0]);
+		return StatToolbox.sample_average(gibbs_samples[0]);
 	}	
+
+	@Override
+	public double[] Evaluate(double[][] records, int num_cores_evaluate) {
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(records, num_cores_evaluate);
+		double[] y_hats = new double[records.length];
+		for (int i = 0; i < records.length; i++) {
+			y_hats[i] = StatToolbox.sample_average(gibbs_samples[i]);
+		}
+		return y_hats;
+	}
 	
 	/**
 	 * After burn in, find the depth (greatest generation of a terminal node) of each tree for each Gibbs sample
@@ -598,13 +944,13 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	}
 	
 	public void intializeInteractionConstraints(int num_constraints) {
-		interaction_constraints = new HashMap<Integer, TIntHashSet>(num_constraints);
+		interaction_constraints = new HashMap<Integer, IntOpenHashSet>(num_constraints);
 	}
 	public void addInteractionConstraint(int constrained_feature, int[] constrained_features) {
 		if (interaction_constraints.get(constrained_feature) == null) {
-			interaction_constraints.put(constrained_feature, new TIntHashSet());
+			interaction_constraints.put(constrained_feature, new IntOpenHashSet());
 		}
-		TIntHashSet current_constrained_features = interaction_constraints.get(constrained_feature);
+		IntOpenHashSet current_constrained_features = interaction_constraints.get(constrained_feature);
 		for (int j : constrained_features) {
 			current_constrained_features.add(j);
 		}		
@@ -656,6 +1002,7 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	}
 
 	public void setSeed(int seed){
+		this.seed = seed;
 		StatToolbox.setSeed(seed);
 	}	
 	
@@ -671,6 +1018,14 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 		this.flush_indices_to_save_ram = flush_indices_to_save_ram;
 	}
 	
+	public void setUseXoshiro(boolean use_xoshiro) {
+		this.use_xoshiro = use_xoshiro;
+	}
+
+	public void setUseGpu(boolean use_gpu) {
+		this.use_gpu = use_gpu;
+	}
+	
 	/** Must be implemented, but does nothing */
 	public void StopBuilding() {}	
 	
@@ -680,5 +1035,266 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 			all_trees[m] = gibbs_samples_of_bart_trees_after_burn_in[g][m];
 		}
 		return all_trees;
+	}
+
+	// -------------------------------------------------------------------------
+	// R→Java migrations: var importance permutations, cov importance, k-fold CV
+	// -------------------------------------------------------------------------
+
+	/** Extract original y values from the training data. */
+	private double[] extractYOrig() {
+		double[] y = new double[n];
+		for (int i = 0; i < n; i++) {
+			y[i] = X_y.get(i)[p];
+		}
+		return y;
+	}
+
+	/** Fisher-Yates in-place shuffle of a double array. */
+	private void shuffleArray(double[] arr) {
+		for (int i = arr.length - 1; i > 0; i--) {
+			int j = (int)(StatToolbox.rand() * (i + 1));
+			double tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+		}
+	}
+
+	/** Build a copy of X_y with y replaced by yNew. */
+	private ArrayList<double[]> buildPermutedXy(double[] yNew) {
+		ArrayList<double[]> data = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			double[] orig = X_y.get(i);
+			double[] row = Arrays.copyOf(orig, p + 1);
+			row[p] = yNew[i];
+			data.add(row);
+		}
+		return data;
+	}
+
+	/**
+	 * Build a copy of X_y with the columns in colsToPermute independently shuffled.
+	 * colsToPermute uses 0-based column indices into the original feature space.
+	 */
+	private ArrayList<double[]> permuteXColumns(int[] colsToPermute) {
+		double[][] colData = new double[colsToPermute.length][n];
+		for (int ci = 0; ci < colsToPermute.length; ci++) {
+			int j = colsToPermute[ci];
+			for (int i = 0; i < n; i++) colData[ci][i] = X_y.get(i)[j];
+			shuffleArray(colData[ci]);
+		}
+		ArrayList<double[]> data = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			double[] orig = X_y.get(i);
+			double[] row = Arrays.copyOf(orig, p + 1);
+			for (int ci = 0; ci < colsToPermute.length; ci++) {
+				row[colsToPermute[ci]] = colData[ci][i];
+			}
+			data.add(row);
+		}
+		return data;
+	}
+
+	/** Create, configure, and build a single-core BART model on the given data. */
+	private bartMachineRegressionMultThread buildPermuteBartMachine(
+			ArrayList<double[]> data, int numTrees, int numBurnIn, int numTotal) {
+		bartMachineRegressionMultThread bart = new bartMachineRegressionMultThread();
+		bart.setNumCores(1);
+		bart.setNumTrees(numTrees);
+		bart.setNumGibbsBurnIn(numBurnIn);
+		bart.setNumGibbsTotalIterations(numTotal);
+		bart.setAlpha(alpha);
+		bart.setBeta(beta);
+		bart.setK(hyper_k);
+		bart.setQ(hyper_q);
+		bart.setNU(hyper_nu);
+		bart.setProbGrow(prob_grow);
+		bart.setProbPrune(prob_prune);
+		bart.setMemCacheForSpeed(mem_cache_for_speed);
+		bart.setFlushIndicesToSaveRAM(flush_indices_to_save_ram);
+		bart.setUseXoshiro(use_xoshiro);
+		if (cov_split_prior != null) bart.setCovSplitPrior(cov_split_prior);
+		bart.setVerbose(false);
+		bart.setData(data);
+		bart.Build();
+		return bart;
+	}
+
+	/**
+	 * Compute pseudo-R² = 1 – SSE/SST for an already-built BART model against
+	 * the true y values passed in.
+	 */
+	private double computePseudoRsq(bartMachineRegressionMultThread bart, double[] yTrue) {
+		int nObs = yTrue.length;
+		double[][] records = new double[nObs][p];
+		ArrayList<double[]> data = bart.X_y;
+		for (int i = 0; i < nObs; i++) {
+			System.arraycopy(data.get(i), 0, records[i], 0, p);
+		}
+		double[] yHat = bart.getPosteriorMeanForPrediction(records, 1);
+		double yBar = 0;
+		for (double v : yTrue) yBar += v;
+		yBar /= nObs;
+		double sse = 0, sst = 0;
+		for (int i = 0; i < nObs; i++) {
+			double res = yTrue[i] - yHat[i];
+			sse += res * res;
+			double dev = yTrue[i] - yBar;
+			sst += dev * dev;
+		}
+		return sst == 0 ? 0 : 1.0 - sse / sst;
+	}
+
+	/**
+	 * Run variable-importance permutation test entirely in Java.
+	 *
+	 * Row 0 of the result is the average inclusion proportions over numRepsForAvg
+	 * regular BART builds on the original data.  Rows 1..numPermuteSamples are the
+	 * inclusion proportions from BART builds on y-permuted copies of the data.
+	 *
+	 * @param numRepsForAvg       number of regular builds to average for row 0
+	 * @param numPermuteSamples   number of permutation builds (rows 1..)
+	 * @param numTreesForPermute  trees per permutation build
+	 * @param type                "splits" or "trees"
+	 * @return                    (numPermuteSamples+1) × p matrix
+	 */
+	public double[][] runVarImportancePermutations(
+			int numRepsForAvg, int numPermuteSamples,
+			int numTreesForPermute, String type) {
+
+		final int burnIn = Math.min(num_gibbs_burn_in, 250);
+		final int total  = burnIn + Math.max(100, num_gibbs_total_iterations - num_gibbs_burn_in);
+		final int nBuilds = numRepsForAvg + numPermuteSamples;
+		final double[][] results = new double[nBuilds][p];
+		final double[] yOrig = extractYOrig();
+
+		int poolSize = Runtime.getRuntime().availableProcessors();
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(nBuilds);
+			for (int b = 0; b < nBuilds; b++) {
+				final int bi = b;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> data;
+					if (bi < numRepsForAvg) {
+						data = new ArrayList<>(X_y);
+					} else {
+						double[] yPerm = yOrig.clone();
+						shuffleArray(yPerm);
+						data = buildPermutedXy(yPerm);
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(data, numTreesForPermute, burnIn, total);
+					results[bi] = bart.getAttributeProps(type);
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		// Average the first numRepsForAvg rows into row 0 of output
+		double[][] out = new double[numPermuteSamples + 1][p];
+		for (int b = 0; b < numRepsForAvg; b++) {
+			for (int j = 0; j < p; j++) out[0][j] += results[b][j];
+		}
+		for (int j = 0; j < p; j++) out[0][j] /= numRepsForAvg;
+		for (int b = 0; b < numPermuteSamples; b++) {
+			out[b + 1] = results[numRepsForAvg + b];
+		}
+		return out;
+	}
+
+	/**
+	 * Run covariate-importance permutation test entirely in Java.
+	 *
+	 * If colsToPermute is empty, permutes y (omnibus test).
+	 * Otherwise permutes the specified columns of X.
+	 * Returns numSamples pseudo-R² values from BART builds on permuted data.
+	 *
+	 * @param colsToPermute  0-based column indices to permute; empty = permute y
+	 * @param numSamples     number of permutation samples
+	 * @return               length-numSamples array of pseudo-R² values
+	 */
+	public double[] runCovariateImportancePermutations(int[] colsToPermute, int numSamples) {
+		final int burnIn = Math.min(num_gibbs_burn_in, 250);
+		final int total  = burnIn + Math.max(100, num_gibbs_total_iterations - num_gibbs_burn_in);
+		final double[] yOrig = extractYOrig();
+		final double[] rsqs = new double[numSamples];
+		final boolean permuteY = (colsToPermute.length == 0);
+
+		int poolSize = Runtime.getRuntime().availableProcessors();
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(numSamples);
+			for (int s = 0; s < numSamples; s++) {
+				final int si = s;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> data;
+					if (permuteY) {
+						double[] yPerm = yOrig.clone();
+						shuffleArray(yPerm);
+						data = buildPermutedXy(yPerm);
+					} else {
+						data = permuteXColumns(colsToPermute);
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(data, num_trees, burnIn, total);
+					rsqs[si] = computePseudoRsq(bart, yOrig);
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return rsqs;
+	}
+
+	/**
+	 * Run k-fold cross-validation entirely in Java.
+	 *
+	 * Builds one BART model per fold in parallel, predicts the held-out records,
+	 * and assembles the full-length out-of-fold prediction vector.
+	 *
+	 * @param foldAssignments  1-based fold label for every training observation (length n)
+	 * @param kFolds           number of folds
+	 * @return                 out-of-fold posterior mean predictions (length n)
+	 */
+	public double[] runKFoldCV(int[] foldAssignments, int kFolds) {
+		final double[] yhatCV = new double[n];
+
+		int poolSize = Math.min(kFolds, Runtime.getRuntime().availableProcessors());
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(kFolds);
+			for (int fold = 1; fold <= kFolds; fold++) {
+				final int foldId = fold;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> trainData = new ArrayList<>();
+					ArrayList<Integer> testIdx = new ArrayList<>();
+					for (int i = 0; i < n; i++) {
+						if (foldAssignments[i] == foldId) {
+							testIdx.add(i);
+						} else {
+							double[] orig = X_y.get(i);
+							trainData.add(Arrays.copyOf(orig, p + 1));
+						}
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(trainData, num_trees,
+									num_gibbs_burn_in, num_gibbs_total_iterations);
+					double[][] testRecords = new double[testIdx.size()][p];
+					for (int k = 0; k < testIdx.size(); k++) {
+						System.arraycopy(X_y.get(testIdx.get(k)), 0, testRecords[k], 0, p);
+					}
+					double[] preds = bart.getPosteriorMeanForPrediction(testRecords, 1);
+					for (int k = 0; k < testIdx.size(); k++) {
+						yhatCV[testIdx.get(k)] = preds[k];
+					}
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return yhatCV;
 	}
 }

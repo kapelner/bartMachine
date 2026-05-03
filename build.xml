@@ -1,31 +1,86 @@
 <project name="bartMachine" basedir="." default="clean">
     <description>
-        This script builds the bartMachine code into the bart_java.jar file which gets called from R in the R package
-    </description>	
-	
-	<path id="master-classpath">
-	  <fileset dir=".">
-	    <include name="*.jar" />
-	  	<exclude name="bart_java.jar" />
-	  </fileset>
-	</path>	
-	
+        Builds bart_java.jar from src/.
+
+        Standard build (auto-detects TornadoVM if installed):
+            ant clean
+
+        TornadoVM detection priority (highest to lowest):
+          1. -Dtornadovm.jar=/explicit/path/tornado-api.jar   (manual override)
+          2. $TORNADO_SDK/share/java/tornado/tornado-api*.jar  (set by TornadoVM installer)
+          3. Not found -> GpuForestPredictor excluded; GPU path falls back to CPU at runtime
+
+        If TornadoVM is detected, GpuForestPredictor.java is compiled in a second pass
+        and included in the jar.  At runtime the GPU path is activated only when a real
+        CUDA/OpenCL device is found; it falls back to CPU transparently otherwise.
+    </description>
+
+    <property environment="env"/>
+
+    <!-- Ensure env.TORNADO_SDK is defined even when the env var is absent,
+         so the fileset below never sees an unresolved ${...} token. -->
+    <property name="env.TORNADO_SDK" value=""/>
+
+    <!--
+        Auto-detect: search $TORNADO_SDK/share/java/tornado/ for tornado-api*.jar.
+        setonempty="false" means the property stays unset when no files are found.
+        Property immutability means an explicit -Dtornadovm.jar=... always wins.
+    -->
+    <pathconvert property="tornadovm.jar" setonempty="false">
+        <fileset dir="${env.TORNADO_SDK}/share/java/tornado"
+                 includes="tornado-api*.jar"
+                 erroronmissingdir="false"/>
+    </pathconvert>
+
+    <condition property="tornado.available">
+        <isset property="tornadovm.jar"/>
+    </condition>
+
+    <path id="master-classpath">
+        <fileset dir=".">
+            <include name="*.jar"/>
+            <exclude name="bart_java.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Always compile everything except GpuForestPredictor -->
     <target name="compile" description="compile the source code">
-      <mkdir dir="class_files"/>
-      <javac srcdir="src" destdir="class_files" includeantruntime="false" release="21">
-      	<exclude name="**/package-info.java"/>
-      	<classpath refid="master-classpath" />	
-        <compilerarg value="-Xlint:-options" />
-        <compilerarg value="--add-modules" />
-        <compilerarg value="jdk.incubator.vector" />
-      </javac>
-    </target>	
-	
-	<target name="dist" depends="compile" description="generate the jar file" >
-	    <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files" />
-	</target>	
-	
-	<target name="clean" description="Clean up" depends="dist">
-		<delete dir="class_files" />
-	</target>
+        <mkdir dir="class_files"/>
+        <javac srcdir="src" destdir="class_files" includeantruntime="false" release="21">
+            <exclude name="**/package-info.java"/>
+            <exclude name="**/GpuForestPredictor.java"/>
+            <classpath refid="master-classpath"/>
+            <compilerarg value="-Xlint:-options"/>
+            <compilerarg value="--add-modules"/>
+            <compilerarg value="jdk.incubator.vector"/>
+        </javac>
+    </target>
+
+    <!--
+        Second-pass: compile GpuForestPredictor only when TornadoVM is available.
+        Runs after compile so bartMachine classes in class_files/ are on the classpath.
+        Uses <pathelement path="..."> (not location) to handle multi-jar pathconvert output.
+    -->
+    <target name="compile-gpu" depends="compile" if="tornado.available"
+            description="compile GpuForestPredictor with TornadoVM (auto-detected or -Dtornadovm.jar=...)">
+        <echo message="TornadoVM detected at: ${tornadovm.jar}"/>
+        <javac srcdir="src" destdir="class_files" includeantruntime="false" release="21"
+               includes="bartMachine/GpuForestPredictor.java">
+            <classpath>
+                <path refid="master-classpath"/>
+                <pathelement path="${tornadovm.jar}"/>
+                <pathelement location="class_files"/>
+            </classpath>
+            <compilerarg value="--add-modules"/>
+            <compilerarg value="jdk.incubator.vector"/>
+        </javac>
+    </target>
+
+    <target name="dist" depends="compile-gpu" description="generate the jar file">
+        <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files"/>
+    </target>
+
+    <target name="clean" description="Clean up" depends="dist">
+        <delete dir="class_files"/>
+    </target>
 </project>

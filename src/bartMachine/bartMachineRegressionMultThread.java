@@ -77,6 +77,8 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected Integer seed;
 	/** whether or not to use the Xoshiro256PlusPlus random number generator */
 	protected boolean use_xoshiro;
+	/** whether to attempt GPU-accelerated prediction (requires GpuForestPredictor.GPU_AVAILABLE) */
+	protected boolean use_gpu = true;
 
 	
 	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
@@ -311,10 +313,29 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	protected double[][] getGibbsSamplesForPrediction(final double[][] records, final int num_cores_evaluate){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
 		final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
-		
+
 		final int n_star = records.length;
+		if (n_star == 0 || num_samples_after_burn_in <= 0){
+			return new double[n_star][num_samples_after_burn_in];
+		}
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictSamples(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min);
+			} catch (Exception e) {
+				// GPU path failed or was too large — fall through to CPU
+			}
+		}
+
 		final double[][] y_hats = new double[n_star][num_samples_after_burn_in];
-		
+
 		int[] allIndices = new int[n_star];
 		for (int i = 0; i < n_star; i++) allIndices[i] = i;
 
@@ -380,7 +401,22 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 			return y_hat_sum;
 		}
 		final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
-		
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictMeans(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
 		int[] allIndices = new int[n_star];
 		for (int i = 0; i < n_star; i++) allIndices[i] = i;
 		
@@ -478,6 +514,27 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	 * @return						A matrix of lower/upper bounds for each record
 	 */
 	public double[][] getCredibleIntervalsForPrediction(double[][] records, double coverage, int num_cores_evaluate){
+		final int n_star = records.length;
+		if (n_star == 0) return new double[0][2];
+
+		if (use_gpu && GpuPredictorBridge.GPU_AVAILABLE && n_star >= 1000) {
+			try {
+				final int num_samples_after_burn_in = numSamplesAfterBurning();
+				final bartMachineRegression first_bart = bart_gibbs_chain_threads[0];
+				Object forest = GpuPredictorBridge.flatten(
+						gibbs_samples_of_bart_trees_after_burn_in,
+						num_samples_after_burn_in, num_trees);
+				return GpuPredictorBridge.predictCredibleIntervals(
+						records, forest,
+						bartMachine_b_hyperparams.YminAndYmaxHalfDiff,
+						first_bart.y_max - first_bart.y_min,
+						first_bart.y_min,
+						coverage);
+			} catch (Exception e) {
+				// GPU path failed — fall through to CPU
+			}
+		}
+
 		double[][] y_gibbs_samples = getGibbsSamplesForPrediction(records, num_cores_evaluate);
 		double[][] intervals = new double[y_gibbs_samples.length][2];
 		double lowerProb = (1 - coverage) / 2;
@@ -964,6 +1021,10 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 	public void setUseXoshiro(boolean use_xoshiro) {
 		this.use_xoshiro = use_xoshiro;
 	}
+
+	public void setUseGpu(boolean use_gpu) {
+		this.use_gpu = use_gpu;
+	}
 	
 	/** Must be implemented, but does nothing */
 	public void StopBuilding() {}	
@@ -974,5 +1035,266 @@ public class bartMachineRegressionMultThread extends Classifier implements Seria
 			all_trees[m] = gibbs_samples_of_bart_trees_after_burn_in[g][m];
 		}
 		return all_trees;
+	}
+
+	// -------------------------------------------------------------------------
+	// R→Java migrations: var importance permutations, cov importance, k-fold CV
+	// -------------------------------------------------------------------------
+
+	/** Extract original y values from the training data. */
+	private double[] extractYOrig() {
+		double[] y = new double[n];
+		for (int i = 0; i < n; i++) {
+			y[i] = X_y.get(i)[p];
+		}
+		return y;
+	}
+
+	/** Fisher-Yates in-place shuffle of a double array. */
+	private void shuffleArray(double[] arr) {
+		for (int i = arr.length - 1; i > 0; i--) {
+			int j = (int)(StatToolbox.rand() * (i + 1));
+			double tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+		}
+	}
+
+	/** Build a copy of X_y with y replaced by yNew. */
+	private ArrayList<double[]> buildPermutedXy(double[] yNew) {
+		ArrayList<double[]> data = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			double[] orig = X_y.get(i);
+			double[] row = Arrays.copyOf(orig, p + 1);
+			row[p] = yNew[i];
+			data.add(row);
+		}
+		return data;
+	}
+
+	/**
+	 * Build a copy of X_y with the columns in colsToPermute independently shuffled.
+	 * colsToPermute uses 0-based column indices into the original feature space.
+	 */
+	private ArrayList<double[]> permuteXColumns(int[] colsToPermute) {
+		double[][] colData = new double[colsToPermute.length][n];
+		for (int ci = 0; ci < colsToPermute.length; ci++) {
+			int j = colsToPermute[ci];
+			for (int i = 0; i < n; i++) colData[ci][i] = X_y.get(i)[j];
+			shuffleArray(colData[ci]);
+		}
+		ArrayList<double[]> data = new ArrayList<>(n);
+		for (int i = 0; i < n; i++) {
+			double[] orig = X_y.get(i);
+			double[] row = Arrays.copyOf(orig, p + 1);
+			for (int ci = 0; ci < colsToPermute.length; ci++) {
+				row[colsToPermute[ci]] = colData[ci][i];
+			}
+			data.add(row);
+		}
+		return data;
+	}
+
+	/** Create, configure, and build a single-core BART model on the given data. */
+	private bartMachineRegressionMultThread buildPermuteBartMachine(
+			ArrayList<double[]> data, int numTrees, int numBurnIn, int numTotal) {
+		bartMachineRegressionMultThread bart = new bartMachineRegressionMultThread();
+		bart.setNumCores(1);
+		bart.setNumTrees(numTrees);
+		bart.setNumGibbsBurnIn(numBurnIn);
+		bart.setNumGibbsTotalIterations(numTotal);
+		bart.setAlpha(alpha);
+		bart.setBeta(beta);
+		bart.setK(hyper_k);
+		bart.setQ(hyper_q);
+		bart.setNU(hyper_nu);
+		bart.setProbGrow(prob_grow);
+		bart.setProbPrune(prob_prune);
+		bart.setMemCacheForSpeed(mem_cache_for_speed);
+		bart.setFlushIndicesToSaveRAM(flush_indices_to_save_ram);
+		bart.setUseXoshiro(use_xoshiro);
+		if (cov_split_prior != null) bart.setCovSplitPrior(cov_split_prior);
+		bart.setVerbose(false);
+		bart.setData(data);
+		bart.Build();
+		return bart;
+	}
+
+	/**
+	 * Compute pseudo-R² = 1 – SSE/SST for an already-built BART model against
+	 * the true y values passed in.
+	 */
+	private double computePseudoRsq(bartMachineRegressionMultThread bart, double[] yTrue) {
+		int nObs = yTrue.length;
+		double[][] records = new double[nObs][p];
+		ArrayList<double[]> data = bart.X_y;
+		for (int i = 0; i < nObs; i++) {
+			System.arraycopy(data.get(i), 0, records[i], 0, p);
+		}
+		double[] yHat = bart.getPosteriorMeanForPrediction(records, 1);
+		double yBar = 0;
+		for (double v : yTrue) yBar += v;
+		yBar /= nObs;
+		double sse = 0, sst = 0;
+		for (int i = 0; i < nObs; i++) {
+			double res = yTrue[i] - yHat[i];
+			sse += res * res;
+			double dev = yTrue[i] - yBar;
+			sst += dev * dev;
+		}
+		return sst == 0 ? 0 : 1.0 - sse / sst;
+	}
+
+	/**
+	 * Run variable-importance permutation test entirely in Java.
+	 *
+	 * Row 0 of the result is the average inclusion proportions over numRepsForAvg
+	 * regular BART builds on the original data.  Rows 1..numPermuteSamples are the
+	 * inclusion proportions from BART builds on y-permuted copies of the data.
+	 *
+	 * @param numRepsForAvg       number of regular builds to average for row 0
+	 * @param numPermuteSamples   number of permutation builds (rows 1..)
+	 * @param numTreesForPermute  trees per permutation build
+	 * @param type                "splits" or "trees"
+	 * @return                    (numPermuteSamples+1) × p matrix
+	 */
+	public double[][] runVarImportancePermutations(
+			int numRepsForAvg, int numPermuteSamples,
+			int numTreesForPermute, String type) {
+
+		final int burnIn = Math.min(num_gibbs_burn_in, 250);
+		final int total  = burnIn + Math.max(100, num_gibbs_total_iterations - num_gibbs_burn_in);
+		final int nBuilds = numRepsForAvg + numPermuteSamples;
+		final double[][] results = new double[nBuilds][p];
+		final double[] yOrig = extractYOrig();
+
+		int poolSize = Runtime.getRuntime().availableProcessors();
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(nBuilds);
+			for (int b = 0; b < nBuilds; b++) {
+				final int bi = b;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> data;
+					if (bi < numRepsForAvg) {
+						data = new ArrayList<>(X_y);
+					} else {
+						double[] yPerm = yOrig.clone();
+						shuffleArray(yPerm);
+						data = buildPermutedXy(yPerm);
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(data, numTreesForPermute, burnIn, total);
+					results[bi] = bart.getAttributeProps(type);
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		// Average the first numRepsForAvg rows into row 0 of output
+		double[][] out = new double[numPermuteSamples + 1][p];
+		for (int b = 0; b < numRepsForAvg; b++) {
+			for (int j = 0; j < p; j++) out[0][j] += results[b][j];
+		}
+		for (int j = 0; j < p; j++) out[0][j] /= numRepsForAvg;
+		for (int b = 0; b < numPermuteSamples; b++) {
+			out[b + 1] = results[numRepsForAvg + b];
+		}
+		return out;
+	}
+
+	/**
+	 * Run covariate-importance permutation test entirely in Java.
+	 *
+	 * If colsToPermute is empty, permutes y (omnibus test).
+	 * Otherwise permutes the specified columns of X.
+	 * Returns numSamples pseudo-R² values from BART builds on permuted data.
+	 *
+	 * @param colsToPermute  0-based column indices to permute; empty = permute y
+	 * @param numSamples     number of permutation samples
+	 * @return               length-numSamples array of pseudo-R² values
+	 */
+	public double[] runCovariateImportancePermutations(int[] colsToPermute, int numSamples) {
+		final int burnIn = Math.min(num_gibbs_burn_in, 250);
+		final int total  = burnIn + Math.max(100, num_gibbs_total_iterations - num_gibbs_burn_in);
+		final double[] yOrig = extractYOrig();
+		final double[] rsqs = new double[numSamples];
+		final boolean permuteY = (colsToPermute.length == 0);
+
+		int poolSize = Runtime.getRuntime().availableProcessors();
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(numSamples);
+			for (int s = 0; s < numSamples; s++) {
+				final int si = s;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> data;
+					if (permuteY) {
+						double[] yPerm = yOrig.clone();
+						shuffleArray(yPerm);
+						data = buildPermutedXy(yPerm);
+					} else {
+						data = permuteXColumns(colsToPermute);
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(data, num_trees, burnIn, total);
+					rsqs[si] = computePseudoRsq(bart, yOrig);
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return rsqs;
+	}
+
+	/**
+	 * Run k-fold cross-validation entirely in Java.
+	 *
+	 * Builds one BART model per fold in parallel, predicts the held-out records,
+	 * and assembles the full-length out-of-fold prediction vector.
+	 *
+	 * @param foldAssignments  1-based fold label for every training observation (length n)
+	 * @param kFolds           number of folds
+	 * @return                 out-of-fold posterior mean predictions (length n)
+	 */
+	public double[] runKFoldCV(int[] foldAssignments, int kFolds) {
+		final double[] yhatCV = new double[n];
+
+		int poolSize = Math.min(kFolds, Runtime.getRuntime().availableProcessors());
+		try (ExecutorService pool = Executors.newFixedThreadPool(poolSize)) {
+			ArrayList<Future<?>> futures = new ArrayList<>(kFolds);
+			for (int fold = 1; fold <= kFolds; fold++) {
+				final int foldId = fold;
+				futures.add(pool.submit(() -> {
+					ArrayList<double[]> trainData = new ArrayList<>();
+					ArrayList<Integer> testIdx = new ArrayList<>();
+					for (int i = 0; i < n; i++) {
+						if (foldAssignments[i] == foldId) {
+							testIdx.add(i);
+						} else {
+							double[] orig = X_y.get(i);
+							trainData.add(Arrays.copyOf(orig, p + 1));
+						}
+					}
+					bartMachineRegressionMultThread bart =
+							buildPermuteBartMachine(trainData, num_trees,
+									num_gibbs_burn_in, num_gibbs_total_iterations);
+					double[][] testRecords = new double[testIdx.size()][p];
+					for (int k = 0; k < testIdx.size(); k++) {
+						System.arraycopy(X_y.get(testIdx.get(k)), 0, testRecords[k], 0, p);
+					}
+					double[] preds = bart.getPosteriorMeanForPrediction(testRecords, 1);
+					for (int k = 0; k < testIdx.size(); k++) {
+						yhatCV[testIdx.get(k)] = preds[k];
+					}
+					return null;
+				}));
+			}
+			for (Future<?> f : futures) f.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return yhatCV;
 	}
 }

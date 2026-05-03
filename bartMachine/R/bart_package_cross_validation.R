@@ -118,23 +118,36 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 	}
 
 	Xy = data.frame(Xpreprocess, y) ##set up data
-	
+
+	if (pred_type == "regression") {
+		# Java path: builds all k fold models in parallel, returns out-of-fold predictions
+		bart_machine_template = do.call(build_bart_machine, c(list(
+				X = as.data.frame(Xpreprocess[, 1 : p, drop = FALSE]),
+				y = as.numeric(y),
+				run_in_sample = FALSE,
+				verbose = FALSE), args))
+		yhat_cv = .jcall(bart_machine_template$java_bart_machine, "[D", "runKFoldCV",
+				.jarray(as.integer(folds_vec)), as.integer(k_folds))
+		y_num = as.numeric(y)
+		L1_err = sum(abs(y_num - yhat_cv))
+		L2_err = sum((y_num - yhat_cv)^2)
+		list(y_hat = yhat_cv, L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n),
+				PseudoRsq = 1 - L2_err / sum((y_num - mean(y_num))^2), folds = folds_vec)
+	} else {
 	for (k in 1 : k_folds){
 		if (verbose){
 			cat(".")
 		}
-		
+
 	    test_idx = which(folds_vec == k)
 		test_data_k = Xy[test_idx, ]
 		training_data_k = Xy[-test_idx, ]
 
-
-		
    		#build bart object
 		bart_machine_cv = do.call(build_bart_machine, c(list(
-							X = training_data_k[, 1 : p, drop = FALSE], 
-							y = training_data_k[, (p + 1)], 
-							run_in_sample = FALSE, 
+							X = training_data_k[, 1 : p, drop = FALSE],
+							y = training_data_k[, (p + 1)],
+							run_in_sample = FALSE,
 							verbose = verbose), args))
 		predict_obj = bart_predict_for_test_data(
 			bart_machine_cv,
@@ -142,32 +155,23 @@ k_fold_cv = function(X, y, k_folds = 5, folds_vec = NULL, verbose = FALSE, ...){
 			test_data_k[, (p + 1)],
 			verbose = verbose
 		)
-		
+
 		#tabulate errors
-		if (pred_type == "regression"){
-			L1_err = L1_err + predict_obj$L1_err
-			L2_err = L2_err + predict_obj$L2_err
-      		yhat_cv[test_idx] = predict_obj$y_hat
-		} else {
-	        phat_cv[test_idx] = predict_obj$p_hat
-	        yhat_cv[test_idx] = predict_obj$y_hat
-			tab = table(factor(test_data_k$y, levels = y_levels), factor(predict_obj$y_hat, levels = y_levels))
-			confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + tab
-		}
+        phat_cv[test_idx] = predict_obj$p_hat
+        yhat_cv[test_idx] = predict_obj$y_hat
+		tab = table(factor(test_data_k$y, levels = y_levels), factor(predict_obj$y_hat, levels = y_levels))
+		confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + tab
 	}
 	if (verbose){
 		cat("\n")
 	}
-	if (pred_type == "regression"){
-		list(y_hat = yhat_cv, L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2), folds = folds_vec)
-	} else {		
-		#calculate the rest of the confusion matrix and return it plus the errors
-		confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
-		confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
-		confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
-		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
-		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
-		list(y_hat = yhat_cv, phat = phat_cv, confusion_matrix = confusion_matrix, misclassification_error = confusion_matrix[3, 3], folds = folds_vec)
+	#calculate the rest of the confusion matrix and return it plus the errors
+	confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
+	confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
+	confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
+	confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
+	confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
+	list(y_hat = yhat_cv, phat = phat_cv, confusion_matrix = confusion_matrix, misclassification_error = confusion_matrix[3, 3], folds = folds_vec)
 	}
 	
 }

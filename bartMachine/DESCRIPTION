@@ -1,8 +1,8 @@
 Package: bartMachine
 Type: Package
 Title: Bayesian Additive Regression Trees
-Version: 1.4.1.1
-Date: 2026-01-19
+Version: 1.4.2
+Date: 2026-04-30
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Authors@R: c(person(given = "Adam",
                   family = "Kapelner",
@@ -18,7 +18,7 @@ Encoding: UTF-8
 Depends: R (>= 2.14.0)
 Imports: bartMachineJARs (>= 1.2.2), rJava, randomForest, missForest, stats, ggplot2, grid, checkmate, matrixStats, grDevices
 Suggests: testthat (>= 3.0.0), withr
-SystemRequirements: Java (>= 21.0)
+SystemRequirements: Java (>= 21.0), TornadoVM (if you want GPU optimization)
 BugReports: https://github.com/kapelner/bartMachine/issues
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
