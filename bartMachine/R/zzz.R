@@ -44,9 +44,28 @@ java_feature_version_from_runtime <- function(jv) {
 	}
 
   java_params = getOption("java.parameters")
-  if (is.null(java_params) || !any(grepl("--add-modules=jdk.incubator.vector", java_params))){
+  has_vector = !is.null(java_params) && any(grepl("--add-modules=jdk.incubator.vector", java_params))
+  
+  if (!has_vector){
 	  packageStartupMessage("You did not set `options` correctly so bartMachine will not work. Restart R and run\n\noptions(java.parameters = c(\"-Xmx20g\", \"--add-modules=jdk.incubator.vector\", \"-XX:+UseZGC\"))\nlibrary(bartMachine)\n")
   } else {
+	  # Check for GPU setup (if -javaagent is used)
+	  is_using_agent = any(grepl("-javaagent:.*bart_java\\.jar", java_params))
+	  has_agent_args = any(grepl("-javaagent:.*bart_java\\.jar=.+", java_params))
+	  
+	  # Check if agent actually activated
+	  agent_active = tryCatch(
+	    .jcall("java/lang/System", "S", "getProperty", "bartMachine.agent.active"),
+	    error = function(e) "false"
+	  )
+	  if (is.null(agent_active)) agent_active = "false"
+	  
+	  if (is_using_agent && agent_active != "true") {
+	    packageStartupMessage("Warning: -javaagent was detected in java.parameters but BartJarAgent did not activate.\nThis usually means you are using an old version of bart_java.jar. Please reinstall the package.\n")
+	  } else if (is_using_agent && !has_agent_args) {
+	    packageStartupMessage("Warning: You are using -javaagent for bart_java.jar but didn't pass dependency jars as arguments.\nThis will likely cause NoClassDefFoundError. See README.md for the correct GPU setup.\n")
+	  }
+
 	  num_gigs_ram_available = .jcall(.jnew("java/lang/Runtime"), "J", "maxMemory") / 1e9
 	  more_memory_message = if (num_gigs_ram_available < 10){
 												  	"\n\nIf you run out of memory, restart R, and use \n\n'options(java.parameters = \"-Xmx20g\")' for 20GB of RAM before you call\n'library(bartMachine)'.\n"

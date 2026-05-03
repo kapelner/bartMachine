@@ -112,11 +112,28 @@
       # to a child URLClassLoader after JVM startup, so the system classloader
       # can't find it. Fix: -javaagent: causes the JVM to add the agent jar to
       # the system classpath *before* any user classes load (Java spec guarantee).
+      #
+      # Since bart_java.jar is now on the system classpath, its dependencies
+      # (fastutil, etc.) must also be on the system classpath or it will
+      # throw NoClassDefFoundError. We pass them as agent arguments to BartJarAgent.
       bart_jar <- system.file("java", "bart_java.jar", package = "bartMachine")
-      agent_flag <- if (nzchar(bart_jar) && file.exists(bart_jar))
-                      paste0("-javaagent:", bart_jar)
-                    else
+      deps     <- c(
+        system.file("java", "fastutil-core-8.5.18.jar", package = "bartMachineJARs"),
+        system.file("java", "commons-math-2.1.jar",     package = "bartMachineJARs")
+      )
+      # Filter out any missing jars (e.g. if bartMachineJARs not installed)
+      deps <- deps[nzchar(deps) & file.exists(deps)]
+      
+      agent_flag <- if (nzchar(bart_jar) && file.exists(bart_jar)) {
+                      if (length(deps) > 0) {
+                        # Pass dependency paths separated by platform path separator
+                        paste0("-javaagent:", bart_jar, "=", paste(deps, collapse = .Platform$path.sep))
+                      } else {
+                        paste0("-javaagent:", bart_jar)
+                      }
+                    } else {
                       character(0)
+                    }
 
       return(c(base, tornado_flags, agent_flag))
     }

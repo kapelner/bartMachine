@@ -1,7 +1,7 @@
 IMPORTANT
 ===========
 
-* For the newest version >=1.4, *before* you load the package, you must set *both* the memory and the special speedup module and newer GC params are also recommended: `options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))`. If you don't do this you will get errors such as `Error in .jnew("bartMachine.bartMachineRegressionMultThread") : java.lang.NoClassDefFoundError: jdk/incubator/vector/Vector`.
+* For the newest version >=1.4, *before* you load the package, you must set *both* the memory and the special speedup module and newer GC params are also recommended: `options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC"))`. If you don't do this you will get errors such as `Error in .jnew("bartMachine.bartMachineRegressionMultThread") : java.lang.NoClassDefFoundError: jdk/incubator/vector/Vector`. If you want GPU optimizations, see the necessary options setup in this README further on.
 
 * For version <1.4, you must set the memory before `options(java.parameters = "-Xmx20g")` to set a larger amount of RAM than the default of 500MB which will get you intro trouble. Only after setting these options, then invoke `library(bartMachine)`. If you don't do this YOU WILL GET OUT OF MEMORY ERRORS OR STUFF THAT LOOKS LIKE THIS `Error in validObject(.Object) : invalid class “jobjRef” object: invalid object for slot "jobj" in class "jobjRef": got class "NULL", should be or extend class "externalptr"`.
 
@@ -92,7 +92,7 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
 
 3. Compile with `ant clean`. The build will automatically find `$TORNADO_SDK/share/java/tornado/tornado-api*.jar` and compile `GpuForestPredictor.java` in a second pass. You will see a line like `TornadoVM detected at: ...` in the build output. For non-standard installs where `TORNADO_SDK` is not set, you can override manually: `ant -Dtornadovm.jar=/path/to/tornado-api.jar clean`.
 
-4. Install into R using `R CMD INSTALL bartMachine` (same as the CPU-only step 5 above).
+4. Install into R using `R CMD INSTALL bartMachine`. **IMPORTANT: You must run this command after building with `ant` to ensure the updated `bart_java.jar` is moved into your R library.**
 
 5. Before loading the package in R, set the JVM flags for your GPU hardware. The five base flags are always required; the rest are TornadoVM backend flags.
 
@@ -100,58 +100,46 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
    - `--add-modules=jdk.incubator.vector` — Vector API (required by bartMachine ≥ 1.4)
    - `-XX:+UseZGC` — low-pause GC recommended for real-time workloads
    - `--enable-preview` — TornadoVM's JARs are compiled with Java preview features
-   - `-javaagent:/path/to/bart_java.jar` — TornadoVM's kernel compiler reads class bytes via `ClassLoader.getSystemClassLoader()`; rJava adds this jar to a child class loader after JVM startup, so the system loader cannot see it. Using the jar as a Java agent causes the JVM to append it to the system classpath before any user classes load (Java SE specification guarantee). Replace the path with the output of `system.file("java", "bart_java.jar", package = "bartMachine")` in R.
+   - `-javaagent:/path/to/bart_java.jar=deps` — TornadoVM's kernel compiler reads class bytes via `ClassLoader.getSystemClassLoader()`; rJava adds this jar to a child class loader after JVM startup, so the system loader cannot see it. Using the jar as a Java agent causes the JVM to append it to the system classpath before any user classes load (Java SE specification guarantee). Since `bart_java.jar` is then on the system classpath, its dependencies (from `bartMachineJARs`) must also be added to the system classpath search; we pass them as agent arguments.
+
+   **Recommended setup snippet for GPU:**
+   ```r
+   # 1. Locate the main jar and dependency jars
+   bart_jar <- system.file("java", "bart_java.jar", package = "bartMachine")
+   deps     <- c(
+     system.file("java", "fastutil-core-8.5.18.jar", package = "bartMachineJARs"),
+     system.file("java", "commons-math-2.1.jar",     package = "bartMachineJARs")
+   )
+   deps <- deps[nzchar(deps) & file.exists(deps)]
+   agent_flag <- paste0("-javaagent:", bart_jar, "=", paste(deps, collapse = .Platform$path.sep))
+
+   # 2. Set JVM flags (change backend as needed: ptx-backend, spirv-backend, opencl-backend, metal-backend)
+   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       agent_flag,
+       "-Dtornado.backends=ptx-backend", #this is for Nvidia (for other hardware, see next five sections below)
+       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
+
+   # 3. Load the package
+   library(bartMachine)
+   ```
 
    **NVIDIA GPU (CUDA/PTX backend):**
-   ```r
-   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
-       "--enable-preview",
-       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
-       "-Dtornado.backends=ptx-backend",
-       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
-   ```
+   Keep `-Dtornado.backends=ptx-backend` in the snippet above.
 
    **Intel GPU (Level Zero / SPIR-V backend):**
-   ```r
-   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
-       "--enable-preview",
-       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
-       "-Dtornado.backends=spirv-backend",
-       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
-   ```
+   Use `-Dtornado.backends=spirv-backend` in the snippet above instead of `-Dtornado.backends=ptx-backend`.
 
    **AMD GPU or Intel GPU (OpenCL backend):**
-   ```r
-   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
-       "--enable-preview",
-       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
-       "-Dtornado.backends=opencl-backend",
-       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
-   ```
+   Use `-Dtornado.backends=opencl-backend` in the snippet above instead of `-Dtornado.backends=ptx-backend`.
 
    **Mac — Apple Silicon or Intel Mac (OpenCL backend, supported):**
-   ```r
-   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
-       "--enable-preview",
-       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
-       "-Dtornado.backends=opencl-backend",
-       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
-   ```
+   Use `-Dtornado.backends=opencl-backend` in the snippet above instead of `-Dtornado.backends=ptx-backend`.
    Note: macOS ships with OpenCL (deprecated but functional) and is the recommended path. TornadoVM's Metal backend is still experimental but can be tried on Apple Silicon:
 
    **Mac — Apple Silicon (Metal backend, experimental):**
-   ```r
-   options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
-       "--enable-preview",
-       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
-       "-Dtornado.backends=metal-backend",
-       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-       "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
-   ```
+   Use `-Dtornado.backends=metal-backend` in the snippet above instead of `-Dtornado.backends=ptx-backend`.
 
    For the authoritative, version-specific list of all required flags for your TornadoVM build, run `$TORNADO_SDK/bin/tornado --printJVMFlags` and append any additional flags it emits to the `java.parameters` vector above.
 
