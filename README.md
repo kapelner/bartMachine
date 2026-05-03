@@ -53,7 +53,7 @@ can install the package from CRAN or compile from source.
 
 ### Install Java JDK (not the JRE)
 
-Download the latest [Java JDK](https://jdk.java.net/) and install it properly. (Java >=21 is required for version >=1.4; Java >=8 is required for version <1.4). bartMachine requires `rJava` which requires the JDK; you cannot just have a JRE!
+`bartMachine` requires `rJava` which requires the JDK; you cannot just have a JRE! Download the latest [Java JDK](https://jdk.java.net/) and install it properly. (Java >=21 is required for version >=1.4; Java >=8 is required for version <1.4). Specifically v21 is required for GPU optimizations. 
 
 ### Install rJava
 
@@ -61,7 +61,7 @@ Use `install.packages("rJava")` within R. If you experience errors, make sure yo
 
 ### Install bartMachine via CRAN
 
-Use `install.packages("bartMachine")` within R.
+Use `install.packages("bartMachine")` within R. This route will *not* give you the GPU optimizations (see below).
 
 ### Install bartMachine via compilation from source (CPU only)
 
@@ -79,14 +79,14 @@ Make sure you add the bin directory for ant to your system PATH variable (on a w
 
 4. Compile the JAVA source code into a JAR using `ant`. You should see a compilation record and then `BUILD SUCCESSFUL` and a total time.
 
-5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can be corrected by running `R CMD INSTALL --no-multiarch bartMachine` (I haven't seen this issue in years though). This may also fail if you don't have the required packages installed (run `install.packages("bartMachineJARs")` and `install.packages("missForest")`). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. In R, you can now run `library(bartMachine)` and start using the package normally.
+5. Now you can install the package into R using `R CMD INSTALL bartMachine`. On Windows systems, this may fail because it expects multiple architectures. This can be corrected by running `R CMD INSTALL --no-multiarch bartMachine` (I haven't seen this issue in years though). This may also fail if you don't have the required packages installed (e.g. run `install.packages("bartMachineJARs")`, `install.packages("missForest")`, etc). Upon successful installation, the last line of the output should read `DONE (bartMachine)`. In R, you can now run `library(bartMachine)` and start using the package normally.
 
 
 ### Install bartMachine via compilation from source (GPU + CPU)
 
-GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/), which dispatches prediction kernels to CUDA/OpenCL devices. The build auto-detects TornadoVM — no special flags are needed when TornadoVM is properly installed. 
+GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/), which dispatches prediction kernels to CUDA, metal, etc. devices. The build auto-detects TornadoVM — no special flags are needed when TornadoVM is properly installed. But installing TornadoVM sometimes is vexing. Read below carefully.
 
-1. Follow steps 1–3 of the CPU-only instructions above (git clone, Java JDK, Apache Ant). At the time of this writing, TornadoVM only works with Java JDK version 21, so you sohuld download that version.
+1. Follow steps 1–3 of the CPU-only instructions above (git clone, Java JDK v21, Apache Ant). At the time of this writing, TornadoVM unfortunately only works with Java JDK version 21, so you must download that version.
 
 2. Install [TornadoVM](https://tornadovm.readthedocs.io/en/latest/installation.html). The TornadoVM installer sets the `TORNADO_SDK` environment variable; make sure it is set in the shell where you will run `ant`.
 
@@ -261,4 +261,4 @@ Prediction Time p-value: 4.4088e-15
 Acknowledgements
 ------------------
 
-We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation.
+We thank Ed George, Abba Krieger, Shene Jensen and Richard Berk for helpful discussions. We thank Matt Olson for pointing out an important memory issue. We thank [JProfiler](http://www.ej-technologies.com/products/jprofiler/overview.html) for profiling the code which allowed us to create a lean implementation. We thank claude, codex and gemini for helping code v1.4+.
