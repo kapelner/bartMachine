@@ -113,3 +113,9 @@ bartMachine/inst/benchmarks/bart_packages_comparisons_results/*
 R_libs/*
 baseline_build/*
 baseline_port.rds
+benchmark_report.md
+create_shared_data.R
+res_gpu.rds
+res_old.rds
+shared_comparison_data.RData
+shared_models.RData

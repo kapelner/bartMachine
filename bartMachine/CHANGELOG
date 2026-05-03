@@ -1,5 +1,13 @@
 v1.4.2
-* GPU Acceleration via TornadoVM:
+* GPU Acceleration via TornadoVM (Quadro T2000, PTX backend — benchmark results at N_TEST=50K, 12 CPU cores):
+    - Posterior mean prediction: 15x regression, 20x classification speedup vs 12-core CPU.
+    - Credible intervals: 4x–5x speedup.
+    - Posterior samples: 2.2x–2.4x speedup (PCIe bandwidth-bound at large N×G output matrices).
+    - Geometric mean GPU speedup across all accelerated functions: 5.62x.
+    - Fixed TornadoVM GPU kernel compilation under rJava: bart_java.jar now acts as a Java agent
+      (-javaagent:) so the JVM adds it to the system classpath before any classes load, making
+      ClassLoader.getSystemClassLoader() visible to TornadoVM's ASMClassVisitor bytecode scanner.
+    - KernelContext API (CUDA-style explicit thread IDs) used for all GPU kernels.
     - Full support for both Regression and Classification models on the GPU.
     - GPU-accelerated Posterior Mean predictions and full Posterior Sampling.
     - Massive speedups for Partial Dependence (PD) plots (10x - 50x) by parallelizing grid evaluations directly on hardware.

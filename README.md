@@ -28,7 +28,7 @@ Recent News
 
 May, 2026
 
-v1.4.2 released - major speedups using GPU via TornadoVM (see relevant sections below). Additional speedups from multiple R-> Java migrations.
+v1.4.2 released - major speedups using GPU via TornadoVM (see relevant sections below). Additional speedups from multiple R -> Java migrations.
 v1.3.5-1.4.1.1 released - major speedups using Java 21+ advancements and "Vector API code" (see benchmark section below), switched from legacy trove package to modern (and maintained) [fastutil](https://github.com/vigna/fastutil) package, verbose flag behavior cleaned up, ggplot2 implementation, argument checks, documentation cleanup tests, testing, multiple benchmarks. The package is faster than the `BART` package but slower than the `dbarts` package for both training and prediction. Note: v1.4.1 has a bug where classification doesn't work. Please upgrade to v1.4.1.1.
 
 
@@ -94,11 +94,19 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
 
 4. Install into R using `R CMD INSTALL bartMachine` (same as the CPU-only step 5 above).
 
-5. Before loading the package in R, set the JVM flags for your GPU hardware. The first three flags (`-Xmx20g`, `--add-modules=jdk.incubator.vector`, `-XX:+UseZGC`) are always required; the rest are TornadoVM backend flags.
+5. Before loading the package in R, set the JVM flags for your GPU hardware. The five base flags are always required; the rest are TornadoVM backend flags.
+
+   - `-Xmx20g` — heap size
+   - `--add-modules=jdk.incubator.vector` — Vector API (required by bartMachine ≥ 1.4)
+   - `-XX:+UseZGC` — low-pause GC recommended for real-time workloads
+   - `--enable-preview` — TornadoVM's JARs are compiled with Java preview features
+   - `-javaagent:/path/to/bart_java.jar` — TornadoVM's kernel compiler reads class bytes via `ClassLoader.getSystemClassLoader()`; rJava adds this jar to a child class loader after JVM startup, so the system loader cannot see it. Using the jar as a Java agent causes the JVM to append it to the system classpath before any user classes load (Java SE specification guarantee). Replace the path with the output of `system.file("java", "bart_java.jar", package = "bartMachine")` in R.
 
    **NVIDIA GPU (CUDA/PTX backend):**
    ```r
    options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
        "-Dtornado.backends=ptx-backend",
        "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
        "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
@@ -107,6 +115,8 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
    **Intel GPU (Level Zero / SPIR-V backend):**
    ```r
    options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
        "-Dtornado.backends=spirv-backend",
        "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
        "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
@@ -115,6 +125,8 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
    **AMD GPU or Intel GPU (OpenCL backend):**
    ```r
    options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
        "-Dtornado.backends=opencl-backend",
        "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
        "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
@@ -123,6 +135,8 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
    **Mac — Apple Silicon or Intel Mac (OpenCL backend, supported):**
    ```r
    options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
        "-Dtornado.backends=opencl-backend",
        "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
        "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
@@ -132,6 +146,8 @@ GPU acceleration is available via [TornadoVM](https://tornadovm.readthedocs.io/)
    **Mac — Apple Silicon (Metal backend, experimental):**
    ```r
    options(java.parameters = c("-Xmx20g", "--add-modules=jdk.incubator.vector", "-XX:+UseZGC",
+       "--enable-preview",
+       paste0("-javaagent:", system.file("java", "bart_java.jar", package = "bartMachine")),
        "-Dtornado.backends=metal-backend",
        "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
        "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED"))
@@ -165,10 +181,25 @@ Classification and prediction batches with fewer than 1,000 records always use t
 
 (At least under GNU/Linux) even if you set `set_bart_machine_num_cores(1)`, CPU usage per process can be much larger than 100% (reaching at times 200% or 300%). This can lead to CPU overloading, especially if you run multiple bartMachines in parallel (for example, if you use the [SuperLearner](https://cran.r-project.org/web/packages/SuperLearner/) package and use parallelization). This seems to be a consequence of the garbage collector. One way to avoid this problem is to issue `Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")` *before* invoking `library(bartMachine)`. (If you use a cluster, for example a SNOW cluster, you will want to do this in the slaves too, for example `clusterEvalQ(the_name_of_your_cluster, {Sys.setenv(JAVA_TOOL_OPTIONS = "-XX:ParallelGCThreads=1")})`).
 
-Benchmarks v1.4.2 to v1.4.1.1
+#### Benchmarks
+
+v1.4.2 to v1.4.1.1
 ------------------
 
-In v1.4.2, we migrated several computationally intensive tasks from R loops to a high-performance Java backend using virtual threads. The following table summarizes the speedups achieved on a 4-core system:
+GPU prediction speedups were measured on an NVIDIA Quadro T2000 (1024 CUDA cores, 4 GB GDDR5, PTX backend) against 12 CPU threads (Intel Core i7), using 50 trees, 1000 posterior samples, N_TRAIN = 2000, and N_TEST = 50,000 test records. Speedups grow with dataset size; GPU overhead dominates at N_TEST < 1000 (where the CPU path is used automatically).
+
+| Operation | CPU (12-core) | GPU (Quadro T2000) | **Speedup** | Max \|CPU−GPU\| |
+| :--- | :--- | :--- | :--- | :--- |
+| **Regression: `predict()`** | 6.341 s | 0.417 s | **15.21x** | 7.5e-14 |
+| **Regression: `bart_machine_get_posterior()`** | 12.724 s | 5.769 s | **2.21x** | < 1e-15 |
+| **Regression: `calc_credible_intervals()`** | 8.057 s | 1.982 s | **4.07x** | < 1e-15 |
+| **Classification: `predict(type="prob")`** | 9.805 s | 0.492 s | **19.93x** | 5.5e-8 |
+| **Classification: `bart_machine_get_posterior()`** | 15.814 s | 6.605 s | **2.39x** | 1.1e-7 |
+| **Classification: `calc_credible_intervals()`** | 10.146 s | 2.096 s | **4.84x** | 1.1e-7 |
+
+Note: `get_posterior` functions return large matrices (N_TEST × N_SAMP), so PCIe memory transfer limits GPU gains. Posterior-mean and credible-interval functions — which return only N_TEST outputs — scale best onto the GPU. The classification numerical differences (~1e-7) reflect GPU vs JVM precision for the `exp()` function used in the probit transform; differences are scientifically negligible.
+
+We also migrated several computationally intensive tasks from R loops to a high-performance Java backend using virtual threads. The following table summarizes the speedups achieved on a 4-core system (CPU-only):
 
 | Operation | Baseline (R) | Current (Java) | **Speedup** | Correctness |
 | :--- | :--- | :--- | :--- | :--- |
@@ -178,7 +209,9 @@ In v1.4.2, we migrated several computationally intensive tasks from R loops to a
 
 Note: Numerical differences in CV results are expected due to initialization variances in the independent multi-threaded BART builds now handled by the JVM.*
 
-Benchmarks v1.4.1.1 to v1.3.5
+The R→Java migration speedups apply on top of the GPU speedups for `var_selection_by_permute`, `cov_importance_test`, and `k_fold_cv`, since their internal prediction calls also dispatch to the GPU when N_TEST ≥ 1000. These results are unshown.
+
+v1.4.1.1 to v1.3.5
 ------------------
 
 You can see how we did these benchmarks in `run_comparisons.sh`. We compared regression and classification for 1 core and 12 cores for (a) predictions (to ensure they are roughly the same to the previous version) and (b) speed. Here are the results.

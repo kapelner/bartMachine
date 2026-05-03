@@ -46,7 +46,8 @@
     <!-- Always compile everything except GpuForestPredictor -->
     <target name="compile" description="compile the source code">
         <mkdir dir="class_files"/>
-        <javac srcdir="bartMachine/java" destdir="class_files" includeantruntime="false" release="21">
+        <javac srcdir="bartMachine/java" destdir="class_files" includeantruntime="false"
+               release="21" debug="true" debuglevel="lines,vars,source">
             <exclude name="**/package-info.java"/>
             <exclude name="**/GpuForestPredictor.java"/>
             <classpath refid="master-classpath"/>
@@ -64,7 +65,8 @@
     <target name="compile-gpu" depends="compile" if="tornado.available"
             description="compile GpuForestPredictor with TornadoVM (auto-detected or -Dtornadovm.jar=...)">
         <echo message="TornadoVM detected at: ${tornadovm.jar}"/>
-        <javac srcdir="bartMachine/java" destdir="class_files" includeantruntime="false" release="21"
+        <javac srcdir="bartMachine/java" destdir="class_files" includeantruntime="false"
+               release="21" debug="true" debuglevel="lines,vars,source"
                includes="bartMachine/GpuForestPredictor.java">
             <classpath>
                 <path refid="master-classpath"/>
@@ -77,7 +79,17 @@
     </target>
 
     <target name="dist" depends="compile-gpu" description="generate the jar file">
-        <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files"/>
+        <jar destfile="bartMachine/inst/java/bart_java.jar" basedir="class_files">
+            <manifest>
+                <!-- Enables -javaagent: use: the JVM adds this jar to the system
+                     classpath before premain is called, making GpuForestPredictor
+                     visible to ClassLoader.getSystemClassLoader() (required by
+                     TornadoVM's ASMClassVisitor for GPU kernel compilation). -->
+                <attribute name="Premain-Class" value="bartMachine.BartJarAgent"/>
+                <attribute name="Can-Redefine-Classes" value="false"/>
+                <attribute name="Can-Retransform-Classes" value="false"/>
+            </manifest>
+        </jar>
     </target>
 
     <target name="clean" description="Clean up" depends="dist">
