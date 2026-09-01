@@ -1,0 +1,43 @@
+# Gets node predictions indices of the training data for new data.
+
+This returns a binary tensor for all gibbs samples after burn-in for all
+trees and for all training observations.
+
+## Usage
+
+``` r
+node_prediction_training_data_indices(bart_machine, new_data = NULL)
+```
+
+## Arguments
+
+- bart_machine:
+
+  An object of class “bartMachine”.
+
+- new_data:
+
+  Data that you wish to investigate the training sample weights. If
+  `NULL`, the original training data is used.
+
+## Value
+
+Returns a binary tensor indicating whether the prediction node contained
+a training datum or not. For each observation in new data, the size of
+this tensor is number of gibbs sample after burn-in times the number of
+trees times the number of training data observations. This the size of
+the full tensor is the number of observations in the new data times the
+three dimensional object just explained.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+set.seed(11)
+n = 50
+X = data.frame(x1 = rnorm(n), x2 = runif(n))
+y = X$x1 + rnorm(n)
+bart_machine = bartMachine(X, y, flush_indices_to_save_RAM = FALSE)
+idx = node_prediction_training_data_indices(bart_machine)
+} # }
+```

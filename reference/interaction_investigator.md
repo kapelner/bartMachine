@@ -1,0 +1,142 @@
+# Explore Pairwise Interactions in BART Model
+
+Explore the pairwise interaction counts for a BART model to learn about
+interactions fit by the model. This function includes an option to
+generate a plot of the pairwise interaction counts.
+
+## Usage
+
+``` r
+interaction_investigator(
+  bart_machine,
+  plot = TRUE,
+  num_replicates_for_avg = 5,
+  num_trees_bottleneck = 20,
+  num_var_plot = 50,
+  cut_bottom = NULL,
+  bottom_margin = 10,
+  verbose = TRUE
+)
+```
+
+## Arguments
+
+- bart_machine:
+
+  An object of class “bartMachine”.
+
+- plot:
+
+  If TRUE, a plot of the pairwise interaction counts is generated.
+
+- num_replicates_for_avg:
+
+  The number of replicates of BART to be used to generate pairwise
+  interaction inclusion counts. Averaging across multiple BART models
+  improves stability of the estimates.
+
+- num_trees_bottleneck:
+
+  Number of trees to be used in the sum-of-trees model for computing
+  pairwise interactions counts. A small number of trees should be used
+  to force the variables to compete for entry into the model.
+
+- num_var_plot:
+
+  Number of variables to be shown on the plot. If “Inf,” all variables
+  are plotted (not recommended if the number of predictors is large).
+  Default is 50.
+
+- cut_bottom:
+
+  A display parameter between 0 and 1 that controls where the y-axis is
+  plotted. A value of 0 would begin the y-axis at 0; a value of 1 begins
+  the y-axis at the minimum of the average pairwise interaction
+  inclusion count (the smallest bar in the bar plot). Values between 0
+  and 1 begin the y-axis as a percentage of that minimum.
+
+- bottom_margin:
+
+  A display parameter that adjusts the bottom margin of the graph if
+  labels are clipped. The scale of this parameter is the same as set
+  with `par(mar = c(....))` in R. Higher values allow for more space if
+  the crossed covariate names are long. Note that making this parameter
+  too large will prevent plotting and the plot function in R will throw
+  an error.
+
+- verbose:
+
+  If TRUE, prints progress messages and plots to the active device.
+
+## Value
+
+- interaction_counts:
+
+  For each of the \\p \times p\\ interactions, what is the count across
+  all `num_replicates_for_avg` BART model replicates' post burn-in Gibbs
+  samples in all trees.
+
+- interaction_counts_avg:
+
+  For each of the \\p \times p\\ interactions, what is the average count
+  across all `num_replicates_for_avg` BART model replicates' post
+  burn-in Gibbs samples in all trees.
+
+- interaction_counts_sd:
+
+  For each of the \\p \times p\\ interactions, what is the sd of the
+  interaction counts across the `num_replicates_for_avg` BART models
+  replicates.
+
+- interaction_counts_avg_and_sd_long:
+
+  For each of the \\p \times p\\ interactions, what is the average and
+  sd of the interaction counts across the `num_replicates_for_avg` BART
+  models replicates. The output is organized as a convenient long table
+  of class `data.frame`.
+
+## Details
+
+An interaction between two variables is considered to occur whenever a
+path from any node of a tree to any of its terminal node contains splits
+using those two variables. See Kapelner and Bleich, 2013, Section 4.11.
+
+## Note
+
+In the plot, the red bars correspond to the standard error of the
+variable inclusion proportion estimates (since multiple replicates were
+used).
+
+## References
+
+Adam Kapelner, Justin Bleich (2016). bartMachine: Machine Learning with
+Bayesian Additive Regression Trees. Journal of Statistical Software,
+70(4), 1-40.
+[doi:10.18637/jss.v070.i04](https://doi.org/10.18637/jss.v070.i04)
+
+## See also
+
+[`investigate_var_importance`](https://kapelner.github.io/bartMachine/reference/investigate_var_importance.md)
+
+## Author
+
+Adam Kapelner and Justin Bleich
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+#generate Friedman data
+set.seed(11)
+n  = 200
+p = 10
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+
+##build BART regression model
+bart_machine = bartMachine(X, y, num_trees = 20)
+
+#investigate interactions
+interaction_investigator(bart_machine)
+} # }
+```

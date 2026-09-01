@@ -1,0 +1,8 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles: {}
+last_built: 2026-09-01T07:59Z
+urls:
+  reference: https://kapelner.github.io/bartMachine/reference
+  article: https://kapelner.github.io/bartMachine/articles

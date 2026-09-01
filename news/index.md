@@ -1,0 +1,355 @@
+# Changelog
+
+## bartMachine 1.4.2
+
+CRAN release: 2026-05-04
+
+- GPU Acceleration via TornadoVM (Quadro T2000, PTX backend — benchmark
+  results at N_TEST=50K, 12 CPU cores):
+  - Posterior mean prediction: 15x regression, 20x classification
+    speedup vs 12-core CPU.
+  - Credible intervals: 4x–5x speedup.
+  - Posterior samples: 2.2x–2.4x speedup (PCIe bandwidth-bound at large
+    N×G output matrices).
+  - Geometric mean GPU speedup across all accelerated functions: 5.62x.
+  - Fixed TornadoVM GPU kernel compilation under rJava: bart_java.jar
+    now acts as a Java agent (-javaagent:) so the JVM adds it to the
+    system classpath before any classes load. Updated BartJarAgent to
+    also support loading dependencies (fastutil, trove, etc.) to the
+    system classpath via agent arguments, preventing
+    NoClassDefFoundError.
+  - KernelContext API (CUDA-style explicit thread IDs) used for all GPU
+    kernels.
+  - Full support for both Regression and Classification models on the
+    GPU.
+  - GPU-accelerated Posterior Mean predictions and full Posterior
+    Sampling.
+  - Massive speedups for Partial Dependence (PD) plots (10x - 50x) by
+    parallelizing grid evaluations directly on hardware.
+  - Accelerated Credible Intervals: Added a GPU-native quantile
+    selection kernel to compute uncertainty bounds without CPU-side
+    sorting or large data transfers.
+  - Large batch predictions (n \> 10,000) are typically 5x - 20x faster
+    than the multi-threaded CPU implementation.
+  - Reflection-based Bridge: Decoupled TornadoVM dependencies so the
+    package compiles on all systems; transparently falls back to CPU if
+    no GPU/TornadoVM is found.
+  - Safety: Strict memory guards prevent GPU out-of-memory errors on
+    massive prediction requests.
+- R -\> Java Migrations (for speedup):
+  - Parallel K-Fold Cross-Validation: Refactored to call a
+    high-performance Java backend using virtual threads.
+  - Variable/Covariate Importance: Permutation-based importance tests
+    now execute in parallel at the Java level.
+
+## bartMachine 1.4.1.1
+
+CRAN release: 2026-01-20
+
+- fix probability predictions for classification
+
+## bartMachine 1.4.1
+
+CRAN release: 2026-01-19
+
+- fix onAttach to pass CRAN checks
+
+## bartMachine 1.4
+
+CRAN release: 2026-01-17
+
+- major speedups throughout Java code using new features in JDK 21 (the
+  java version now required)
+- major speedups throughout R code by moving heavy lifting to Java or
+  otherwise using smarter vector operations
+- Xoshiro256++ random number generation support in Java (for even
+  greater speed and robust randomness)
+- Seed-setting for multiple cores now produces deterministic output
+- Speed and accuracy benchmarks against packages BART and dbarts
+  (stochtree is a different architecture which does not explore the full
+  posterior so it is not included)
+
+## bartMachine 1.3.6
+
+- major speedups due to the fastutil implementation (removed dependency
+  on the legacy trove package)
+
+## bartMachine 1.3.5
+
+- exported functions use ggplot2 for graphics instead of legacy base R
+  graphics
+- arguments for all functions are now checked using checkmate
+- cleaned up verbosity when verbose = FALSE
+- cleaned out deprecated functions
+- test suite
+- benchmarks
+- roxygen documentation
+- examples in documentation
+- cleaned up the vignette compilation
+- various clerical changes to have modern cran checks pass
+
+## bartMachine 1.3.4.2
+
+- bartMachineCV with verbose = FALSE now behaves as expected
+
+## bartMachine 1.3.4.1
+
+CRAN release: 2023-07-06
+
+- Fixed bug for interaction_investigator due to previous release
+- We now comply with CRAN policy to not change the user’s graphical
+  parameters
+
+## bartMachine 1.3.4
+
+CRAN release: 2023-06-26
+
+- If you are now doing binary classification for a 0/1 vector, we handle
+  the labeling automatically (message produced)
+- For interaction_investigator, there is now a useful long data.frame
+  returned (interaction_counts_avg_and_sd_long) that tabulates the mean
+  and sd of interactions for the variable pair in order of approximate
+  importance
+
+## bartMachine 1.3.3.1
+
+CRAN release: 2023-02-27
+
+- Fixed bug in bartMachine
+
+## bartMachine 1.3.3
+
+CRAN release: 2023-01-11
+
+- Gave up on fastutil — too many reported bugs. The code is reverted to
+  using trove. I have no idea why. If anyone could help that would be
+  great. So we lost the 2x speedup.
+- Fixed a scoping problem for the alias of bartMachine which calls
+  build_bart_machine
+
+## bartMachine 1.3.2
+
+CRAN release: 2022-10-25
+
+- folds_vec param now works for the bartMachineCV and
+  var_selection_by_permute_cv functions as suggested by Paul Rathouz of
+  UT Austin
+
+## bartMachine 1.3.1
+
+- Fixed prediction in classification due to an error in
+  it.unimi.dsi.fastutil.ints.IntArrayList. I’ve traced the error down to
+  two calls in the bartMachineTreeNode file that are clearly marked. We
+  lost a tiny speedup there.
+- Fixed concurrency error by synchronizing the MersenneTwister call.
+  Hope this doesn’t impact performance too much.
+- Reenabled printing of tree illustrations for those who are crazy
+  enough to use it. Good luck.
+
+## bartMachine 1.3
+
+CRAN release: 2022-08-26
+
+- fastutil is now used instead of trove for supposedly a 2x speedup of
+  many operations (see <https://fastutil.di.unimi.it/>) the downside
+  being Java 8 is now required
+- Mersenne Twister for randomness which is faster than Java’s Random
+  implementation
+
+## bartMachine 1.2.7
+
+CRAN release: 2022-08-23
+
+- interaction constraints
+
+## bartMachine 1.2.6
+
+CRAN release: 2020-12-17
+
+- raw node information extraction feature
+- posterior mean / variance is now recorded and provided in the raw node
+  information
+- much more information is now returned in the pd_plot function for
+  custom plotting, etc
+
+## bartMachine 1.2.5.2
+
+- interaction_investigator was fixed thanks to
+  [@bernicecu](https://github.com/bernicecu)
+- During building, when seed was set and num_cores \> 1, a warning is
+  fired saying that you won’t get deterministic output (thanks to
+  Dr. Michael H Schwartz).
+
+## bartMachine 1.2.5.1
+
+CRAN release: 2020-08-13
+
+- Downgraded Java to v7 for Solaris-x86 platform compatibility (a CRAN
+  requirement).
+- bartMachineJARs Java version was set to 5 (I checked all its JARs to
+  make sure). No need to release an update there.
+- During building, when seed was set, set.seed in R is no longer called
+  (a call to set.seed is unexpected for the user and should only be done
+  by the user consciously).
+
+## bartMachine 1.2.5
+
+CRAN release: 2020-07-21
+
+- Major speedups to all places where data is passed from Java -\> R
+- A function that provides the observations in each node for all
+  post-burn-in nodes.
+- Sample weight function to see how a prediction is being weighted by
+  the original training data i.e. the approximate projection matrix H
+  where yhatvec H yvec. This function is not currently working properly
+  without a kludge.
+- Dependence on package “car” removed.
+
+## bartMachine 1.2.4
+
+CRAN release: 2018-03-02
+
+- Prints message during classification indicating clearly the level of y
+  = 1 to prevent user confusion
+- As pertains to the above, added a verbose FLAG to predict that lets
+  user know which level is y = 1 to prevent user confusion
+- Compatibility with the data.table package
+- Function “calc_prediction_intervals” returns all prediction samples
+- Fixed Java version error (by making it a warning)
+
+## bartMachine 1.2.3
+
+CRAN release: 2016-05-12
+
+- Fixed bug in label reversals
+
+## bartMachine 1.2.2
+
+CRAN release: 2016-03-25
+
+- Created test of linearity convenience method
+- Created bartMachine model array convenience constructor and predicts
+  method
+- Fixed inconsistent label bug: Y = 1 is now coded for the first element
+  in levels(y). Thanks to Lars Kotthoff for pointing this out.
+- Added warning message upon startup if less than 1GB RAM is allowed for
+  bartMachine’s java implementation
+- Added benchmark datasets and fixed replication code for JSS paper
+- Updated vignette and citation to reflect published paper in JSS
+
+## bartMachine 1.2.1
+
+CRAN release: 2016-02-27
+
+- Error message for pathological case with missing data
+- Fix for datasets with missing data in some operating systems
+- Fix for error checking function (normality test)
+- Fix pd_plot function for missing data
+- Fix error for sigsq estimate when there are variables consisting
+  entirely of missing data
+- More verbose messages for debugging intialization of bartMachine
+  objects
+- Ability to pass in an estimate of sigsq. This is important since this
+  step may take a lot of time for datasets with a large number of
+  features
+- When creating partial dependence plots, there is now an option for
+  proportion of data to use. The lower the proportion, the lower the
+  resolution but the speedier the plot will generate.
+- When creating partial dependence plots, there is now less duplication
+  in the calculations which results in faster plotting.
+- Decomped dependencies (the JARs) to package bartMachine JARs thanks to
+  Kurt Hornik.
+
+## bartMachine 1.2.0
+
+CRAN release: 2015-03-10
+
+- A major memory leak was fixed. bartMachine objects are also generated
+  about 5% faster. Variable importance metrics are a tad slower as a
+  result. Thanks to Matt Olson for pointing this out.
+
+## bartMachine 1.1.2
+
+- there is now a seed argument which sets the seed in both R and Java
+  (especially useful for debugging). Only works when bartMachine is
+  built with one core
+- sigsq convergence plot now easier to read
+- plot_y_vs_y_hat plot now easier to read and print in black & white
+- pd_plot now has interval shaded for reading ease
+- cov_prior_vec bug fixed
+
+## bartMachine 1.1.1
+
+CRAN release: 2014-12-02
+
+- bartMachine now serializes models for transport in an image file (use
+  serialize = TRUE option)
+- bartMachine models are now cleaned up by R’s garbage collection
+  (destroy_bart_machine function is removed)
+- rmse_by_num_trees no longer throws warnings
+- k_fold_cv now has random splits and the y-hats and p-hats are returned
+- jpackage is now used for initializing Java and thus
+  “options(java.parameters = ‘…’)” is used instead of
+  set_bart_machine_memory which has been removed
+- vignette and documentation are now revamped
+- setting verbose flag set to FALSE eliminates Java output as well
+
+## bartMachine 1.0.4
+
+CRAN release: 2014-09-05
+
+- fixed bug in confusion table creation in the pathological case when
+  only one class is observed and predicted
+- fixed small bug off-by-one bug in get_sigsqs function (thanks to Jeff
+  Moser)
+- Added Java source files to R package build. Declared authors of JARs
+  which this library depends upon.
+
+## bartMachine 1.0.3
+
+- fixed bug in variable selection via cv where it used to crash if one
+  variable was selected
+- bartMachineCV now returns stats for each cross-validation run of
+  hyperparameter sets
+
+## bartMachine 1.0.2
+
+CRAN release: 2014-02-05
+
+- worked around a rJava 0.9.5 issue that surfaces when setting RAM on
+  some new MACs
+- Upon initialization of the JVM there is now a message indicating how
+  much maximum memory is available and a warning is thrown if the user
+  attempts to reinitialize the RAM amount.
+- Default JVM memory is now 1.1GB which is the maximum which initializes
+  on 32-bit Windows machines
+- Automobile data manual update
+- Removed unnecessary verbosity during model construction
+- Added a convenience alias method for setting memory
+- Added a convenience alias method for building bart machines and
+  building cross-validated bart machines
+- Bugs fixed in k_fold_cv function
+- Bug fixed in handling of missing data in the absence of missing data
+- Prediction intervals now technically correct
+- During covariance importance test, covariates are all permuted as a
+  block unit to preserve collinearity structure
+- Automatic cov_importance_prior construction by downweighting factors
+  by their number of levels
+- Added benchmark datasets
+- Bugs fixed during specification of Xy dataframe instead of X, y
+  separately
+- Bugs fixed when using bartMachineCV on a numeric x
+- Various improvements to printed messages during runtime
+
+## bartMachine 1.0.1
+
+CRAN release: 2013-12-09
+
+- Updated vignette to load from R
+- Better verbose messages in R
+
+## bartMachine 1.0
+
+CRAN release: 2013-12-07
+
+- Initial Release
