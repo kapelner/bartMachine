@@ -13,6 +13,7 @@ bartMachine
 [![R-universe version](https://kapelner.r-universe.dev/bartMachine/badges/version)](https://kapelner.r-universe.dev/bartMachine)
 [![R-universe checks](https://kapelner.r-universe.dev/bartMachine/badges/checks)](https://kapelner.r-universe.dev/bartMachine)
 [![GitHub Actions pkgdown](https://github.com/kapelner/bartMachine/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/kapelner/bartMachine/actions/workflows/pkgdown.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning

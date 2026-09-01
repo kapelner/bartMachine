@@ -6,14 +6,14 @@ Date: 2026-05-03
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Authors@R: c(person(given = "Adam",
                   family = "Kapelner",
-                  role = c("aut", "cre"),
+                  role = c("aut", "cre", "cph"),
                   email = "kapelner@qc.cuny.edu",
                   comment = c(ORCID = "0000-0001-5985-6792")),
              person(given = "Justin",
                       family = "Bleich",
-                      role = "aut"))
+                      role = c("aut", "cph")))
 Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
-License: GPL-3
+License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 2.14.0)
 Imports: bartMachineJARs (>= 1.2.2), rJava, randomForest, missForest, stats, ggplot2, grid, checkmate, matrixStats, grDevices
