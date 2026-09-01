@@ -1,3 +1,9 @@
+# bartMachine 1.4.3
+* Modernize package metadata and declare the MIT license consistently.
+* Add R-universe, CRAN, GitHub Actions, and license badges and current installation instructions.
+* Add a pkgdown site deployed through GitHub Pages Actions.
+* Reconcile third-party Java dependency notices with the JARs distributed by bartMachineJARs.
+
 # bartMachine 1.4.2
 * GPU Acceleration via TornadoVM (Quadro T2000, PTX backend — benchmark results at N_TEST=50K, 12 CPU cores):
     - Posterior mean prediction: 15x regression, 20x classification speedup vs 12-core CPU.

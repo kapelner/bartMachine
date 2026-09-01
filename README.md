@@ -32,6 +32,10 @@ This is a Java implementation of the algorithm found in Chipman, George, & McCul
 Recent News
 ---------
 
+September, 2026
+
+v1.4.3 released - modernized package metadata, installation documentation, automated checks, and pkgdown deployment; reconciled third-party Java licensing notices.
+
 May, 2026
 
 v1.4.2 released - major speedups using GPU via TornadoVM (see relevant sections below). Additional speedups from multiple R -> Java migrations.

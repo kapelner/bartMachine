@@ -1,25 +1,15 @@
-The following open source Java libraries are included in this package through the package bartMachineJARs:
+Third-party Java dependencies used by bartMachine
+==================================================
 
-- JUnit under the Eclipse Public License 1.0, 
-  Version 4.10, January 2004, 
-  http://junit.org/, 
-  Copyright 2002-2014 JUnit
+The bartMachine package does not bundle the Java libraries listed below.
+They are distributed by the required companion package bartMachineJARs and
+retain their respective upstream licenses:
 
-- Commons Math: The Apache Commons Mathematics Library under the Apache License 2.0, 
-  Version 2.1, March 2010,
-  http://commons.apache.org/proper/commons-math/, 
-  Copyright 2003-2014 The Apache Software Foundation
+- commons-math-2.1.jar: Apache Commons Math 2.1, Apache License 2.0
+- fastutil-core-8.5.18.jar: fastutil 8.5.18, Apache License 2.0
+- trove-3.0.3.jar: GNU Trove 3.0.3, GNU Lesser General Public License 2.1
 
-- fastutil under the Apache License 2.0,
-  Version 8.5.18, 
-  https://fastutil.di.unimi.it/,
-  Copyright 2002-2021 Sebastiano Vigna
+The authoritative notices, upstream project and source links, and license
+locations are installed with bartMachineJARs. They can be found from R with:
 
-License
-=======
-
-You may obtain a copy of the Eclipse Public License 1.0 at
-https://www.eclipse.org/legal/epl-v10.html
-
-You may obtain a copy of the Apache License, Version 2.0 at
-http://www.apache.org/licenses/LICENSE-2.0
+    system.file("COPYRIGHTS", package = "bartMachineJARs")

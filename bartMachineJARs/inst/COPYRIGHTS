@@ -1,15 +1,49 @@
-The following open source Java libraries are included in this package:
+Third-party Java libraries bundled with bartMachineJARs
+=======================================================
 
-- Commons Math: The Apache Commons Mathematics Library under the Apache License 2.0, 
-  Version 2.1, March 2010,
-  http://commons.apache.org/proper/commons-math/
+The MIT license declared for bartMachineJARs covers the package's own code
+and metadata. The following bundled JAR files retain their respective
+upstream licenses.
 
-- Fastutil under Apache-2.0 license,
-  Version 8.5.18, 
-  https://fastutil.di.unimi.it/
+Apache Commons Math
+-------------------
 
-License
-=======
+Bundled file: java/commons-math-2.1.jar
+Version: 2.1
+License: Apache License 2.0
+Copyright: Copyright 2001-2010 The Apache Software Foundation
+Project: https://commons.apache.org/proper/commons-math/
+Source: https://archive.apache.org/dist/commons/math/source/
 
-You may obtain a copy of the Apache License, Version 2.0 at
-http://www.apache.org/licenses/LICENSE-2.0
+The complete Apache License and the upstream NOTICE, including notices for
+incorporated third-party work, are stored as META-INF/LICENSE.txt and
+META-INF/NOTICE.txt inside this JAR. A separate copy of the license is also
+installed at licenses/Apache-2.0.txt.
+
+fastutil
+--------
+
+Bundled file: java/fastutil-core-8.5.18.jar
+Version: 8.5.18
+License: Apache License 2.0
+Copyright: Copyright (C) 1999 CERN; Copyright (C) 2002-2025 Sebastiano
+Vigna; portions Copyright (C) 2003-2024 Paolo Boldi and Sebastiano Vigna
+Project: https://fastutil.di.unimi.it/
+Source: https://github.com/vigna/fastutil/tree/8.5.18
+License text: licenses/Apache-2.0.txt
+Official license: https://www.apache.org/licenses/LICENSE-2.0
+
+GNU Trove
+---------
+
+Bundled file: java/trove-3.0.3.jar
+Version: 3.0.3
+Artifact: net.sf.trove4j:trove4j:3.0.3
+License: GNU Lesser General Public License 2.1
+Copyright: Copyright (c) 1999 CERN; Copyright (c) 2001-2002 Eric D.
+Friedman; Copyright (c) 2008-2011 Robert D. (Rob) Eden; Copyright (c) 2009
+Jeff Randall; Copyright (c) 2011 Johan Parent
+Project: https://trove4j.sourceforge.net/
+Source: https://repo1.maven.org/maven2/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3-sources.jar
+License text: licenses/LGPL-2.1.txt
+Official license: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html

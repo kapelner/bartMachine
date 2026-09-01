@@ -1,8 +1,8 @@
 Package: bartMachineJARs
-Version: 1.2.2
+Version: 1.2.3
 Title: bartMachine JARs
 Type: Package
-Date: 2026-01-08
+Date: 2026-09-01
 Author: Adam Kapelner [aut, cre] (ORCID: 0000-0001-5985-6792), Justin Bleich [aut]
 Maintainer: Adam Kapelner <kapelner@qc.cuny.edu>
 Authors@R: c(person(given = "Adam",
