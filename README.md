@@ -9,6 +9,11 @@ IMPORTANT
 bartMachine
 ===========
 
+[![CRAN status](https://www.r-pkg.org/badges/version/bartMachine)](https://CRAN.R-project.org/package=bartMachine)
+[![R-universe version](https://kapelner.r-universe.dev/bartMachine/badges/version)](https://kapelner.r-universe.dev/bartMachine)
+[![R-universe checks](https://kapelner.r-universe.dev/bartMachine/badges/checks)](https://kapelner.r-universe.dev/bartMachine)
+[![GitHub Actions pkgdown](https://github.com/kapelner/bartMachine/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/kapelner/bartMachine/actions/workflows/pkgdown.yaml)
+
 An R-Java Bayesian Additive Regression Trees implementation (BART)
 Software for Supervised Statistical Learning
 
@@ -61,7 +66,23 @@ Use `install.packages("rJava")` within R. If you experience errors, make sure yo
 
 ### Install bartMachine via CRAN
 
-Use `install.packages("bartMachine")` within R. This route will *not* give you the GPU optimizations (see below).
+```r
+install.packages("bartMachine")
+```
+
+This route will *not* give you the GPU optimizations (see below).
+
+### Install the latest bartMachine via R-universe
+
+```r
+install.packages(
+  "bartMachine",
+  repos = c(
+    kapelner = "https://kapelner.r-universe.dev",
+    CRAN = "https://cloud.r-project.org"
+  )
+)
+```
 
 ### Install bartMachine via compilation from source (CPU only)
 

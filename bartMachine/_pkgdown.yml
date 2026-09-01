@@ -1,0 +1,15 @@
+url: https://kapelner.github.io/bartMachine/
+
+template:
+  bootstrap: 5
+
+home:
+  title: bartMachine
+  description: >
+    Bayesian Additive Regression Trees for regression and classification,
+    implemented in R and Java.
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]

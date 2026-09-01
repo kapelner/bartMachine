@@ -1,1 +1,4 @@
 ^\.Rlib$
+^_pkgdown\.yml$
+^pkgdown$
+^docs$

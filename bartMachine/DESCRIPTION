@@ -19,6 +19,7 @@ Depends: R (>= 2.14.0)
 Imports: bartMachineJARs (>= 1.2.2), rJava, randomForest, missForest, stats, ggplot2, grid, checkmate, matrixStats, grDevices
 Suggests: testthat (>= 3.0.0), withr
 SystemRequirements: Java (>= 21.0), TornadoVM (if you want GPU optimization)
+URL: https://kapelner.github.io/bartMachine/, https://github.com/kapelner/bartMachine
 BugReports: https://github.com/kapelner/bartMachine/issues
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
