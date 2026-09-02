@@ -12,14 +12,24 @@ Authors@R: c(person(given = "Adam",
              person(given = "Justin",
                       family = "Bleich",
                       role = c("aut", "cph")))
-Description: An advanced implementation of Bayesian Additive Regression Trees with expanded features for data analysis and visualization.
+Description: Fits Bayesian additive regression trees (BART), a Bayesian
+    nonparametric machine-learning method, for regression and classification.
+    Provides posterior inference, credible and prediction intervals, variable
+    selection, interaction analysis, partial-dependence plots,
+    cross-validation, and optional graphics processing unit (GPU)
+    acceleration through TornadoVM.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 2.14.0)
 Imports: bartMachineJARs (>= 1.2.3), rJava, randomForest, missForest, stats, ggplot2, grid, checkmate, matrixStats, grDevices
 Suggests: testthat (>= 3.0.0), withr
 SystemRequirements: Java (>= 21.0), TornadoVM (if you want GPU optimization)
-URL: https://kapelner.github.io/bartMachine/, https://github.com/kapelner/bartMachine
+URL: https://kapelner.github.io/bartMachine/, https://kapelner.r-universe.dev/bartMachine, https://github.com/kapelner/bartMachine
 BugReports: https://github.com/kapelner/bartMachine/issues
+X-schema.org-keywords: Bayesian additive regression trees, BART, Bayesian
+    machine learning, Bayesian nonparametrics, machine learning, ensemble
+    learning, decision trees, regression, classification, posterior inference,
+    MCMC, variable selection, uncertainty quantification, interpretable machine
+    learning, partial dependence, cross-validation, GPU acceleration
 RoxygenNote: 7.3.3
 Config/testthat/edition: 3
