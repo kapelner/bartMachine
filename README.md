@@ -6,8 +6,7 @@ IMPORTANT
 * For version <1.4, you must set the memory before `options(java.parameters = "-Xmx20g")` to set a larger amount of RAM than the default of 500MB which will get you intro trouble. Only after setting these options, then invoke `library(bartMachine)`. If you don't do this YOU WILL GET OUT OF MEMORY ERRORS OR STUFF THAT LOOKS LIKE THIS `Error in validObject(.Object) : invalid class “jobjRef” object: invalid object for slot "jobj" in class "jobjRef": got class "NULL", should be or extend class "externalptr"`.
 
 
-bartMachine
-===========
+# bartMachine <img src="bartMachine/man/figures/logo.png" align="right" height="139" alt="bartMachine hex logo" />
 
 [![CRAN status](https://www.r-pkg.org/badges/version/bartMachine)](https://CRAN.R-project.org/package=bartMachine)
 [![R-universe version](https://kapelner.r-universe.dev/bartMachine/badges/version)](https://kapelner.r-universe.dev/bartMachine)

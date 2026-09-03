@@ -1,4 +1,4 @@
-# bartMachine
+# bartMachine <img src="man/figures/logo.png" align="right" height="139" alt="bartMachine hex logo" />
 
 `bartMachine` is an R and Java implementation of Bayesian Additive Regression
 Trees (BART) for regression and classification.
